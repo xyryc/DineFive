@@ -893,13 +893,14 @@ export const useStore = create((rawSet, get) => {
           },
         );
 
-        const result = await response.json();
+        const text = await response.text();
+        const result = text ? JSON.parse(text) : {};
         if (!response.ok) {
           throw new Error(result.message || "Failed to fetch notifications");
         }
 
         set({ isLoading: false });
-        return result.data;
+        return result.data || result || [];
       } catch (error: any) {
         console.log("fetchNotifications error", error);
         set({ error: error.message, isLoading: false });

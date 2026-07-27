@@ -50,11 +50,11 @@ export default function LocationScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#ffffff" }} edges={["top"]}>
       <StatusBar style="dark" />
 
       {/* Map Container */}
-      <View className="flex-1">
+      <View style={{ flex: 1, width: "100%", height: "100%" }}>
         <RestaurantMapView onOpenRestaurant={handleOpenRestaurant} />
       </View>
     </SafeAreaView>

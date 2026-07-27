@@ -29,21 +29,20 @@ const getGoogleModule = async () => {
 
 const ensureConfigured = async () => {
   const mod = await getGoogleModule();
-  if (!isConfigured) {
-    mod.GoogleSignin.configure({
-      webClientId:
-        "649475005615-p6qfnn9gpktjt9inlemivc3qllmqh2ag.apps.googleusercontent.com",
-      offlineAccess: true,
-    });
-    isConfigured = true;
-  }
+  mod.GoogleSignin.configure({
+    webClientId:
+      "649475005615-p6qfnn9gpktjt9inlemivc3qllmqh2ag.apps.googleusercontent.com",
+    offlineAccess: true,
+  });
   return mod;
 };
 
 export const signInWithGoogle = async () => {
   const { GoogleSignin, statusCodes } = await ensureConfigured();
   try {
-    await GoogleSignin.hasPlayServices();
+    await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+    // Clear any previous session so the account chooser is fresh and stale tokens are cleared
+    await GoogleSignin.signOut().catch(() => {});
     const userInfo = await GoogleSignin.signIn();
     // userInfo.idToken is what we need for the backend
     return userInfo;

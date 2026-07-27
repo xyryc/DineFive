@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -15,7 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import MapView, { Marker, PROVIDER_DEFAULT, Region } from "react-native-maps";
+import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
 import * as Location from "expo-location";
 import { Restaurant, useRestaurantStore } from "../../stores/useRestaurantStore";
 const normalizeText = (value: string): string =>
@@ -186,6 +187,15 @@ export default function RestaurantMapView({
   const [isAddressModalVisible, setIsAddressModalVisible] = useState(false);
 
   const [addressLabel, setAddressLabel] = useState("3067 Fifth Ave");
+
+  useEffect(() => {
+    const mapsApiKeyFromConfig = Constants.expoConfig?.android?.config?.googleMaps?.apiKey;
+    const mapsApiKeyFromEnv = process.env.GOOGLE_MAPS_API_KEY || process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
+    console.log("🗺️ [Google Maps API Key Check]:", {
+      apiKeyInExpoConfig: mapsApiKeyFromConfig || "NOT SET",
+      apiKeyInEnv: mapsApiKeyFromEnv ? `${mapsApiKeyFromEnv.slice(0, 8)}...` : "NOT SET",
+    });
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -563,11 +573,11 @@ export default function RestaurantMapView({
   }
 
   return (
-    <View className="flex-1 bg-gray-100">
+    <View style={{ flex: 1, width: "100%", height: "100%", backgroundColor: "#F3F4F6" }}>
       <MapView
         ref={mapRef}
-        provider={PROVIDER_DEFAULT}
-        style={{ flex: 1 }}
+        provider={PROVIDER_GOOGLE}
+        style={{ flex: 1, width: "100%", height: "100%" }}
         initialRegion={{
           latitude: userLat,
           longitude: userLng,

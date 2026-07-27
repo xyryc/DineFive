@@ -1,0 +1,99 @@
+module.exports = {
+  expo: {
+    name: "Dine Five",
+    slug: "Dine-Five",
+    version: "1.0.2",
+    orientation: "portrait",
+    icon: "./assets/app_icon.png",
+    scheme: "dinefive",
+    userInterfaceStyle: "automatic",
+    ios: {
+      bundleIdentifier: "com.dinefive.app",
+      supportsTablet: true,
+      infoPlist: {
+        NSLocationWhenInUseUsageDescription:
+          "Allow app to use your location to find nearby restaurants.",
+      },
+    },
+    android: {
+      package: "com.dinefive.app",
+      versionCode: 3,
+      adaptiveIcon: {
+        backgroundColor: "#E6F4FE",
+        foregroundImage: "./assets/app_icon.png",
+        backgroundImage: "./assets/app_icon.png",
+        monochromeImage: "./assets/app_icon.png",
+      },
+      googleServicesFile: "./google-services.json",
+      config: {
+        googleMaps: {
+          apiKey:
+            process.env.GOOGLE_MAPS_API_KEY ||
+            process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ||
+            "",
+        },
+      },
+      permissions: [
+        "POST_NOTIFICATIONS",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+      ],
+      predictiveBackGestureEnabled: false,
+    },
+    web: {
+      output: "static",
+      favicon: "./assets/images/favicon.png",
+      bundler: "metro",
+    },
+    plugins: [
+      "expo-router",
+      "expo-notifications",
+      ["@stripe/stripe-react-native", {}],
+      "@react-native-google-signin/google-signin",
+      [
+        "expo-location",
+        {
+          locationWhenInUsePermission:
+            "Allow Dine-Five to use your location to find nearby restaurants.",
+        },
+      ],
+      [
+        "expo-splash-screen",
+        {
+          image: "./assets/icon.png",
+          imageWidth: 200,
+          resizeMode: "contain",
+          backgroundColor: "#ffffff",
+          dark: {
+            backgroundColor: "#000000",
+          },
+        },
+      ],
+      [
+        "expo-build-properties",
+        {
+          android: {
+            usesCleartextTraffic: true,
+          },
+        },
+      ],
+      "expo-font",
+      "expo-image",
+      "expo-sharing",
+      "expo-status-bar",
+      "expo-web-browser",
+      "expo-video",
+      "expo-asset",
+    ],
+    experiments: {
+      typedRoutes: true,
+      reactCompiler: true,
+    },
+    extra: {
+      router: {},
+      eas: {
+        projectId: "959a0264-ad52-4a40-b156-60b13d42c868",
+      },
+    },
+  },
+};
