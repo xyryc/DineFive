@@ -60,14 +60,12 @@ const Step4 = () => {
           adjustsFontSizeToFit
           className="text-3xl font-heading text-[#1F2937] mb-4 text-center"
         >
-          Your Next Meal is Ready
+          Freshly Made, Ready for Pickup
         </Text>
 
         {/* Description */}
         <Text className="text-base text-gray-600 leading-relaxed mb-6 text-center px-2">
-          No pick up fees. No hidden markups. No long waits. Simply browse
-          available meals, reserve your favorite, and pick it up fresh from the
-          restaurant when it&apos;s ready.
+          No cold leftovers or long waits. Reserve your favorite $5.99 meal, pick it up hot from top local spots, and enjoy fresh, high-quality dining anytime.
         </Text>
 
         {/* Get Started button */}

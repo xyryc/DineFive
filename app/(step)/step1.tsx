@@ -68,7 +68,7 @@ const Step1 = () => {
 
         {/* Description */}
         <Text className="text-base text-gray-600 leading-relaxed mb-6 text-center">
-          Beat the rising cost of food. We connect you with delicious, freshly prepared meals from local favorites at a price that actually fits your budget.
+          Beat the rising cost of dining out. Enjoy top-quality, freshly prepared meals from your favorite local spots for just $5.99—without the markup.
         </Text>
 
         {/* Next button - full width */}

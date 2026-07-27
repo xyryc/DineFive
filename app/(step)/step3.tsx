@@ -61,12 +61,12 @@ const Step3 = () => {
           adjustsFontSizeToFit 
           className="text-3xl font-heading text-gray-900 mb-4 text-center"
         >
-          Freshness Guaranteed, No Exceptions
+          Beer, Wine & Perfect Pairings
         </Text>
 
         {/* Description */}
         <Text className="text-base text-gray-600 leading-relaxed mb-6 text-center">
-          We believe high-quality dining shouldn&apos;t be a luxury. Access top-tier ingredients and chef-prepared dishes without the &quot;inflation tax.&quot;
+          Complete your meal with ice-cold beer, fine wine, artisan drinks, and sweet desserts. Enjoy a full restaurant experience at unbeatable $5.99 value.
         </Text>
 
         {/* Next button - full width */}

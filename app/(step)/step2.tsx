@@ -61,14 +61,12 @@ const Step2 = () => {
           adjustsFontSizeToFit
           className="text-3xl font-heading text-gray-900 mb-4 text-center"
         >
-          Good for You, Great Restaurants
+          From Burgers to Asian Cuisine
         </Text>
 
         {/* Description */}
         <Text className="text-base text-gray-600 leading-relaxed mb-6 text-center">
-          In an expensive economy, we help local restaurants thrive by recouping
-          ingredient costs. You get a fresh meal; they keep their doors open.
-          It&apos;s a win-win.
+          Craving gourmet burgers, authentic Asian noodles, sushi, or tacos? Discover an extraordinary variety of fresh dishes crafted daily by local chefs.
         </Text>
 
         {/* Next button - full width */}
