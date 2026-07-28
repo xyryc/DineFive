@@ -2,6 +2,14 @@
 
 Dine-Five is a premium, mobile-first food ordering app built with Expo, React Native, and Expo Router. It delivers a seamless, high-performance user experience, featuring customer onboarding, secure authentication, location-based restaurant discovery, menus, shopping cart management, Stripe checkout, past orders history, and favorites list.
 
+<p align="center">
+  <a href="https://play.google.com/store/apps/details?id=com.dinefive.app" target="_blank">
+    <img src="https://img.shields.io/badge/Google_Play-Get_it_on_Play_Store-3DDC84?style=for-the-badge&logo=googleplay&logoColor=white" alt="Get it on Google Play" />
+  </a>
+  &nbsp;&nbsp;
+  <img src="https://img.shields.io/badge/App_Store-Coming_Soon-555555?style=for-the-badge&logo=apple&logoColor=white" alt="App Store - Coming Soon" />
+</p>
+
 ---
 
 ## 📱 App Screenshots
@@ -30,7 +38,7 @@ Dine-Five is a premium, mobile-first food ordering app built with Expo, React Na
 
 ## 🛠️ Tech Stack
 
-- **Core Framework:** Expo 54, React Native 0.81, React 19
+- **Core Framework:** Expo 57, React Native 0.81, React 19
 - **Navigation:** Expo Router (File-based routing)
 - **Styling:** NativeWind & Tailwind CSS (Utility-first CSS styling)
 - **State Management:** Zustand with AsyncStorage (Persisted user credentials, authentication token, and cart state)
