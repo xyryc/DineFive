@@ -24,7 +24,7 @@ const SplashScreen = () => {
         } else if (auth && auth.user && auth.accessToken) {
           router.replace("/(tabs)");
         } else {
-          router.replace("/(step)/step1");
+          router.replace("/onboarding");
         }
       }, 2000); // Back to 2s as requested by user in their manual edit
     };

@@ -37,6 +37,30 @@ const ENDPOINTS: Record<ModalType, string> = {
   privacy: "/api/v1/legal/privacy-policy",
 };
 
+const documentCache: Record<ModalType, LegalDocument | null> = {
+  terms: null,
+  privacy: null,
+};
+
+export const preloadLegalDocuments = async () => {
+  const types: ModalType[] = ["terms", "privacy"];
+  for (const type of types) {
+    if (documentCache[type]) continue;
+    try {
+      const url = apiUrl(ENDPOINTS[type]);
+      const response = await fetch(url);
+      if (response.ok) {
+        const json = await response.json();
+        if (json.success && json.data) {
+          documentCache[type] = json.data;
+        }
+      }
+    } catch (err) {
+      console.log(`Preload ${type} error:`, err);
+    }
+  }
+};
+
 const htmlTagStyles = {
   h1: { fontSize: 18, fontWeight: "700" as const, color: "#1a1a1a", marginBottom: 8, marginTop: 4 },
   h2: { fontSize: 15, fontWeight: "700" as const, color: "#1f2937", marginBottom: 6, marginTop: 16 },
@@ -53,13 +77,16 @@ const TermsModal: React.FC<TermsModalProps> = ({ visible, type, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const activeDoc = documentCache[type] || document;
+
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || documentCache[type]) return;
+
+    let isMounted = true;
 
     const fetchDocument = async () => {
       setLoading(true);
       setError(null);
-      setDocument(null);
 
       try {
         const url = apiUrl(ENDPOINTS[type]);
@@ -75,15 +102,26 @@ const TermsModal: React.FC<TermsModalProps> = ({ visible, type, onClose }) => {
           throw new Error("Invalid response from server");
         }
 
-        setDocument(json.data);
+        documentCache[type] = json.data;
+        if (isMounted) {
+          setDocument(json.data);
+        }
       } catch (err: any) {
-        setError(err?.message ?? "Failed to load document");
+        if (isMounted) {
+          setError(err?.message ?? "Failed to load document");
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchDocument();
+
+    return () => {
+      isMounted = false;
+    };
   }, [visible, type]);
 
   return (
@@ -103,10 +141,10 @@ const TermsModal: React.FC<TermsModalProps> = ({ visible, type, onClose }) => {
               <Text style={styles.headerTitle}>
                 {type === "terms" ? "Terms & Conditions" : "Privacy Policy"}
               </Text>
-              {document && (
+              {activeDoc && (
                 <Text style={styles.lastUpdated}>
                   Last updated:{" "}
-                  {new Date(document.LastUpdated).toLocaleDateString("en-US", {
+                  {new Date(activeDoc.LastUpdated).toLocaleDateString("en-US", {
                     year: "numeric",
                     month: "long",
                     day: "numeric",
@@ -124,17 +162,17 @@ const TermsModal: React.FC<TermsModalProps> = ({ visible, type, onClose }) => {
         <View style={styles.divider} />
 
         {/* Content */}
-        {loading ? (
+        {loading && !activeDoc ? (
           <View style={styles.centerContent}>
             <ActivityIndicator size="large" color="#D32F1E" />
             <Text style={styles.loadingText}>Loading...</Text>
           </View>
-        ) : error ? (
+        ) : error && !activeDoc ? (
           <View style={styles.centerContent}>
             <Feather name="alert-circle" size={36} color="#f87171" />
             <Text style={styles.errorText}>{error}</Text>
           </View>
-        ) : document ? (
+        ) : activeDoc ? (
           <ScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
@@ -142,7 +180,7 @@ const TermsModal: React.FC<TermsModalProps> = ({ visible, type, onClose }) => {
           >
             <RenderHtml
               contentWidth={width - 40}
-              source={{ html: document.content }}
+              source={{ html: activeDoc.content }}
               tagsStyles={htmlTagStyles}
             />
           </ScrollView>

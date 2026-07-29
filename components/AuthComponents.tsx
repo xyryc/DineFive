@@ -2,13 +2,13 @@ import { useStore } from "@/stores/stores";
 import { Ionicons } from "@expo/vector-icons";
 import { Checkbox, Host } from "@expo/ui";
 import { router } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Animated,
-  Easing,
+  LayoutChangeEvent,
   Linking,
+  ScrollView,
   Text,
   TouchableOpacity,
   View,
@@ -16,7 +16,7 @@ import {
 import CustomInput from "./CustomInput";
 import GoogleLogin from "./GoogleLogin";
 import GradientButton from "./GradientButton";
-import TermsModal from "./TermsModal";
+import TermsModal, { preloadLegalDocuments } from "./TermsModal";
 
 interface AuthComponentsProps {
   initialTab?: "login" | "signup";
@@ -26,10 +26,12 @@ export const AuthComponents = ({
   initialTab = "login",
 }: AuthComponentsProps) => {
   const [activeTab, setActiveTab] = useState<"login" | "signup">(initialTab);
+  const [cardWidth, setCardWidth] = useState<number>(0);
+  const scrollViewRef = useRef<ScrollView>(null);
 
-  // Animation values for form content transition
-  const formOpacity = useRef(new Animated.Value(1)).current;
-  const formTranslateX = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    preloadLegalDocuments();
+  }, []);
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState("");
@@ -57,45 +59,22 @@ export const AuthComponents = ({
 
   const handleTabSwitch = (tab: "login" | "signup") => {
     if (activeTab === tab) return;
+    setActiveTab(tab);
 
-    const direction = tab === "signup" ? 1 : -1; // 1 = to signup, -1 = to login
+    const targetX = tab === "signup" ? cardWidth : 0;
+    scrollViewRef.current?.scrollTo({ x: targetX, animated: true });
+  };
 
-    // Animate out current form
-    Animated.parallel([
-      Animated.timing(formOpacity, {
-        toValue: 0,
-        duration: 90,
-        useNativeDriver: true,
-        easing: Easing.out(Easing.quad),
-      }),
-      Animated.timing(formTranslateX, {
-        toValue: direction * -16,
-        duration: 90,
-        useNativeDriver: true,
-        easing: Easing.out(Easing.quad),
-      }),
-    ]).start(() => {
-      // Update form tab
-      setActiveTab(tab);
-      // Set initial offset for incoming form
-      formTranslateX.setValue(direction * 16);
-
-      // Animate in new form
-      Animated.parallel([
-        Animated.timing(formOpacity, {
-          toValue: 1,
-          duration: 160,
-          useNativeDriver: true,
-          easing: Easing.out(Easing.cubic),
-        }),
-        Animated.timing(formTranslateX, {
-          toValue: 0,
-          duration: 160,
-          useNativeDriver: true,
-          easing: Easing.out(Easing.cubic),
-        }),
-      ]).start();
-    });
+  const handleLayout = (event: LayoutChangeEvent) => {
+    const width = event.nativeEvent.layout.width - 40; // Subtract padding px-5 (20px left + 20px right)
+    if (width > 0 && width !== cardWidth) {
+      setCardWidth(width);
+      if (initialTab === "signup") {
+        setTimeout(() => {
+          scrollViewRef.current?.scrollTo({ x: width, animated: false });
+        }, 50);
+      }
+    }
   };
 
   const handleLogin = async () => {
@@ -174,7 +153,10 @@ export const AuthComponents = ({
   };
 
   return (
-    <View className="pt-5 px-5 pb-10 bg-white rounded-t-3xl shadow-lg">
+    <View
+      onLayout={handleLayout}
+      className="pt-5 px-5 pb-10 bg-white rounded-t-3xl shadow-lg"
+    >
       {/* Tab Selector */}
       <View className="flex-row items-center gap-5 bg-[#FFF3CD] rounded-2xl mb-4">
         {activeTab === "login" ? (
@@ -204,168 +186,172 @@ export const AuthComponents = ({
         )}
       </View>
 
-      {/* Animated Form Fields */}
-      <Animated.View
-        style={{
-          opacity: formOpacity,
-          transform: [{ translateX: formTranslateX }],
-        }}
-      >
-        {/* LOGIN FORM */}
-        {activeTab === "login" && (
-          <View>
-            <CustomInput
-              label="Email"
-              className="mt-1"
-              placeholder="name@example.com"
-              onChangeText={(text) => setLoginEmail(text)}
-              value={loginEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
+      {/* Horizontal Sliding Form Pager (Top App Standard) */}
+      {cardWidth > 0 ? (
+        <View style={{ width: cardWidth }} className="overflow-hidden bg-white">
+          <ScrollView
+            ref={scrollViewRef}
+            horizontal
+            pagingEnabled
+            scrollEnabled={false}
+            showsHorizontalScrollIndicator={false}
+            scrollEventThrottle={16}
+            style={{ width: cardWidth }}
+            className="bg-white overflow-hidden"
+          >
+            {/* LOGIN FORM */}
+            <View style={{ width: cardWidth }} className="bg-white">
+              <CustomInput
+                label="Email"
+                className="mt-1"
+                placeholder="name@example.com"
+                onChangeText={(text) => setLoginEmail(text)}
+                value={loginEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
 
-            <CustomInput
-              label="Password"
-              className="mt-5"
-              placeholder="min. 6 characters"
-              onChangeText={(text) => setLoginPassword(text)}
-              value={loginPassword}
-              secureTextEntry={!isLoginShowPassword}
-              icon={
+              <CustomInput
+                label="Password"
+                className="mt-5"
+                placeholder="min. 6 characters"
+                onChangeText={(text) => setLoginPassword(text)}
+                value={loginPassword}
+                secureTextEntry={!isLoginShowPassword}
+                icon={
+                  <TouchableOpacity
+                    onPress={() => setIsLoginShowPassword(!isLoginShowPassword)}
+                  >
+                    {isLoginShowPassword ? (
+                      <Ionicons name="eye-outline" size={24} color="black" />
+                    ) : (
+                      <Ionicons name="eye-off-outline" size={24} color="black" />
+                    )}
+                  </TouchableOpacity>
+                }
+              />
+
+              <View className="mt-3 flex-row items-center justify-between">
+                <View className="flex-row items-center">
+                  <Host style={{ width: 24, height: 24 }}>
+                    <Checkbox
+                      value={rememberMe}
+                      onValueChange={setRememberMe}
+                    />
+                  </Host>
+                  <Text
+                    onPress={() => setRememberMe(!rememberMe)}
+                    className="ml-2 text-[#1F2A33] font-body-medium text-sm"
+                  >
+                    Remember me
+                  </Text>
+                </View>
+
                 <TouchableOpacity
-                  onPress={() => setIsLoginShowPassword(!isLoginShowPassword)}
+                  onPress={() => router.push("/(auth)/forgot-password")}
                 >
-                  {isLoginShowPassword ? (
-                    <Ionicons name="eye-outline" size={24} color="black" />
-                  ) : (
-                    <Ionicons name="eye-off-outline" size={24} color="black" />
-                  )}
+                  <Text className="text-[#D32F1E] font-body-medium text-sm">
+                    Forgot Password?
+                  </Text>
                 </TouchableOpacity>
-              }
-            />
+              </View>
 
-            <View className="mt-3 flex-row items-center justify-between">
-              <View className="flex-row items-center">
+              <View className="mt-7">
+                {isSubmittingLogin ? (
+                  <View className="items-center py-4 bg-yellow-400 rounded-full">
+                    <ActivityIndicator color="black" />
+                  </View>
+                ) : (
+                  <GradientButton title="Login" onPress={handleLogin} />
+                )}
+              </View>
+            </View>
+
+            {/* SIGNUP FORM */}
+            <View style={{ width: cardWidth }} className="bg-white">
+              <CustomInput
+                label="Name"
+                className="mt-1"
+                placeholder="Your full name"
+                onChangeText={(text) => setSignupName(text)}
+                value={signupName}
+              />
+
+              <CustomInput
+                label="Email"
+                className="mt-4"
+                placeholder="name@example.com"
+                onChangeText={(text) => setSignupEmail(text)}
+                value={signupEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+
+              <CustomInput
+                label="Password"
+                className="mt-4"
+                placeholder="min. 6 characters"
+                onChangeText={(text) => setSignupPassword(text)}
+                value={signupPassword}
+                secureTextEntry={!isSignupShowPassword}
+                icon={
+                  <TouchableOpacity
+                    onPress={() => setIsSignupShowPassword(!isSignupShowPassword)}
+                  >
+                    {isSignupShowPassword ? (
+                      <Ionicons name="eye-outline" size={24} color="black" />
+                    ) : (
+                      <Ionicons name="eye-off-outline" size={24} color="black" />
+                    )}
+                  </TouchableOpacity>
+                }
+              />
+
+              <TermsModal
+                visible={modalVisible}
+                type={modalType}
+                onClose={() => setModalVisible(false)}
+              />
+
+              <View className="mt-3 flex-row items-center">
                 <Host style={{ width: 24, height: 24 }}>
                   <Checkbox
-                    value={rememberMe}
-                    onValueChange={setRememberMe}
+                    value={agree}
+                    onValueChange={setAgree}
                   />
                 </Host>
-                <Text
-                  onPress={() => setRememberMe(!rememberMe)}
-                  className="ml-2 text-[#1F2A33] font-body-medium text-sm"
-                >
-                  Remember me
+                <Text className="ml-2 text-[#1F2A33] font-body-medium text-sm flex-1">
+                  I agree to our{" "}
+                  <Text
+                    className="text-[#D32F1E] underline"
+                    onPress={() => openModal("terms")}
+                  >
+                    Terms & Conditions
+                  </Text>{" "}
+                  and{" "}
+                  <Text
+                    className="text-[#D32F1E] underline"
+                    onPress={() => openModal("privacy")}
+                  >
+                    Privacy Policy
+                  </Text>
+                  .
                 </Text>
               </View>
 
-              <TouchableOpacity
-                onPress={() => router.push("/(auth)/forgot-password")}
-              >
-                <Text className="text-[#D32F1E] font-body-medium text-sm">
-                  Forgot Password?
-                </Text>
-              </TouchableOpacity>
+              <View className="mt-7">
+                {isSubmittingSignup ? (
+                  <View className="items-center py-4 bg-yellow-400 rounded-full">
+                    <ActivityIndicator color="black" />
+                  </View>
+                ) : (
+                  <GradientButton title="Sign up" onPress={handleSignup} />
+                )}
+              </View>
             </View>
-
-            <View className="mt-7">
-              {isSubmittingLogin ? (
-                <View className="items-center py-4 bg-yellow-400 rounded-full">
-                  <ActivityIndicator color="black" />
-                </View>
-              ) : (
-                <GradientButton title="Login" onPress={handleLogin} />
-              )}
-            </View>
-          </View>
-        )}
-
-        {/* SIGNUP FORM */}
-        {activeTab === "signup" && (
-          <View>
-            <CustomInput
-              label="Name"
-              className="mt-1"
-              placeholder="Your full name"
-              onChangeText={(text) => setSignupName(text)}
-              value={signupName}
-            />
-
-            <CustomInput
-              label="Email"
-              className="mt-4"
-              placeholder="name@example.com"
-              onChangeText={(text) => setSignupEmail(text)}
-              value={signupEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-
-            <CustomInput
-              label="Password"
-              className="mt-4"
-              placeholder="min. 6 characters"
-              onChangeText={(text) => setSignupPassword(text)}
-              value={signupPassword}
-              secureTextEntry={!isSignupShowPassword}
-              icon={
-                <TouchableOpacity
-                  onPress={() => setIsSignupShowPassword(!isSignupShowPassword)}
-                >
-                  {isSignupShowPassword ? (
-                    <Ionicons name="eye-outline" size={24} color="black" />
-                  ) : (
-                    <Ionicons name="eye-off-outline" size={24} color="black" />
-                  )}
-                </TouchableOpacity>
-              }
-            />
-
-            <TermsModal
-              visible={modalVisible}
-              type={modalType}
-              onClose={() => setModalVisible(false)}
-            />
-
-            <View className="mt-3 flex-row items-center">
-              <Host style={{ width: 24, height: 24 }}>
-                <Checkbox
-                  value={agree}
-                  onValueChange={setAgree}
-                />
-              </Host>
-              <Text className="ml-2 text-[#1F2A33] font-body-medium text-sm flex-1">
-                I agree to our{" "}
-                <Text
-                  className="text-[#D32F1E] underline"
-                  onPress={() => openModal("terms")}
-                >
-                  Terms & Conditions
-                </Text>{" "}
-                and{" "}
-                <Text
-                  className="text-[#D32F1E] underline"
-                  onPress={() => openModal("privacy")}
-                >
-                  Privacy Policy
-                </Text>
-                .
-              </Text>
-            </View>
-
-            <View className="mt-7">
-              {isSubmittingSignup ? (
-                <View className="items-center py-4 bg-yellow-400 rounded-full">
-                  <ActivityIndicator color="black" />
-                </View>
-              ) : (
-                <GradientButton title="Sign up" onPress={handleSignup} />
-              )}
-            </View>
-          </View>
-        )}
-      </Animated.View>
+          </ScrollView>
+        </View>
+      ) : null}
 
       {/* Divider */}
       <View className="mt-4 flex-row items-center gap-3">
@@ -385,7 +371,7 @@ export const AuthComponents = ({
             className="text-[#E29E10] font-body-bold underline"
             onPress={() => Linking.openURL("https://restaurant.dinefive.com")}
           >
-            Partner Dashboard
+            Go to Partner Dashboard
           </Text>
         </Text>
       </View>

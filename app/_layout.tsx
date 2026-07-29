@@ -50,7 +50,7 @@ export default function RootLayout() {
     const group = segments[0] as string;
 
     const inAuthGroup = group === "(auth)";
-    const inStepGroup = group === "(step)";
+    const inOnboarding = group === "onboarding";
     const inTabsGroup = group === "(tabs)";
     const inScreensGroup = group === "screens";
     const inSplashScreen = group === "splash-screen";
@@ -59,7 +59,7 @@ export default function RootLayout() {
     if (!isInitialized || inSplashScreen) return;
 
     if (isPendingVerification) {
-      if (inTabsGroup || inScreensGroup || inStepGroup) {
+      if (inTabsGroup || inScreensGroup || inOnboarding) {
         router.replace({
           pathname: "/(auth)/verify-otp",
           params: { email: user?.email },
@@ -73,7 +73,7 @@ export default function RootLayout() {
         router.replace("/(auth)/login");
       }
     } else {
-      if (inAuthGroup || inStepGroup) {
+      if (inAuthGroup || inOnboarding) {
         router.replace("/(tabs)");
       }
     }
@@ -102,7 +102,7 @@ export default function RootLayout() {
         <Stack.Screen name="splash-screen" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(step)" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
         <Stack.Screen name="screens" options={{ headerShown: false }} />
       </Stack>
     </>
