@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   Text,
   TouchableOpacity,
   View,
@@ -63,7 +64,7 @@ const SignupComponents = () => {
   };
 
   return (
-    <View className="pt-5 px-5 pb-10 bg-white/90 rounded-t-2xl ">
+    <View className="pt-5 px-5 pb-10 bg-white rounded-t-3xl shadow-lg">
       <View className="flex-row items-center gap-5 bg-[#FFF3CD] rounded-2xl">
         <TouchableOpacity
           className=" flex-1"
@@ -166,6 +167,19 @@ const SignupComponents = () => {
 
       {/* google login */}
       <GoogleLogin />
+
+      {/* restaurant partner dashboard link */}
+      <View className="mt-6 items-center">
+        <Text className="text-xs font-body-medium text-[#6C757D]">
+          Are you a restaurant partner?{" "}
+          <Text
+            className="text-[#E29E10] font-body-bold underline"
+            onPress={() => Linking.openURL("https://restaurant.dinefive.com")}
+          >
+            Partner Dashboard
+          </Text>
+        </Text>
+      </View>
     </View>
   );
 };

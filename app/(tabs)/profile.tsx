@@ -6,7 +6,7 @@ import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect } from "react";
-import { ScrollView, Text, TouchableOpacity, View, Alert, StyleSheet } from "react-native";
+import { ScrollView, Text, TouchableOpacity, View, Alert, StyleSheet, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { DonateModal } from "@/components/home/DonateModal";
 
@@ -111,7 +111,7 @@ export default function ProfileScreen() {
       ],
     },
     {
-      title: "Preferences",
+      title: "Preferences & Business",
       items: [
         {
           id: "settings",
@@ -120,6 +120,14 @@ export default function ProfileScreen() {
           color: "#78909C",
           bgColor: "#ECEFF1",
           route: "/screens/profile/settings",
+        },
+        {
+          id: "partner-dashboard",
+          title: "Restaurant Dashboard",
+          icon: "storefront-outline",
+          color: "#E29E10",
+          bgColor: "#FFF8E7",
+          action: () => Linking.openURL("https://restaurant.dinefive.com"),
         },
       ],
     },

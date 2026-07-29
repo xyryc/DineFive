@@ -7,7 +7,6 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  ImageBackground,
   Text,
   TextInput,
   TouchableOpacity,
@@ -59,22 +58,17 @@ const ResetPassword = () => {
   };
 
   return (
-    <View className="flex-1">
+    <View className="flex-1 bg-white">
       <StatusBar style="auto" />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
-        <ImageBackground
-          source={require("@/assets/images/Screenshot.png")}
-          resizeMode="cover"
-          style={{ flex: 1, width: "100%", height: "100%" }}
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <ScrollView
-            contentContainerStyle={{ flexGrow: 1 }}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
             <View className="flex-1 items-center justify-center py-10">
               <Image
                 source={require("@/assets/images/logo.jpg")}
@@ -168,7 +162,6 @@ const ResetPassword = () => {
               </View>
             </View>
           </ScrollView>
-        </ImageBackground>
       </KeyboardAvoidingView>
     </View>
   );

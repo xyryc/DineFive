@@ -3,7 +3,6 @@ import { Image } from "expo-image";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
 import {
-  ImageBackground,
   View,
   KeyboardAvoidingView,
   Platform,
@@ -12,39 +11,33 @@ import {
 
 const Signup = () => {
   return (
-    <View className="flex-1">
+    <View className="flex-1 bg-white">
       <StatusBar style="auto" />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
-        <ImageBackground
-          source={require("@/assets/images/Screenshot.png")}
-          resizeMode="cover"
-          style={{ flex: 1, width: "100%", height: "100%" }}
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <ScrollView
-            contentContainerStyle={{ flexGrow: 1 }}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            <View className="flex-1 items-center justify-center py-10">
-              <Image
-                source={require("@/assets/images/logo.jpg")}
-                contentFit="contain"
-                style={{
-                  height: 200,
-                  width: 200,
-                  backgroundColor: "#00000010",
-                  paddingBottom: 5,
-                  borderRadius: 100,
-                }}
-              />
-            </View>
-            {/* Signup components */}
-            <SignupComponents />
-          </ScrollView>
-        </ImageBackground>
+          <View className="flex-1 items-center justify-center py-10">
+            <Image
+              source={require("@/assets/images/logo.jpg")}
+              contentFit="contain"
+              style={{
+                height: 200,
+                width: 200,
+                backgroundColor: "#00000010",
+                paddingBottom: 5,
+                borderRadius: 100,
+              }}
+            />
+          </View>
+          {/* Signup components */}
+          <SignupComponents />
+        </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
