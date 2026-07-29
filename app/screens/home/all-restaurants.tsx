@@ -29,8 +29,18 @@ const formatDistance = (distanceKm?: any) => {
   return `${dist.toFixed(1)} mi`;
 };
 
-const getCuisineLabel = (restaurant: Restaurant) =>
-  restaurant?.cuisine?.filter(Boolean).join(" • ") || "Restaurant";
+const getCityAreaLabel = (restaurant: Restaurant): string => {
+  const city = restaurant?.city;
+  const state = restaurant?.state;
+  const address = restaurant?.restaurantAddress;
+
+  if (typeof city === "string" && city.trim()) return city.trim();
+  if (typeof state === "string" && state.trim()) return state.trim();
+  if (typeof address === "string" && address.trim()) {
+    return address.split(",")[0].trim();
+  }
+  return "Nearby";
+};
 
 function VerticalRestaurantCardSkeleton() {
   const [pulseAnim] = React.useState(() => new Animated.Value(0.3));
@@ -242,12 +252,14 @@ export default function AllRestaurantsScreen() {
   // Initial load
   useEffect(() => {
     fetchLocation();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchCategoriesData();
   }, [fetchLocation, fetchCategoriesData]);
 
   // Keep active category "All" if selected category becomes missing
   useEffect(() => {
     if (!categories.includes(activeCategory)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveCategory("All");
     }
   }, [activeCategory, categories]);
@@ -291,7 +303,7 @@ export default function AllRestaurantsScreen() {
       const r = Number(item.rating);
       return Number.isFinite(r) ? r.toFixed(1) : "4.2";
     })();
-    const cuisineLabel = getCuisineLabel(item);
+    const areaLabel = getCityAreaLabel(item);
     const distanceLabel = formatDistance(item.distance);
     const deliveryMin =
       item.deliveryTimeMinutes ??
@@ -350,7 +362,7 @@ export default function AllRestaurantsScreen() {
             className="text-[11px] text-gray-400 font-body-semibold mt-0.5 mb-2 pr-2"
             numberOfLines={1}
           >
-            {cuisineLabel}
+            {areaLabel}
           </Text>
 
           <View className="flex-row items-center justify-between">

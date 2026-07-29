@@ -10,9 +10,9 @@ import {
 } from "react-native";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const BANNER_WIDTH = SCREEN_WIDTH - 32; // mx-4 means 16 each side
+const BANNER_WIDTH = SCREEN_WIDTH - 32;
 
-type Deal = {
+export type BannerItem = {
   title?: string;
   subtitle?: string;
   ctaText?: string;
@@ -20,38 +20,34 @@ type Deal = {
 };
 
 type PromoBannerProps = {
-  deals?: Deal[];
+  banners?: BannerItem[];
+  deals?: BannerItem[];
 };
 
-const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1550547660-d9450f859349?w=500";
-
-const DEFAULT_DEAL: Deal = {
+const DEFAULT_BANNER: BannerItem = {
   title: "Welcome to Dine Five!",
   subtitle: "Discover restaurants near you",
   ctaText: "Explore",
-  image: FALLBACK_IMAGE,
+  image: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=500",
 };
 
-export const PromoBanner = ({ deals = [] }: PromoBannerProps) => {
+export const PromoBanner = ({ banners, deals }: PromoBannerProps) => {
   const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Filter out any null/undefined deals and ensure we have at least one
   const list = React.useMemo(() => {
-    const filtered = Array.isArray(deals) ? deals.filter(Boolean) : [];
-    return filtered.length > 0 ? filtered : [DEFAULT_DEAL];
-  }, [deals]);
+    const rawList = banners ?? deals ?? [];
+    const filtered = Array.isArray(rawList) ? rawList.filter(Boolean) : [];
+    return filtered.length > 0 ? filtered : [DEFAULT_BANNER];
+  }, [banners, deals]);
 
-  // To create a seamless right-to-left infinite loop, we duplicate the first and last items
   const extendedList = React.useMemo(() => {
     if (list.length <= 1) return list;
     return [list[list.length - 1], ...list, list[0]];
   }, [list]);
 
-  // Initial scroll to the actual first item (skipping the prepended duplicate)
   useEffect(() => {
     if (list.length > 1) {
       const timer = setTimeout(() => {
@@ -66,18 +62,18 @@ export const PromoBanner = ({ deals = [] }: PromoBannerProps) => {
       }, 100);
       return () => clearTimeout(timer);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsInitialized(true);
       setActiveIndex(0);
     }
   }, [list]);
 
-  // Auto-slide effect
   useEffect(() => {
     if (list.length <= 1 || !isInitialized) return;
 
     const interval = setInterval(() => {
       if (scrollRef.current) {
-        const nextScrollIndex = activeIndex + 2; // +1 for next item, +1 for offset
+        const nextScrollIndex = activeIndex + 2;
         scrollRef.current.scrollTo({
           x: nextScrollIndex * BANNER_WIDTH,
           animated: true,
@@ -95,11 +91,9 @@ export const PromoBanner = ({ deals = [] }: PromoBannerProps) => {
 
     if (list.length > 1) {
       if (scrollIndex >= list.length + 1) {
-        // At the last "fake" item (copy of first item), jump to real first item
         scrollRef.current?.scrollTo({ x: BANNER_WIDTH, animated: false });
         newIndex = 0;
       } else if (scrollIndex <= 0) {
-        // At the first "fake" item (copy of last item), jump to real last item
         scrollRef.current?.scrollTo({
           x: list.length * BANNER_WIDTH,
           animated: false,
@@ -125,11 +119,11 @@ export const PromoBanner = ({ deals = [] }: PromoBannerProps) => {
         bounces={false}
         contentContainerStyle={{ alignItems: "center" }}
       >
-        {extendedList.map((deal, index) => {
-          const title = deal?.title || DEFAULT_DEAL.title;
-          const subtitle = deal?.subtitle || DEFAULT_DEAL.subtitle;
-          const ctaText = deal?.ctaText || DEFAULT_DEAL.ctaText;
-          const image = deal?.image || DEFAULT_DEAL.image;
+        {extendedList.map((item, index) => {
+          const title = item?.title || DEFAULT_BANNER.title;
+          const subtitle = item?.subtitle || DEFAULT_BANNER.subtitle;
+          const ctaText = item?.ctaText || DEFAULT_BANNER.ctaText;
+          const image = item?.image || DEFAULT_BANNER.image;
 
           return (
             <View
@@ -137,7 +131,6 @@ export const PromoBanner = ({ deals = [] }: PromoBannerProps) => {
               style={{ width: BANNER_WIDTH, paddingHorizontal: 6 }}
             >
               <View className="bg-[#F6D977] rounded-[28px] px-6 py-5 min-h-[125px] overflow-hidden flex-row gap-1 flex-1 shadow-sm">
-                {/* Decorative background patterns */}
                 <View className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-white/20" />
                 <View className="absolute -left-4 -bottom-4 w-16 h-16 rounded-full bg-black/5" />
                 <View className="absolute right-1/4 bottom-0 w-12 h-12 rounded-full bg-white/10" />
@@ -188,7 +181,6 @@ export const PromoBanner = ({ deals = [] }: PromoBannerProps) => {
         })}
       </ScrollView>
 
-      {/* Pagination dots */}
       {list.length > 1 && (
         <View className="flex-row justify-center mt-3 gap-2">
           {list.map((_, i) => (

@@ -6,38 +6,32 @@ import { type Restaurant } from "@/stores/useRestaurantStore";
 import { normalizeImageUri } from "@/utils/userAvatar";
 import { useRouter } from "expo-router";
 
-const formatDistance = (distanceKm?: any) => {
+const formatDistance = (distanceKm?: number | string) => {
   const dist = Number(distanceKm);
   if (!Number.isFinite(dist)) return "";
   if (dist < 1) return `${Math.max(1, Math.round(dist * 1000))} m`;
   return `${dist.toFixed(1)} mi`;
 };
 
-const getCuisineLabel = (restaurant: any) => {
-  try {
-    if (!restaurant) return "Restaurant";
-    if (Array.isArray(restaurant?.cuisine) && restaurant.cuisine.length > 0) {
-      return restaurant.cuisine.filter(Boolean).map(String).join(" • ");
-    }
-    if (typeof restaurant?.categoryName === "string" && restaurant.categoryName) {
-      return restaurant.categoryName;
-    }
-    if (typeof restaurant?.category === "string" && restaurant.category) {
-      return restaurant.category;
-    }
-    return "Restaurant";
-  } catch {
-    return "Restaurant";
+const getCityAreaLabel = (restaurant: Restaurant): string => {
+  const city = restaurant.city || (restaurant as any).city;
+  const state = restaurant.state || (restaurant as any).state;
+  const address = restaurant.restaurantAddress || (restaurant as any).address;
+
+  if (typeof city === "string" && city.trim()) return city.trim();
+  if (typeof state === "string" && state.trim()) return state.trim();
+  if (typeof address === "string" && address.trim()) {
+    // Pick first segment before comma if full address
+    return address.split(",")[0].trim();
   }
+  return "Nearby";
 };
 
-// ---- Error Boundary for individual cards ----
+// ── Error Boundaries ──
 type EBState = { hasError: boolean };
+
 class CardErrorBoundary extends React.Component<{ children: React.ReactNode }, EBState> {
-  constructor(props: any) {
-    super(props);
-    this.state = { hasError: false };
-  }
+  state: EBState = { hasError: false };
   static getDerivedStateFromError() {
     return { hasError: true };
   }
@@ -50,12 +44,8 @@ class CardErrorBoundary extends React.Component<{ children: React.ReactNode }, E
   }
 }
 
-// ---- Error Boundary for full sections block ----
 export class SectionErrorBoundary extends React.Component<{ children: React.ReactNode }, EBState> {
-  constructor(props: any) {
-    super(props);
-    this.state = { hasError: false };
-  }
+  state: EBState = { hasError: false };
   static getDerivedStateFromError() {
     return { hasError: true };
   }
@@ -68,44 +58,39 @@ export class SectionErrorBoundary extends React.Component<{ children: React.Reac
   }
 }
 
-// ---- Card component ----
+// ── Card Component ──
 function SectionRestaurantCardInner({
   restaurant,
   onOpen,
 }: {
-  restaurant: any;
+  restaurant: Restaurant;
   onOpen: () => void;
 }) {
-  if (!restaurant || typeof restaurant !== "object") return null;
+  if (!restaurant) return null;
 
   const distanceLabel = formatDistance(restaurant.distance);
-  const rawRating = Number(restaurant.rating);
+  const rawRating = Number((restaurant as any).rating);
   const rating = Number.isFinite(rawRating) && rawRating > 0 ? rawRating.toFixed(1) : "4.2";
-  const cuisineLabel = getCuisineLabel(restaurant);
-  const rawDelivery = Number(restaurant.deliveryTimeMinutes);
+  const areaLabel = getCityAreaLabel(restaurant);
+  const rawDelivery = Number((restaurant as any).etaMinutes ?? (restaurant as any).deliveryTimeMinutes);
   const deliveryMin = Number.isFinite(rawDelivery) && rawDelivery > 0
     ? rawDelivery
     : Math.max(5, Math.min(30, Math.round((Number(restaurant.distance) || 0) * 2) + 5));
 
   const rawUri =
-    restaurant?.profile ||
-    restaurant?.image ||
-    restaurant?.restaurantImage ||
-    restaurant?.providerImage ||
-    restaurant?.foodImage ||
+    (restaurant as any).foodImage ||
+    (restaurant as any).image ||
+    restaurant.profile ||
     "";
   const profileUri = normalizeImageUri(rawUri);
 
-  const name = String(
-    restaurant?.restaurantName ||
-    restaurant?.providerRestaurantName ||
-    restaurant?.providerName ||
-    restaurant?.name ||
-    restaurant?.title ||
-    "Restaurant"
-  );
+  const name =
+    restaurant.restaurantName ||
+    (restaurant as any).name ||
+    restaurant.title ||
+    "Restaurant";
 
-  const availableFoods = Number(restaurant?.availableFoods ?? restaurant?.foodCount ?? 0);
+  const availableFoods = Number(restaurant.availableFoods ?? (restaurant as any).foodCount ?? 0);
 
   return (
     <TouchableOpacity
@@ -176,7 +161,7 @@ function SectionRestaurantCardInner({
           <Text className="text-[11px] font-body-semibold text-[#374151]">{rating}</Text>
           <Text style={{ fontSize: 10, color: "#D1D5DB" }}>•</Text>
           <Text className="text-[11px] font-body text-[#6B7280] flex-1" numberOfLines={1}>
-            {cuisineLabel}
+            {areaLabel}
           </Text>
           <Text className="text-[11px] font-body-medium text-[#6B7280]">{deliveryMin}min</Text>
         </View>
@@ -192,7 +177,7 @@ function SectionRestaurantCardInner({
   );
 }
 
-export function SectionRestaurantCard({ restaurant, onOpen }: { restaurant: any; onOpen: () => void }) {
+export function SectionRestaurantCard({ restaurant, onOpen }: { restaurant: Restaurant; onOpen: () => void }) {
   return (
     <CardErrorBoundary>
       <SectionRestaurantCardInner restaurant={restaurant} onOpen={onOpen} />
@@ -200,7 +185,7 @@ export function SectionRestaurantCard({ restaurant, onOpen }: { restaurant: any;
   );
 }
 
-// ---- Section wrapper ----
+// ── Section Wrapper Component ──
 export function RestaurantSection({
   title,
   restaurants,
@@ -230,7 +215,7 @@ export function RestaurantSection({
         contentContainerStyle={{ paddingHorizontal: 20 }}
       >
         {restaurants.filter(Boolean).map((restaurant, index) => {
-          const key = String(restaurant?.providerId || restaurant?.id || restaurant?.foodId || index);
+          const key = String(restaurant?.id || (restaurant as any)?.providerId || index);
           return (
             <SectionRestaurantCard
               key={key}
@@ -244,23 +229,15 @@ export function RestaurantSection({
   );
 }
 
-// ---- Skeleton Loader Components ----
+// ── Skeletons ──
 export function RestaurantCardSkeleton() {
   const [pulseAnim] = React.useState(() => new Animated.Value(0.3));
 
   React.useEffect(() => {
     const animation = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 0.8,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 0.3,
-          duration: 800,
-          useNativeDriver: true,
-        }),
+        Animated.timing(pulseAnim, { toValue: 0.8, duration: 800, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 0.3, duration: 800, useNativeDriver: true }),
       ])
     );
     animation.start();
@@ -269,17 +246,10 @@ export function RestaurantCardSkeleton() {
 
   return (
     <View style={{ width: 224, marginRight: 16, backgroundColor: "#fff", borderRadius: 10, padding: 6, borderWidth: 1, borderColor: "#F3F4F6" }}>
-      {/* Skeleton Image */}
       <Animated.View style={{ width: "100%", height: 160, borderRadius: 12, backgroundColor: "#E5E7EB", opacity: pulseAnim, marginBottom: 14 }} />
-
       <View style={{ paddingHorizontal: 4, paddingBottom: 4, gap: 6 }}>
-        {/* Title skeleton */}
         <Animated.View style={{ width: 140, height: 14, borderRadius: 4, backgroundColor: "#E5E7EB", opacity: pulseAnim }} />
-
-        {/* Rating/Cuisine row skeleton */}
         <Animated.View style={{ width: 180, height: 10, borderRadius: 4, backgroundColor: "#E5E7EB", opacity: pulseAnim }} />
-
-        {/* Location skeleton */}
         <Animated.View style={{ width: 100, height: 10, borderRadius: 4, backgroundColor: "#E5E7EB", opacity: pulseAnim }} />
       </View>
     </View>
@@ -292,16 +262,8 @@ export function RestaurantSectionSkeleton() {
   React.useEffect(() => {
     const animation = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 0.8,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 0.3,
-          duration: 800,
-          useNativeDriver: true,
-        }),
+        Animated.timing(pulseAnim, { toValue: 0.8, duration: 800, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 0.3, duration: 800, useNativeDriver: true }),
       ])
     );
     animation.start();
@@ -310,13 +272,10 @@ export function RestaurantSectionSkeleton() {
 
   return (
     <View style={{ marginBottom: 24 }}>
-      {/* Title & View All Skeleton */}
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, marginBottom: 12 }}>
         <Animated.View style={{ width: 130, height: 18, borderRadius: 6, backgroundColor: "#E5E7EB", opacity: pulseAnim }} />
         <Animated.View style={{ width: 50, height: 14, borderRadius: 4, backgroundColor: "#E5E7EB", opacity: pulseAnim }} />
       </View>
-
-      {/* Horizontal Skeleton Cards */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20 }}>
         <RestaurantCardSkeleton />
         <RestaurantCardSkeleton />
