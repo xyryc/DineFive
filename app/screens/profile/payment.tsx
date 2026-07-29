@@ -14,9 +14,40 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const CardRow = ({
+  card,
+  isDefault,
+  onPress,
+}: {
+  card: Card;
+  isDefault?: boolean;
+  onPress: () => void;
+}) => (
+  <TouchableOpacity
+    onPress={onPress}
+    activeOpacity={0.6}
+    className="bg-white p-5 rounded-2xl mb-4 flex-row justify-between items-center border border-gray-100 shadow-sm"
+  >
+    <View className="flex-row items-center">
+      <View
+        className={`w-10 h-10 ${isDefault ? "bg-yellow-50" : "bg-gray-50"} rounded-lg items-center justify-center mr-3`}
+      >
+        <Ionicons name="card" size={20} color={isDefault ? "#FFC107" : "#9CA3AF"} />
+      </View>
+      <View>
+        <Text className="text-base font-heading-semibold text-gray-900">
+          {card.cardholderName}
+        </Text>
+        <Text className="text-gray-500 text-xs mt-0.5">{card.cardNumber}</Text>
+      </View>
+    </View>
+    <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+  </TouchableOpacity>
+);
+
 export default function PaymentScreen() {
   const router = useRouter();
-  const [cards, setCards] = useState(cardStore.getAllCards());
+  const [cards, setCards] = useState(() => cardStore.getAllCards());
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [showModal, setShowModal] = useState(false);
 
@@ -24,69 +55,10 @@ export default function PaymentScreen() {
     setCards(cardStore.getAllCards());
   };
 
-  useEffect(() => {
-    refreshCards();
-  }, []);
-
   const handleCardPress = (card: Card) => {
     setSelectedCard(card);
     setShowModal(true);
   };
-
-  const handleToggleDefault = (value: boolean) => {
-    if (selectedCard) {
-      if (value) {
-        cardStore.setDefaultCard(selectedCard.id);
-      } else {
-        // In this implementation, turning off default just keeps it as is 
-        // until another card is picked
-        cardStore.setDefaultCard(selectedCard.id);
-      }
-      refreshCards();
-      setSelectedCard({ ...selectedCard, isDefault: value });
-    }
-  };
-
-  const handleDelete = () => {
-    if (selectedCard) {
-      Alert.alert("Delete Card", "Are you sure you want to remove this card?", [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "Delete", 
-          style: "destructive",
-          onPress: () => {
-            cardStore.removeCard(selectedCard.id);
-            setShowModal(false);
-            refreshCards();
-          }
-        },
-      ]);
-    }
-  };
-
-  const defaultCard = cards.find((card: any) => card.isDefault);
-  const otherCards = cards.filter((card: any) => !card.isDefault);
-
-  const CardRow = ({ card, isDefault }: { card: Card; isDefault?: boolean }) => (
-    <TouchableOpacity 
-      onPress={() => handleCardPress(card)}
-      activeOpacity={0.6}
-      className="bg-white p-5 rounded-2xl mb-4 flex-row justify-between items-center border border-gray-100 shadow-sm"
-    >
-      <View className="flex-row items-center">
-        <View className={`w-10 h-10 ${isDefault ? 'bg-yellow-50' : 'bg-gray-50'} rounded-lg items-center justify-center mr-3`}>
-          <Ionicons name="card" size={20} color={isDefault ? "#FFC107" : "#9CA3AF"} />
-        </View>
-        <View>
-          <Text className="text-base font-heading-semibold text-gray-900">
-            {card.cardholderName}
-          </Text>
-          <Text className="text-gray-500 text-xs mt-0.5">{card.cardNumber}</Text>
-        </View>
-      </View>
-      <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
-    </TouchableOpacity>
-  );
 
   return (
     <SafeAreaView className="flex-1 bg-[#FDFBF7]">
@@ -114,7 +86,7 @@ export default function PaymentScreen() {
         {defaultCard && (
           <View className="mb-6">
             <Text className="text-gray-500 text-[10px] uppercase font-body-bold mb-3 ml-1 tracking-widest">Default Method</Text>
-            <CardRow card={defaultCard} isDefault={true} />
+            <CardRow card={defaultCard} isDefault={true} onPress={() => handleCardPress(defaultCard)} />
           </View>
         )}
 
@@ -122,7 +94,7 @@ export default function PaymentScreen() {
           <View>
             <Text className="text-gray-500 text-[10px] uppercase font-body-bold mb-3 ml-1 tracking-widest">Other Methods</Text>
             {otherCards.map((card: any) => (
-              <CardRow key={card.id} card={card} />
+              <CardRow key={card.id} card={card} onPress={() => handleCardPress(card)} />
             ))}
           </View>
         )}

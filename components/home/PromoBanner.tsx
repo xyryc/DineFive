@@ -53,7 +53,6 @@ export const PromoBanner = ({ deals = [] }: PromoBannerProps) => {
 
   // Initial scroll to the actual first item (skipping the prepended duplicate)
   useEffect(() => {
-    setIsInitialized(false);
     if (list.length > 1) {
       const timer = setTimeout(() => {
         if (scrollRef.current) {

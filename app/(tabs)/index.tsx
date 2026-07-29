@@ -581,7 +581,7 @@ export default function HomeScreen() {
                     No Restaurants Found
                   </Text>
                   <Text className="text-xs font-body text-gray-400 text-center max-w-[260px] leading-relaxed">
-                    We couldn't find any restaurants near your location. Try searching for something else or adjusting your filters.
+                    We couldn&apos;t find any restaurants near your location. Try searching for something else or adjusting your filters.
                   </Text>
                   {(searchText || activeCategory !== "All") && (
                     <TouchableOpacity

@@ -1,12 +1,4 @@
-// RestaurantMapView.web.tsx
 import { Ionicons } from "@expo/vector-icons";
-const Slider = (props: any) => {
-  return (
-    <View style={props.style}>
-      <View style={{ height: 4, backgroundColor: props.minimumTrackTintColor || '#FFC107', borderRadius: 2 }} />
-    </View>
-  );
-};
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -21,6 +13,14 @@ import {
 } from "react-native";
 import { Restaurant, useRestaurantStore } from "../../stores/useRestaurantStore";
 
+const Slider = (props: any) => {
+  return (
+    <View style={props.style}>
+      <View style={{ height: 4, backgroundColor: props.minimumTrackTintColor || '#FFC107', borderRadius: 2 }} />
+    </View>
+  );
+};
+
 type RestaurantMapViewProps = {
   onOpenRestaurant?: (restaurant: Restaurant) => void;
 };
@@ -29,6 +29,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = SCREEN_WIDTH * 0.78;
 const CARD_MARGIN = 10;
 const CARD_SNAP_INTERVAL = CARD_WIDTH + CARD_MARGIN * 2;
+const VIEWABILITY_CONFIG = { itemVisiblePercentThreshold: 60 };
 
 // ── Google Maps helpers ────────────────────────────────────────────────────────
 
@@ -165,7 +166,7 @@ export default function RestaurantMapView({
   const [mealFilter, setMealFilter] = useState<"all" | "free">("all");
 
   // Animation value for the route-info banner slide-up
-  const routeBannerAnim = useRef(new Animated.Value(80)).current;
+  const [routeBannerAnim] = useState(() => new Animated.Value(80));
   const flatListRef = useRef<FlatList<Restaurant>>(null);
 
   useEffect(() => {
@@ -207,8 +208,10 @@ export default function RestaurantMapView({
       (r) => r.id === selectedRestaurant.id
     );
     if (idx !== -1 && idx !== activeCardIndex) {
-      setActiveCardIndex(idx);
-      flatListRef.current?.scrollToIndex({ index: idx, animated: true });
+      requestAnimationFrame(() => {
+        setActiveCardIndex(idx);
+        flatListRef.current?.scrollToIndex({ index: idx, animated: true });
+      });
     }
   }, [activeCardIndex, restaurants, selectedRestaurant]);
 
@@ -261,7 +264,6 @@ export default function RestaurantMapView({
     [restaurants, setSelectedRestaurant]
   );
 
-  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 60 });
 
   // ── Derived route info ────────────────────────────────────────────────────────
   const routeInfo = selectedRestaurant
@@ -284,9 +286,14 @@ export default function RestaurantMapView({
   // ── Loading ───────────────────────────────────────────────────────────────────
   if (locationLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-[#FDFBF7]">
-        <ActivityIndicator size="large" color="#FFC107" />
-        <Text className="mt-4 text-gray-500 text-sm">Locating you…</Text>
+      <View className="flex-1 bg-white items-center justify-center">
+        <View className="w-16 h-16 rounded-3xl bg-[#F5C518]/10 items-center justify-center mb-4">
+          <Ionicons name="location-outline" size={32} color="#F5C518" />
+        </View>
+        <ActivityIndicator size="small" color="#F5C518" />
+        <Text className="text-gray-500 mt-3 font-body-semibold text-sm">
+          Locating restaurants on map...
+        </Text>
       </View>
     );
   }
@@ -487,7 +494,7 @@ export default function RestaurantMapView({
               paddingVertical: 12,
             }}
             onViewableItemsChanged={onViewableItemsChanged}
-            viewabilityConfig={viewabilityConfig.current}
+            viewabilityConfig={VIEWABILITY_CONFIG}
             getItemLayout={(_, index) => ({
               length: CARD_SNAP_INTERVAL,
               offset: CARD_SNAP_INTERVAL * index,

@@ -21,7 +21,7 @@ const PILL_SIZE  = 44;
 function CustomTabBar({ state, descriptors, navigation }: any) {
   const insets = useSafeAreaInsets();
   const [barWidth, setBarWidth] = useState(0);
-  const translateX   = useRef(new Animated.Value(0)).current;
+  const [translateX] = useState(() => new Animated.Value(0));
   const initialised  = useRef(false);
 
   // Only the 4 named tabs (filter out href:null screens)

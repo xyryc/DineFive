@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
+import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -105,7 +106,7 @@ type RestaurantMapViewProps = {
 };
 
 const SkeletonCard = () => {
-  const pulseAnim = useRef(new Animated.Value(0.4)).current;
+  const [pulseAnim] = useState(() => new Animated.Value(0.4));
 
   useEffect(() => {
     Animated.loop(
@@ -338,14 +339,20 @@ export default function RestaurantMapView({
 
   useEffect(() => {
     if (filteredRestaurants.length === 0) {
-      if (selectedRestaurant !== null) setSelectedRestaurant(null);
-      if (activeCardIndex !== 0) setActiveCardIndex(0);
+      if (selectedRestaurant !== null || activeCardIndex !== 0) {
+        requestAnimationFrame(() => {
+          setSelectedRestaurant(null);
+          setActiveCardIndex(0);
+        });
+      }
       return;
     }
 
     if (!selectedRestaurant) {
-      setSelectedRestaurant(filteredRestaurants[0]);
-      setActiveCardIndex(0);
+      requestAnimationFrame(() => {
+        setSelectedRestaurant(filteredRestaurants[0]);
+        setActiveCardIndex(0);
+      });
       return;
     }
 
@@ -536,9 +543,15 @@ export default function RestaurantMapView({
 
   if (locationLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-[#FDFBF7]">
-        <ActivityIndicator size="large" color="#FFC107" />
-        <Text className="mt-4 text-gray-500 text-sm">Locating you...</Text>
+      <View className="flex-1 bg-white items-center justify-center">
+        <StatusBar style="dark" />
+        <View className="w-16 h-16 rounded-3xl bg-[#F5C518]/10 items-center justify-center mb-4">
+          <Ionicons name="location-outline" size={32} color="#F5C518" />
+        </View>
+        <ActivityIndicator size="small" color="#F5C518" />
+        <Text className="text-gray-500 mt-3 font-body-semibold text-sm">
+          Locating restaurants on map...
+        </Text>
       </View>
     );
   }

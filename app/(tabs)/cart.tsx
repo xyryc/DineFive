@@ -458,10 +458,15 @@ export default function CartScreen() {
 
   if (loading && cartItems.length === 0) {
     return (
-      <SafeAreaView className="flex-1 bg-[#FDFBF7] justify-center items-center">
+      <SafeAreaView className="flex-1 bg-white items-center justify-center">
         <StatusBar style="dark" />
-        <ActivityIndicator size="large" color="#FFC107" />
-        <Text className="mt-4 text-gray-500 font-body text-sm">Loading Cart...</Text>
+        <View className="w-16 h-16 rounded-3xl bg-[#F5C518]/10 items-center justify-center mb-4">
+          <Ionicons name="fast-food-outline" size={32} color="#F5C518" />
+        </View>
+        <ActivityIndicator size="small" color="#F5C518" />
+        <Text className="text-gray-500 mt-3 font-body-semibold text-sm">
+          Loading Cart...
+        </Text>
       </SafeAreaView>
     );
   }
