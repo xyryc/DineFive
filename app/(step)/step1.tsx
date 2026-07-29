@@ -25,7 +25,7 @@ const Step1 = () => {
       {/* Full screen image background */}
       <View className="flex-1 relative">
         <ImageBackground
-          source={require("@/assets/images/00000.png")}
+          source={require("@/assets/images/step-1.png")}
           resizeMode="cover"
           className="flex-1"
         >

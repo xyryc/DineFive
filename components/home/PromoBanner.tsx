@@ -178,7 +178,7 @@ export const PromoBanner = ({ deals = [] }: PromoBannerProps) => {
                       marginRight: -10,
                       transform: [{ rotate: "-4deg" }],
                     }}
-                    contentFit="fill"
+                    contentFit="cover"
                     transition={400}
                     cachePolicy="memory-disk"
                   />

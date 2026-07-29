@@ -4,7 +4,7 @@ module.exports = {
     slug: "Dine-Five",
     version: "1.0.3",
     orientation: "portrait",
-    icon: "./assets/app_icon.png",
+    icon: "./assets/images/app-icon.png",
     scheme: "dinefive",
     userInterfaceStyle: "automatic",
     ios: {
@@ -20,9 +20,9 @@ module.exports = {
       versionCode: 4,
       adaptiveIcon: {
         backgroundColor: "#E6F4FE",
-        foregroundImage: "./assets/app_icon.png",
-        backgroundImage: "./assets/app_icon.png",
-        monochromeImage: "./assets/app_icon.png",
+        foregroundImage: "./assets/images/app-icon.png",
+        backgroundImage: "./assets/images/app-icon.png",
+        monochromeImage: "./assets/images/app-icon.png",
       },
       googleServicesFile: "./google-services.json",
       config: {
@@ -60,7 +60,7 @@ module.exports = {
       [
         "expo-splash-screen",
         {
-          image: "./assets/icon.png",
+          image: "./assets/images/icon.png",
           imageWidth: 200,
           resizeMode: "contain",
           backgroundColor: "#ffffff",
