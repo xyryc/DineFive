@@ -1,101 +1,143 @@
-// RestaurantCard.tsx
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
-import { Restaurant } from "../../stores/useRestaurantStore";
+import { Ionicons } from "@expo/vector-icons";
+import { Restaurant } from "@/stores/useRestaurantStore";
+import { normalizeImageUri } from "@/utils/userAvatar";
+import {
+  CARD_WIDTH,
+  formatRestaurantDistance,
+  getRestaurantImage,
+  toNumber,
+} from "./utils/mapHelpers";
 
-interface Props {
-  restaurant: Restaurant;
-  onClose: () => void;
-  onOrder?: () => void;
-}
-
-const formatDistance = (km: number): string => {
-  if (km < 1) return `${Math.round(km * 1000)} m`;
-  return `${km.toFixed(1)} km`;
+type Props = {
+  item: Restaurant;
+  index: number;
+  activeCardIndex: number;
+  selectedRestaurantId?: string;
+  isFreeMode: boolean;
+  onPress: () => void;
 };
 
-export const RestaurantCard: React.FC<Props> = ({
-  restaurant,
-  onClose,
-  onOrder,
-}) => {
-  const cuisineLabel =
-    Array.isArray(restaurant.cuisine) && restaurant.cuisine.length > 0
-      ? restaurant.cuisine.join(", ")
-      : "Restaurant";
+export default function RestaurantCard({
+  item,
+  index,
+  activeCardIndex,
+  selectedRestaurantId,
+  isFreeMode,
+  onPress,
+}: Props) {
+  const isActive = index === activeCardIndex;
+  const isSelected = selectedRestaurantId === item.id;
+
+  const rating = toNumber((item as any).rating ?? (item as any).averageRating, 4.2);
+  const addressLabel = item.restaurantAddress || item.city || item.state || "Nearby";
+  const itemsCount = toNumber(item.availableFoods ?? (item as any).foodCount, 0);
+  const itemsBadge = itemsCount > 0 ? `${itemsCount} Items` : "Open";
+
+  const profileUri = normalizeImageUri(
+    (item as any).profile ||
+    (item as any).image ||
+    (item as any).restaurantImage ||
+    (item as any).providerImage ||
+    ""
+  );
+
+  const imageUri = isFreeMode
+    ? ((item as any).image || (item as any).foodImage || (item as any).mealImage || (item as any).profile)
+    : getRestaurantImage(item);
+
+  const name = isFreeMode
+    ? ((item as any).name || (item as any).title || (item as any).mealName)
+    : item.restaurantName;
 
   return (
-    <View className="absolute bottom-6 left-4 right-4 bg-white rounded-3xl shadow-2xl overflow-hidden">
-      {/* Drag handle */}
-      <View className="items-center pt-3 pb-1">
-        <View className="w-10 h-1 bg-gray-200 rounded-full" />
-      </View>
-
-      <View className="flex-row p-4 gap-3">
-        {/* Restaurant Image */}
-        <Image
-          source={{
-            uri:
-              restaurant.profile ||
-              "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=200",
-          }}
-          className="w-20 h-20 rounded-2xl bg-gray-100"
-          resizeMode="cover"
-        />
-
-        {/* Info */}
-        <View className="flex-1 justify-between">
-          <View>
-            <Text
-              className="text-gray-900 font-heading-semibold text-base leading-tight"
-              numberOfLines={1}
-            >
-              {restaurant.restaurantName}
+    <TouchableOpacity activeOpacity={0.9} onPress={onPress} style={{ width: CARD_WIDTH }}>
+      <View
+        className={`rounded-3xl bg-white overflow-hidden ${
+          isSelected ? "border-2 border-[#FFC107]" : "border border-gray-100"
+        } ${isActive ? "scale-100 opacity-100" : "scale-95 opacity-80"}`}
+      >
+        {/* Free mode: restaurant header strip */}
+        {isFreeMode && (
+          <View className="flex-row items-center px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+            <View className="w-7 h-7 rounded-full bg-gray-200 overflow-hidden mr-2 border border-white">
+              <Image source={{ uri: profileUri }} className="w-full h-full" resizeMode="cover" />
+            </View>
+            <Text className="text-xs font-body-bold text-gray-700 flex-1" numberOfLines={1}>
+              {item.restaurantName}
             </Text>
-            <Text className="text-gray-400 text-xs mt-0.5" numberOfLines={1}>
-              {cuisineLabel}
-            </Text>
-            <Text className="text-gray-400 text-xs mt-0.5" numberOfLines={1}>
-              📍 {restaurant.restaurantAddress}
-            </Text>
+            <View className="bg-green-100 px-2 py-0.5 rounded-full">
+              <Text className="text-[10px] font-body-bold text-green-700 uppercase">Free</Text>
+            </View>
           </View>
+        )}
 
-          {/* Distance row */}
-          <View className="flex-row items-center gap-3 mt-2">
-            <View className="flex-row items-center gap-1 bg-amber-50 px-2 py-1 rounded-full">
-              <Ionicons name="navigate-outline" size={11} color="#F59E0B" />
-              <Text className="text-amber-600 text-xs font-body-semibold">
-                {formatDistance(restaurant.distance)}
+        {/* Cover image */}
+        <Image source={{ uri: imageUri }} className="w-full h-32" resizeMode="cover" />
+
+        {/* Card body */}
+        <View className="px-3.5 py-3">
+          {/* Row 1: Name + Items badge */}
+          <View className="flex-row items-center justify-between gap-2">
+            <Text className="text-base font-heading-semibold text-gray-900 flex-1" numberOfLines={1}>
+              {name}
+            </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: "#F5C518",
+                paddingHorizontal: 8,
+                paddingVertical: 3,
+                borderRadius: 999,
+                gap: 4,
+              }}
+            >
+              <Ionicons name="fast-food-outline" size={11} color="#111827" />
+              <Text style={{ fontSize: 10, fontWeight: "800", color: "#111827" }}>
+                {itemsBadge}
               </Text>
             </View>
-            {restaurant.availableFoods > 0 && (
-              <View className="flex-row items-center gap-1">
-                <Ionicons name="fast-food-outline" size={11} color="#9CA3AF" />
-                <Text className="text-gray-400 text-xs">
-                  {restaurant.availableFoods} items
-                </Text>
-              </View>
-            )}
+          </View>
+
+          {/* Row 2: Rating + Address */}
+          <View className="flex-row items-center mt-1.5 gap-1.5">
+            <View className="flex-row items-center bg-gray-50 px-1.5 py-0.5 rounded-md">
+              <Ionicons name="star" size={11} color="#F5C518" />
+              <Text className="text-[11px] font-body-bold text-gray-800 ml-1">
+                {rating.toFixed(1)}
+              </Text>
+            </View>
+            <Text className="text-gray-300 text-xs">•</Text>
+            <Ionicons name="location-outline" size={12} color="#6B7280" />
+            <Text className="text-xs font-body text-gray-500 flex-1" numberOfLines={1}>
+              {addressLabel}
+            </Text>
+          </View>
+
+          {/* Divider */}
+          <View style={{ height: 1, backgroundColor: "#F3F4F6", marginTop: 14, marginBottom: 14 }} />
+
+          {/* Row 3: Distance + CTA */}
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+              <Ionicons name="navigate-outline" size={13} color="#F5C518" />
+              <Text className="text-[11px] font-body-bold text-gray-800 ml-1">
+                {formatRestaurantDistance(item.distance)}
+              </Text>
+            </View>
+            <TouchableOpacity
+              className="bg-[#F5C518] px-4 py-2 rounded-full shadow-sm active:opacity-80"
+              onPress={onPress}
+            >
+              <Text className="text-gray-900 font-body-bold text-[11px] uppercase tracking-wide">
+                View Details
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
-
-        {/* Close button */}
-        <TouchableOpacity
-          onPress={onClose}
-          className="w-7 h-7 rounded-full bg-gray-100 items-center justify-center self-start"
-        >
-          <Ionicons name="close" size={14} color="#6B7280" />
-        </TouchableOpacity>
       </View>
-
-      {/* CTA Button */}
-      <TouchableOpacity
-        onPress={onOrder}
-        className="mx-4 mb-4 bg-[#FFC107] rounded-2xl py-3 items-center"
-      >
-        <Text className="text-gray-900 font-body-bold text-sm">View Restaurant</Text>
-      </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
-};
+}
