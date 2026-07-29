@@ -1,5 +1,6 @@
 import GradientButton from "@/components/GradientButton";
 import { useStore } from "@/stores/stores";
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -115,11 +116,13 @@ const ResetPassword = () => {
                   />
                   <TouchableOpacity
                     onPress={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3.5"
+                    className="absolute right-3 top-3"
                   >
-                    <Text className="text-gray-600">
-                      {showPassword ? "👁️" : "👁️‍🗨️"}
-                    </Text>
+                    {showPassword ? (
+                      <Ionicons name="eye-outline" size={24} color="black" />
+                    ) : (
+                      <Ionicons name="eye-off-outline" size={24} color="black" />
+                    )}
                   </TouchableOpacity>
                 </View>
               </View>
@@ -138,11 +141,13 @@ const ResetPassword = () => {
                   />
                   <TouchableOpacity
                     onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-3.5"
+                    className="absolute right-3 top-3"
                   >
-                    <Text className="text-gray-600">
-                      {showConfirmPassword ? "👁️" : "👁️‍🗨️"}
-                    </Text>
+                    {showConfirmPassword ? (
+                      <Ionicons name="eye-outline" size={24} color="black" />
+                    ) : (
+                      <Ionicons name="eye-off-outline" size={24} color="black" />
+                    )}
                   </TouchableOpacity>
                 </View>
               </View>
@@ -150,8 +155,8 @@ const ResetPassword = () => {
               {/* Reset button */}
               <View className="mt-14 mb-4">
                 {isLoading ? (
-                  <View className="items-center py-4 bg-[#D32F1E] rounded-full">
-                    <ActivityIndicator color="white" />
+                  <View className="items-center py-4 bg-yellow-400 rounded-full">
+                    <ActivityIndicator color="black" />
                   </View>
                 ) : (
                   <GradientButton
