@@ -20,6 +20,8 @@ import {
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
 import * as Location from "expo-location";
 import { Restaurant, useRestaurantStore } from "../../stores/useRestaurantStore";
+import { normalizeImageUri } from "@/utils/userAvatar";
+import { Image as ExpoImage } from "expo-image";
 const normalizeText = (value: string): string =>
   value
     .toLowerCase()
@@ -38,6 +40,146 @@ const formatRestaurantDistance = (distanceKm: number): string => {
   if (distanceKm < 1) return `${Math.round(distanceKm * 1000)} m`;
   return `${distanceKm.toFixed(1)} km`;
 };
+
+function MapMarkerItem({
+  restaurant,
+  isSelected,
+  onPress,
+}: {
+  restaurant: any;
+  isSelected: boolean;
+  onPress: () => void;
+}) {
+  const [tracksViewChanges, setTracksViewChanges] = useState(true);
+
+  const coords = getRestaurantCoords(restaurant);
+  if (!coords) return null;
+
+  const rawUri =
+    restaurant.profile ||
+    restaurant.image ||
+    restaurant.mealImage ||
+    restaurant.profilePic ||
+    restaurant.logo ||
+    "";
+  const profileUri = normalizeImageUri(rawUri);
+
+  return (
+    <Marker
+      coordinate={coords}
+      onPress={onPress}
+      tracksViewChanges={tracksViewChanges}
+    >
+      <View style={{ alignItems: "center", justifyContent: "center" }}>
+        {/* Name & Distance Pill */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            backgroundColor: isSelected ? "#111827" : "#FFFFFF",
+            borderColor: isSelected ? "#111827" : "#E5E7EB",
+            borderWidth: 1,
+            borderRadius: 999,
+            paddingHorizontal: 10,
+            paddingVertical: 4,
+            marginBottom: 4,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.15,
+            shadowRadius: 4,
+            elevation: 3,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 11,
+              fontWeight: "700",
+              color: isSelected ? "#F5C518" : "#111827",
+              maxWidth: 110,
+            }}
+            numberOfLines={1}
+          >
+            {restaurant.restaurantName || restaurant.name || "Restaurant"}
+          </Text>
+
+          {formatRestaurantDistance(restaurant.distance) ? (
+            <View
+              style={{
+                backgroundColor: "#F5C518",
+                paddingHorizontal: 6,
+                paddingVertical: 1,
+                borderRadius: 999,
+                marginLeft: 6,
+              }}
+            >
+              <Text style={{ fontSize: 9, fontWeight: "800", color: "#111827" }}>
+                {formatRestaurantDistance(restaurant.distance)}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+
+        {/* Rounded Restaurant Badge / Icon */}
+        <View
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            backgroundColor: isSelected ? "#F5C518" : "#FFFFFF",
+            borderWidth: 2.5,
+            borderColor: isSelected ? "#111827" : "#F5C518",
+            alignItems: "center",
+            justifyContent: "center",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.25,
+            shadowRadius: 5,
+            elevation: 5,
+            overflow: "hidden",
+          }}
+        >
+          {profileUri ? (
+            <ExpoImage
+              source={{ uri: profileUri }}
+              style={{ width: 39, height: 39, borderRadius: 19.5 }}
+              contentFit="cover"
+              onLoadEnd={() => setTracksViewChanges(false)}
+              onError={() => setTracksViewChanges(false)}
+            />
+          ) : (
+            <View
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 19,
+                backgroundColor: isSelected ? "#F5C518" : "#FFFBEB",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons
+                name="restaurant"
+                size={22}
+                color={isSelected ? "#FFFFFF" : "#F5C518"}
+              />
+            </View>
+          )}
+        </View>
+
+        {/* Pointer Triangle */}
+        <View
+          style={{
+            width: 8,
+            height: 8,
+            backgroundColor: isSelected ? "#111827" : "#F5C518",
+            transform: [{ rotate: "45deg" }],
+            marginTop: -4,
+          }}
+        />
+      </View>
+    </Marker>
+  );
+}
 
 const buildRestaurantSearchHaystack = (restaurant: Restaurant): string => {
   const searchParts = [
@@ -615,41 +757,15 @@ export default function RestaurantMapView({
           </Marker>
         )}
 
-        {filteredRestaurants.map((restaurant) => {
-          const coords = getRestaurantCoords(restaurant);
-          if (!coords) return null;
-
-          const isSelected = selectedRestaurant?.id === restaurant.id;
-
-          return (
-            <Marker
-              key={restaurant.id}
-              coordinate={coords}
-              onPress={() => handleMarkerPress(restaurant)}
-            >
-              <View className="items-center justify-center">
-                {/* Distance Badge */}
-                <View className="bg-[#FFC107] px-2 py-0.5 rounded-full mb-0.5 shadow-md border border-white">
-                  <Text className="text-[11px] font-body-bold text-gray-900">
-                    {formatRestaurantDistance(restaurant.distance)}
-                  </Text>
-                </View>
-
-                {/* Restaurant Icon */}
-                <View
-                  className={`w-10 h-10 rounded-full items-center justify-center border-2 shadow-md ${isSelected ? "bg-[#FFC107] border-[#FFC107]" : "bg-white border-white"}`}
-                >
-                  <Ionicons
-                    name="restaurant"
-                    size={18}
-                    color={isSelected ? "#fff" : "#FFC107"}
-                  />
-                </View>
-              </View>
-            </Marker>
-          );
-        })}
-      </MapView>
+        {filteredRestaurants.map((restaurant) => (
+          <MapMarkerItem
+            key={restaurant.id}
+            restaurant={restaurant}
+            isSelected={selectedRestaurant?.id === restaurant.id}
+            onPress={() => handleMarkerPress(restaurant)}
+          />
+        ))}
+       </MapView>
 
       <View className="absolute top-4 left-4 right-4">
         <View className="flex-row items-center">
@@ -835,6 +951,7 @@ export default function RestaurantMapView({
             decelerationRate="fast"
             snapToAlignment="start"
             onMomentumScrollEnd={handleCardSnap}
+            initialScrollIndex={0}
             contentContainerStyle={{
               paddingLeft: 12,
               paddingRight: 12,
@@ -842,15 +959,18 @@ export default function RestaurantMapView({
             }}
             getItemLayout={(_, index) => ({
               length: CARD_SNAP_INTERVAL,
-              offset: CARD_SNAP_INTERVAL * index,
+              offset: CARD_SNAP_INTERVAL * index + 12,
               index,
             })}
             renderItem={({ item, index }) => {
               const isActive = index === activeCardIndex;
               const isSelected = selectedRestaurant?.id === item.id;
-              const cuisine = item.cuisine?.[0] || "cake";
               const rating = toNumber((item as any).rating ?? (item as any).averageRating, 4.2);
               const isFreeMode = mealFilter === "free";
+              const addressLabel =
+                item.restaurantAddress || item.city || item.state || "Nearby";
+              const itemsCount = toNumber(item.availableFoods ?? (item as any).foodCount, 0);
+              const itemsBadge = itemsCount > 0 ? `${itemsCount} Items` : "Open";
 
               return (
                 <TouchableOpacity
@@ -885,36 +1005,65 @@ export default function RestaurantMapView({
                       resizeMode="cover"
                     />
 
-                    <View className="px-3 py-2.5">
-                      <View className="flex-row items-center justify-between">
-                        <Text className="text-base font-heading-semibold text-gray-900 flex-1" numberOfLines={1}>
-                          {isFreeMode ? ((item as any).name || (item as any).title || (item as any).mealName) : item.restaurantName}
+                    <View className="px-3.5 py-3">
+                      {/* Line 1: Restaurant Name + Items Badge */}
+                      <View className="flex-row items-center justify-between gap-2">
+                        <Text
+                          className="text-base font-heading-semibold text-gray-900 flex-1"
+                          numberOfLines={1}
+                        >
+                          {isFreeMode
+                            ? (item as any).name || (item as any).title || (item as any).mealName
+                            : item.restaurantName}
+                        </Text>
+                        <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#F5C518", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, gap: 4 }}>
+                          <Ionicons name="fast-food-outline" size={11} color="#111827" />
+                          <Text style={{ fontSize: 10, fontWeight: "800", color: "#111827" }}>
+                            {itemsBadge}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* Line 2: Rating & Address */}
+                      <View className="flex-row items-center mt-1.5 gap-1.5">
+                        <View className="flex-row items-center bg-gray-50 px-1.5 py-0.5 rounded-md">
+                          <Ionicons name="star" size={11} color="#F5C518" />
+                          <Text className="text-[11px] font-body-bold text-gray-800 ml-1">
+                            {rating.toFixed(1)}
+                          </Text>
+                        </View>
+
+                        <Text className="text-gray-300 text-xs">•</Text>
+
+                        <Ionicons name="location-outline" size={12} color="#6B7280" />
+                        <Text
+                          className="text-xs font-body text-gray-500 flex-1"
+                          numberOfLines={1}
+                        >
+                          {addressLabel}
                         </Text>
                       </View>
 
-                      <View className="flex-row items-center mt-1">
-                        <Ionicons name="star" size={12} color="#F5C518" />
-                        <Text className="text-xs text-gray-600 ml-1">{rating.toFixed(1)}</Text>
-                        <Text className="text-xs text-gray-300 mx-2">|</Text>
-                        <Text className="text-xs text-gray-600">{isFreeMode ? "Free Meal" : cuisine}</Text>
-                      </View>
+                      {/* Divider */}
+                      <View style={{ height: 1, backgroundColor: "#F3F4F6", marginTop: 14, marginBottom: 14 }} />
 
-                      <View className="flex-row items-center justify-between pt-3 border-t border-gray-50">
-                        <View className="flex-row items-center">
-                          <Ionicons name="navigate-outline" size={14} color="#FFC107" />
-                          <Text className="text-[11px] font-body-bold text-gray-700 ml-1">
+                      {/* Line 3: Distance & View Details CTA */}
+                      <View className="flex-row items-center justify-between">
+                        <View className="flex-row items-center bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+                          <Ionicons name="navigate-outline" size={13} color="#F5C518" />
+                          <Text className="text-[11px] font-body-bold text-gray-800 ml-1">
                             {formatRestaurantDistance(item.distance)}
                           </Text>
                         </View>
 
                         <TouchableOpacity
-                           className="bg-[#FFC107] px-5 py-2 rounded-2xl shadow-sm"
-                           onPress={() => openRestaurantDetail(item)}
-                         >
-                           <Text className="text-gray-900 font-body-bold text-[11px] uppercase tracking-wide">
-                             View Details
-                           </Text>
-                         </TouchableOpacity>
+                          className="bg-[#F5C518] px-4 py-2 rounded-full shadow-sm active:opacity-80"
+                          onPress={() => openRestaurantDetail(item)}
+                        >
+                          <Text className="text-gray-900 font-body-bold text-[11px] uppercase tracking-wide">
+                            View Details
+                          </Text>
+                        </TouchableOpacity>
                       </View>
                     </View>
                   </View>

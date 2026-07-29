@@ -3,6 +3,7 @@ import { Animated, ScrollView, Text, TouchableOpacity, View } from "react-native
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { type Restaurant } from "@/stores/useRestaurantStore";
+import { normalizeImageUri } from "@/utils/userAvatar";
 import { useRouter } from "expo-router";
 
 const formatDistance = (distanceKm?: any) => {
@@ -14,11 +15,15 @@ const formatDistance = (distanceKm?: any) => {
 
 const getCuisineLabel = (restaurant: any) => {
   try {
+    if (!restaurant) return "Restaurant";
     if (Array.isArray(restaurant?.cuisine) && restaurant.cuisine.length > 0) {
-      return restaurant.cuisine.filter(Boolean).join(" • ");
+      return restaurant.cuisine.filter(Boolean).map(String).join(" • ");
     }
     if (typeof restaurant?.categoryName === "string" && restaurant.categoryName) {
       return restaurant.categoryName;
+    }
+    if (typeof restaurant?.category === "string" && restaurant.category) {
+      return restaurant.category;
     }
     return "Restaurant";
   } catch {
@@ -82,19 +87,50 @@ function SectionRestaurantCardInner({
     ? rawDelivery
     : Math.max(5, Math.min(30, Math.round((Number(restaurant.distance) || 0) * 2) + 5));
 
-  const profileUri = typeof restaurant.profile === "string" && restaurant.profile.startsWith("http")
-    ? restaurant.profile
-    : null;
+  const rawUri =
+    restaurant?.profile ||
+    restaurant?.image ||
+    restaurant?.restaurantImage ||
+    restaurant?.providerImage ||
+    restaurant?.foodImage ||
+    "";
+  const profileUri = normalizeImageUri(rawUri);
 
-  const name = String(restaurant.restaurantName || restaurant.providerRestaurantName || restaurant.providerName || "Restaurant");
+  const name = String(
+    restaurant?.restaurantName ||
+    restaurant?.providerRestaurantName ||
+    restaurant?.providerName ||
+    restaurant?.name ||
+    restaurant?.title ||
+    "Restaurant"
+  );
+
+  const availableFoods = Number(restaurant?.availableFoods ?? restaurant?.foodCount ?? 0);
 
   return (
     <TouchableOpacity
       activeOpacity={0.92}
       onPress={onOpen}
-      style={{ width: 224, marginRight: 16, backgroundColor: "#fff", borderRadius: 10, padding: 6, borderWidth: 1, borderColor: "#F9FAFB" }}
+      style={{
+        width: 224,
+        marginRight: 16,
+        backgroundColor: "#fff",
+        borderRadius: 10,
+        padding: 6,
+        borderWidth: 1,
+        borderColor: "#F9FAFB",
+      }}
     >
-      <View style={{ borderRadius: 12, overflow: "hidden", backgroundColor: "#F9FAFB", marginBottom: 14, position: "relative", height: 160 }}>
+      <View
+        style={{
+          borderRadius: 12,
+          overflow: "hidden",
+          backgroundColor: "#F9FAFB",
+          marginBottom: 14,
+          position: "relative",
+          height: 160,
+        }}
+      >
         {profileUri ? (
           <Image
             source={{ uri: profileUri }}
@@ -102,13 +138,30 @@ function SectionRestaurantCardInner({
             contentFit="cover"
           />
         ) : (
-          <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#F3F4F6" }}>
+          <View
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "#F3F4F6",
+            }}
+          >
             <Ionicons name="restaurant-outline" size={32} color="#D1D5DB" />
           </View>
         )}
-        <View style={{ position: "absolute", top: 8, left: 8, backgroundColor: "#F5C518", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
+        <View
+          style={{
+            position: "absolute",
+            top: 8,
+            left: 8,
+            backgroundColor: "#F5C518",
+            paddingHorizontal: 10,
+            paddingVertical: 4,
+            borderRadius: 999,
+          }}
+        >
           <Text className="text-[10px] font-body-semibold text-[#111827]">
-            {restaurant.availableFoods > 0 ? `${restaurant.availableFoods} items` : "Open"}
+            {availableFoods > 0 ? `${availableFoods} items` : "Open"}
           </Text>
         </View>
       </View>
@@ -122,7 +175,9 @@ function SectionRestaurantCardInner({
           <Ionicons name="star" size={11} color="#F5C518" />
           <Text className="text-[11px] font-body-semibold text-[#374151]">{rating}</Text>
           <Text style={{ fontSize: 10, color: "#D1D5DB" }}>•</Text>
-          <Text className="text-[11px] font-body text-[#6B7280] flex-1" numberOfLines={1}>{cuisineLabel}</Text>
+          <Text className="text-[11px] font-body text-[#6B7280] flex-1" numberOfLines={1}>
+            {cuisineLabel}
+          </Text>
           <Text className="text-[11px] font-body-medium text-[#6B7280]">{deliveryMin}min</Text>
         </View>
 
