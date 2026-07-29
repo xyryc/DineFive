@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Animated, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { type Restaurant } from "@/stores/useRestaurantStore";
@@ -184,6 +184,88 @@ export function RestaurantSection({
             />
           );
         })}
+      </ScrollView>
+    </View>
+  );
+}
+
+// ---- Skeleton Loader Components ----
+export function RestaurantCardSkeleton() {
+  const [pulseAnim] = React.useState(() => new Animated.Value(0.3));
+
+  React.useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 0.8,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 0.3,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [pulseAnim]);
+
+  return (
+    <View style={{ width: 224, marginRight: 16, backgroundColor: "#fff", borderRadius: 10, padding: 6, borderWidth: 1, borderColor: "#F3F4F6" }}>
+      {/* Skeleton Image */}
+      <Animated.View style={{ width: "100%", height: 160, borderRadius: 12, backgroundColor: "#E5E7EB", opacity: pulseAnim, marginBottom: 14 }} />
+
+      <View style={{ paddingHorizontal: 4, paddingBottom: 4, gap: 6 }}>
+        {/* Title skeleton */}
+        <Animated.View style={{ width: 140, height: 14, borderRadius: 4, backgroundColor: "#E5E7EB", opacity: pulseAnim }} />
+
+        {/* Rating/Cuisine row skeleton */}
+        <Animated.View style={{ width: 180, height: 10, borderRadius: 4, backgroundColor: "#E5E7EB", opacity: pulseAnim }} />
+
+        {/* Location skeleton */}
+        <Animated.View style={{ width: 100, height: 10, borderRadius: 4, backgroundColor: "#E5E7EB", opacity: pulseAnim }} />
+      </View>
+    </View>
+  );
+}
+
+export function RestaurantSectionSkeleton() {
+  const [pulseAnim] = React.useState(() => new Animated.Value(0.3));
+
+  React.useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 0.8,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 0.3,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [pulseAnim]);
+
+  return (
+    <View style={{ marginBottom: 24 }}>
+      {/* Title & View All Skeleton */}
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, marginBottom: 12 }}>
+        <Animated.View style={{ width: 130, height: 18, borderRadius: 6, backgroundColor: "#E5E7EB", opacity: pulseAnim }} />
+        <Animated.View style={{ width: 50, height: 14, borderRadius: 4, backgroundColor: "#E5E7EB", opacity: pulseAnim }} />
+      </View>
+
+      {/* Horizontal Skeleton Cards */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20 }}>
+        <RestaurantCardSkeleton />
+        <RestaurantCardSkeleton />
+        <RestaurantCardSkeleton />
       </ScrollView>
     </View>
   );

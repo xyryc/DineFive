@@ -1,16 +1,9 @@
-import { Platform } from "react-native";
-
 type GoogleModule = typeof import("@react-native-google-signin/google-signin");
 
 let googleModulePromise: Promise<GoogleModule> | null = null;
 let isConfigured = false;
 
 const getGoogleModule = async () => {
-  if (Platform.OS === "web") {
-    throw new Error(
-      "Google Sign-In is not available on web. Use a native build.",
-    );
-  }
 
   try {
     if (!googleModulePromise) {

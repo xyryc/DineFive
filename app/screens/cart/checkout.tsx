@@ -333,6 +333,21 @@ function CheckoutContent() {
     cartRawData?.items?.[0]?.food?.restaurantAddress ||
     "Restaurant address";
 
+  if (isCheckoutLoading && cartItems.length === 0 && !isDonationCheckout) {
+    return (
+      <SafeAreaView className="flex-1 bg-white items-center justify-center">
+        <StatusBar style="dark" />
+        <View className="w-16 h-16 rounded-3xl bg-[#F5C518]/10 items-center justify-center mb-4">
+          <Ionicons name="card-outline" size={32} color="#F5C518" />
+        </View>
+        <ActivityIndicator size="small" color="#F5C518" />
+        <Text className="text-gray-500 mt-3 font-body-semibold text-sm">
+          Preparing checkout...
+        </Text>
+      </SafeAreaView>
+    );
+  }
+
   const handleDonationPayment = async () => {
     if (!Number.isFinite(donationMealCount) || donationMealCount < 1) {
       Alert.alert("Invalid donation", "Please select at least 1 meal.");
@@ -942,11 +957,14 @@ export default function CheckoutScreen() {
 
   if (isLoadingConfig) {
     return (
-      <SafeAreaView className="flex-1 bg-[#FDFBF7] items-center justify-center">
+      <SafeAreaView className="flex-1 bg-white items-center justify-center">
         <StatusBar style="dark" />
-        <ActivityIndicator size="large" color="#000" />
-        <Text className="text-gray-600 font-body mt-4">
-          Loading payment configuration...
+        <View className="w-16 h-16 rounded-3xl bg-[#F5C518]/10 items-center justify-center mb-4">
+          <Ionicons name="card-outline" size={32} color="#F5C518" />
+        </View>
+        <ActivityIndicator size="small" color="#F5C518" />
+        <Text className="text-gray-500 mt-3 font-body-semibold text-sm">
+          Preparing checkout...
         </Text>
       </SafeAreaView>
     );

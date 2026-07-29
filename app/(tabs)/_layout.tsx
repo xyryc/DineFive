@@ -8,36 +8,57 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // ─── Tab definitions ────────────────────────────────────────────────────────
 const TAB_CONFIG = [
-  { name: "index",    type: "ionicons" as const,    icon: "home-outline" as any,     activeIcon: "home" as any },
-  { name: "location", type: "ionicons" as const,    icon: "location-outline" as any, activeIcon: "location" as any },
-  { name: "cart",     type: "ionicons" as const,    icon: "cart-outline" as any,     activeIcon: "cart" as any },
-  { name: "profile",  type: "fontawesome" as const, icon: "user-o" as any,           activeIcon: "user" as any },
+  {
+    name: "index",
+    type: "ionicons" as const,
+    icon: "home-outline" as any,
+    activeIcon: "home" as any,
+  },
+  {
+    name: "location",
+    type: "ionicons" as const,
+    icon: "location-outline" as any,
+    activeIcon: "location" as any,
+  },
+  {
+    name: "cart",
+    type: "ionicons" as const,
+    icon: "cart-outline" as any,
+    activeIcon: "cart" as any,
+  },
+  {
+    name: "profile",
+    type: "fontawesome" as const,
+    icon: "user-o" as any,
+    activeIcon: "user" as any,
+  },
 ] as const;
 
 const BAR_HEIGHT = 64;
-const PILL_SIZE  = 44;
+const PILL_SIZE = 44;
 
 // ─── Custom animated tab bar ─────────────────────────────────────────────────
 function CustomTabBar({ state, descriptors, navigation }: any) {
   const insets = useSafeAreaInsets();
   const [barWidth, setBarWidth] = useState(0);
   const [translateX] = useState(() => new Animated.Value(0));
-  const initialised  = useRef(false);
+  const initialised = useRef(false);
 
   // Only the 4 named tabs (filter out href:null screens)
   const routesList = Array.isArray(state?.routes) ? state.routes : [];
   const visibleRoutes = routesList.filter((r: any) =>
-    TAB_CONFIG.some((t: any) => t.name === r.name)
+    TAB_CONFIG.some((t: any) => t.name === r.name),
   );
 
   const activeRoute = routesList[state?.index ?? 0];
-  const activeIdx   = activeRoute ? visibleRoutes.findIndex((r: any) => r.key === activeRoute.key) : 0;
-  const tabWidth    = barWidth > 0 ? barWidth / 4 : 0;
+  const activeIdx = activeRoute
+    ? visibleRoutes.findIndex((r: any) => r.key === activeRoute.key)
+    : 0;
+  const tabWidth = barWidth > 0 ? barWidth / 4 : 0;
 
   // Centre of the active tab minus half pill so pill centres under icon
-  const targetX = tabWidth > 0
-    ? activeIdx * tabWidth + tabWidth / 2 - PILL_SIZE / 2
-    : 0;
+  const targetX =
+    tabWidth > 0 ? activeIdx * tabWidth + tabWidth / 2 - PILL_SIZE / 2 : 0;
 
   useEffect(() => {
     if (tabWidth === 0) return;
@@ -63,16 +84,12 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
     <View
       style={[
         styles.outerContainer,
-        { bottom: insets.bottom > 0 ? insets.bottom + 8 : 16 },
+        { bottom: insets.bottom > 0 ? insets.bottom + 6 : 20 },
       ]}
     >
       <View style={styles.bar}>
         {/* ── Liquid glass layers ── */}
-        <BlurView
-          intensity={85}
-          tint="light"
-          style={StyleSheet.absoluteFill}
-        />
+        <BlurView intensity={85} tint="light" style={StyleSheet.absoluteFill} />
         {/* White brightness overlay */}
         <View style={[StyleSheet.absoluteFill, styles.whiteOverlay]} />
         {/* Top-edge shimmer highlight */}
@@ -93,11 +110,12 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
           onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
         >
           {visibleRoutes.map((route: any, idx: number) => {
-            const config   = TAB_CONFIG.find((t) => t.name === route.name);
+            const config = TAB_CONFIG.find((t) => t.name === route.name);
             if (!config) return null;
             const isFocused = activeIdx === idx;
 
-            const IconComponent = config.type === "fontawesome" ? FontAwesome : Ionicons;
+            const IconComponent =
+              config.type === "fontawesome" ? FontAwesome : Ionicons;
             const iconSize = config.type === "fontawesome" ? 21 : 22; // adjust FontAwesome user-o alignment slightly
 
             return (
@@ -145,10 +163,10 @@ export default function TabsLayout() {
       tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{ headerShown: false }}
     >
-      <Tabs.Screen name="index"           options={{ title: "Home" }} />
-      <Tabs.Screen name="location"        options={{ title: "Location" }} />
-      <Tabs.Screen name="cart"            options={{ title: "Cart" }} />
-      <Tabs.Screen name="profile"         options={{ title: "Profile" }} />
+      <Tabs.Screen name="index" options={{ title: "Home" }} />
+      <Tabs.Screen name="location" options={{ title: "Location" }} />
+      <Tabs.Screen name="cart" options={{ title: "Cart" }} />
+      <Tabs.Screen name="profile" options={{ title: "Profile" }} />
     </Tabs>
   );
 }
@@ -175,7 +193,7 @@ const styles = StyleSheet.create({
     // Shadow / glow
     shadowColor: "#C8A85A",
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.20,
+    shadowOpacity: 0.2,
     shadowRadius: 20,
     elevation: 12,
   },

@@ -15,7 +15,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 
 const toNumber = (value: unknown, fallback = 0): number => {
@@ -169,28 +172,24 @@ const extractTaxRateFromPayload = (
 
   return normalizeTaxRate(
     taxSource?.stateTaxRate ??
-    taxSource?.taxRate ??
-    taxSource?.rate ??
-    taxSource?.percentage ??
-    taxSource?.tax ??
-    taxSource?.TaxRules ??
-    taxSource?.tax_rate ??
-    taxSource?.state_tax_rate ??
-    taxSource?.combinedRate ??
-    taxSource?.combined_rate ??
-    taxSource?.totalTaxRate ??
-    taxSource?.total_tax_rate,
+      taxSource?.taxRate ??
+      taxSource?.rate ??
+      taxSource?.percentage ??
+      taxSource?.tax ??
+      taxSource?.TaxRules ??
+      taxSource?.tax_rate ??
+      taxSource?.state_tax_rate ??
+      taxSource?.combinedRate ??
+      taxSource?.combined_rate ??
+      taxSource?.totalTaxRate ??
+      taxSource?.total_tax_rate,
   );
 };
 
 export default function CartScreen() {
   const router = useRouter();
-  const {
-    fetchCart,
-    updateCartQuantity,
-    removeCartItem,
-    clearCart,
-  } = useStore() as any;
+  const { fetchCart, updateCartQuantity, removeCartItem, clearCart } =
+    useStore() as any;
   const insets = useSafeAreaInsets();
   const { location, fetchLocation } = useRestaurantStore();
   const [cartItems, setCartItems] = React.useState<any[]>([]);
@@ -210,7 +209,9 @@ export default function CartScreen() {
           ? cartData.data
           : null;
       const rawItems = Array.isArray(root?.items) ? root.items : [];
-      const rawGroups = Array.isArray(root?.restaurantGroups) ? root.restaurantGroups : [];
+      const rawGroups = Array.isArray(root?.restaurantGroups)
+        ? root.restaurantGroups
+        : [];
 
       if (root && (rawItems.length || rawGroups.length)) {
         setCartMeta(root);
@@ -252,10 +253,10 @@ export default function CartScreen() {
               ),
               price: toNumber(
                 item.baseRevenue ??
-                foodData?.baseRevenue ??
-                item.price ??
-                foodData?.price ??
-                foodData?.finalPriceTag,
+                  foodData?.baseRevenue ??
+                  item.price ??
+                  foodData?.price ??
+                  foodData?.finalPriceTag,
                 0,
               ),
               image: pickString(foodData?.image, item.image),
@@ -295,22 +296,41 @@ export default function CartScreen() {
                 foodData?.restaurantAddress,
                 item.address,
               ),
-              distanceKm: toNumber(item.distanceKm ?? foodData?.distanceKm, NaN),
-              etaMinutes: toNumber(item.etaMinutes ?? foodData?.etaMinutes, NaN),
+              distanceKm: toNumber(
+                item.distanceKm ?? foodData?.distanceKm,
+                NaN,
+              ),
+              etaMinutes: toNumber(
+                item.etaMinutes ?? foodData?.etaMinutes,
+                NaN,
+              ),
               serviceFee: toNumber(item.serviceFee ?? foodData?.serviceFee, 0),
             };
           });
 
           const subtotalVal = toNumber(group.subtotal, 0);
-          const stateTaxVal = toNumber(group.stateTax ?? group.stateTaxAmount, 0);
+          const stateTaxVal = toNumber(
+            group.stateTax ?? group.stateTaxAmount,
+            0,
+          );
           const cityTaxVal = toNumber(group.cityTax, 0);
-          const totalVal = toNumber(group.total, subtotalVal + stateTaxVal + cityTaxVal);
+          const totalVal = toNumber(
+            group.total,
+            subtotalVal + stateTaxVal + cityTaxVal,
+          );
 
           return {
             providerId: group.providerId,
             restaurantName: pickString(group.restaurantName, "Restaurant"),
-            restaurantAddress: pickString(group.restaurantAddress, "Address unavailable"),
-            restaurantProfile: pickString(group.restaurantProfile, group.restaurantImage, ""),
+            restaurantAddress: pickString(
+              group.restaurantAddress,
+              "Address unavailable",
+            ),
+            restaurantProfile: pickString(
+              group.restaurantProfile,
+              group.restaurantImage,
+              "",
+            ),
             subtotal: subtotalVal,
             stateTax: stateTaxVal,
             cityTax: cityTaxVal,
@@ -321,7 +341,9 @@ export default function CartScreen() {
         setCartGroups(formattedGroups);
 
         // Format flat items (either directly from root.items or derived by flattening the groups)
-        const itemsToFormat = rawItems.length ? rawItems : rawGroups.reduce((acc: any[], g: any) => [...acc, ...g.items], []);
+        const itemsToFormat = rawItems.length
+          ? rawItems
+          : rawGroups.reduce((acc: any[], g: any) => [...acc, ...g.items], []);
         const formattedItems = itemsToFormat.map((item: any) => {
           const foodData =
             item?.foodId && typeof item.foodId === "object"
@@ -356,10 +378,10 @@ export default function CartScreen() {
             ),
             price: toNumber(
               item.baseRevenue ??
-              foodData?.baseRevenue ??
-              item.price ??
-              foodData?.price ??
-              foodData?.finalPriceTag,
+                foodData?.baseRevenue ??
+                item.price ??
+                foodData?.price ??
+                foodData?.finalPriceTag,
               0,
             ),
             image: pickString(foodData?.image, item.image),
@@ -397,10 +419,13 @@ export default function CartScreen() {
         });
         setCartItems(formattedItems);
 
-        const computedSubtotal = toNumber(root.subtotal, formattedItems.reduce(
-          (acc: number, item: any) => acc + item.price * item.quantity,
-          0,
-        ));
+        const computedSubtotal = toNumber(
+          root.subtotal,
+          formattedItems.reduce(
+            (acc: number, item: any) => acc + item.price * item.quantity,
+            0,
+          ),
+        );
         setSubtotal(computedSubtotal);
       } else {
         setCartItems([]);
@@ -509,9 +534,15 @@ export default function CartScreen() {
 
   const platformFee = toNumber(cartMeta?.platformFee, 0);
   const cityTax = toNumber(cartMeta?.cityTax, 0);
-  const stateTaxAmount = toNumber(cartMeta?.stateTaxAmount ?? cartMeta?.stateTax, 0);
+  const stateTaxAmount = toNumber(
+    cartMeta?.stateTaxAmount ?? cartMeta?.stateTax,
+    0,
+  );
   const countyTaxAmount = toNumber(cartMeta?.countyTaxAmount, 0);
-  const total = toNumber(cartMeta?.total, subtotal + platformFee + cityTax + stateTaxAmount + countyTaxAmount);
+  const total = toNumber(
+    cartMeta?.total,
+    subtotal + platformFee + cityTax + stateTaxAmount + countyTaxAmount,
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-[#FBF9F6]" edges={["top"]}>
@@ -532,8 +563,8 @@ export default function CartScreen() {
       >
         {/* Restaurant Groups */}
         {cartGroups.map((group, groupIdx) => (
-          <View 
-            key={group.providerId || groupIdx} 
+          <View
+            key={group.providerId || groupIdx}
             className="bg-white rounded-3xl border border-gray-100/80 overflow-hidden shadow-sm mb-6"
           >
             {/* Restaurant Header */}
@@ -550,12 +581,18 @@ export default function CartScreen() {
                 )}
               </View>
               <View className="flex-1">
-                <Text className="text-base font-heading text-gray-900" numberOfLines={1}>
+                <Text
+                  className="text-base font-heading text-gray-900"
+                  numberOfLines={1}
+                >
                   {group.restaurantName}
                 </Text>
                 <View className="flex-row items-center mt-1">
                   <Ionicons name="location-outline" size={12} color="#9CA3AF" />
-                  <Text className="text-[11px] text-gray-400 ml-1 font-body-medium flex-1" numberOfLines={1}>
+                  <Text
+                    className="text-[11px] text-gray-400 ml-1 font-body-medium flex-1"
+                    numberOfLines={1}
+                  >
                     {group.restaurantAddress}
                   </Text>
                 </View>
@@ -568,7 +605,9 @@ export default function CartScreen() {
                 <View
                   key={item.cartItemId || item.id}
                   className={`flex-row items-center p-4 ${
-                    itemIdx < group.items.length - 1 ? "border-b border-gray-50" : ""
+                    itemIdx < group.items.length - 1
+                      ? "border-b border-gray-50"
+                      : ""
                   }`}
                 >
                   {/* Item Image */}
@@ -580,13 +619,20 @@ export default function CartScreen() {
                         resizeMode="cover"
                       />
                     ) : (
-                      <Ionicons name="fast-food-outline" size={24} color="#9CA3AF" />
+                      <Ionicons
+                        name="fast-food-outline"
+                        size={24}
+                        color="#9CA3AF"
+                      />
                     )}
                   </View>
 
                   {/* Item Details */}
                   <View className="flex-1 justify-center mr-2">
-                    <Text className="text-sm font-body-semibold text-gray-900" numberOfLines={2}>
+                    <Text
+                      className="text-sm font-body-semibold text-gray-900"
+                      numberOfLines={2}
+                    >
                       {item.name}
                     </Text>
                     <Text className="text-sm font-body-semibold text-[#E29E10] mt-1">
@@ -637,27 +683,43 @@ export default function CartScreen() {
             {/* Group Price Breakdown Footer */}
             <View className="px-4 py-3 bg-gray-50/10 border-t border-gray-100/50 gap-y-1.5">
               <View className="flex-row justify-between items-center">
-                <Text className="text-[11px] text-gray-400 font-body-semibold">Subtotal</Text>
-                <Text className="text-xs font-body-semibold text-gray-600">{formatMoney(group.subtotal)}</Text>
+                <Text className="text-[11px] text-gray-400 font-body-semibold">
+                  Subtotal
+                </Text>
+                <Text className="text-xs font-body-semibold text-gray-600">
+                  {formatMoney(group.subtotal)}
+                </Text>
               </View>
 
               {group.stateTax > 0 && (
                 <View className="flex-row justify-between items-center">
-                  <Text className="text-[11px] text-gray-400 font-body-semibold">State Tax</Text>
-                  <Text className="text-xs font-body-semibold text-gray-600">{formatMoney(group.stateTax)}</Text>
+                  <Text className="text-[11px] text-gray-400 font-body-semibold">
+                    State Tax
+                  </Text>
+                  <Text className="text-xs font-body-semibold text-gray-600">
+                    {formatMoney(group.stateTax)}
+                  </Text>
                 </View>
               )}
 
               {group.cityTax > 0 && (
                 <View className="flex-row justify-between items-center">
-                  <Text className="text-[11px] text-gray-400 font-body-semibold">City Tax</Text>
-                  <Text className="text-xs font-body-semibold text-gray-600">{formatMoney(group.cityTax)}</Text>
+                  <Text className="text-[11px] text-gray-400 font-body-semibold">
+                    City Tax
+                  </Text>
+                  <Text className="text-xs font-body-semibold text-gray-600">
+                    {formatMoney(group.cityTax)}
+                  </Text>
                 </View>
               )}
 
               <View className="flex-row justify-between items-center pt-1.5 mt-1 border-t border-gray-100/50">
-                <Text className="text-[12px] font-body-bold text-gray-800">Total for this restaurant</Text>
-                <Text className="text-sm font-heading text-gray-900">{formatMoney(group.total)}</Text>
+                <Text className="text-[12px] font-body-bold text-gray-800">
+                  Total for this restaurant
+                </Text>
+                <Text className="text-sm font-heading text-gray-900">
+                  {formatMoney(group.total)}
+                </Text>
               </View>
             </View>
           </View>
@@ -694,31 +756,43 @@ export default function CartScreen() {
 
           <View className="gap-y-2.5">
             <View className="flex-row justify-between items-center">
-              <Text className="text-sm font-body-medium text-gray-500">Item subtotal</Text>
+              <Text className="text-sm font-body-medium text-gray-500">
+                Item subtotal
+              </Text>
               {loading ? (
                 <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
               ) : (
-                <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(subtotal)}</Text>
+                <Text className="text-sm font-body-semibold text-gray-800">
+                  {formatMoney(subtotal)}
+                </Text>
               )}
             </View>
 
             <View className="flex-row justify-between items-center">
-              <Text className="text-sm font-body-medium text-gray-500">Platform fee</Text>
+              <Text className="text-sm font-body-medium text-gray-500">
+                Platform fee
+              </Text>
               {loading ? (
                 <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
               ) : (
-                <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(platformFee)}</Text>
+                <Text className="text-sm font-body-semibold text-gray-800">
+                  {formatMoney(platformFee)}
+                </Text>
               )}
             </View>
 
             {/* Taxes are itemized per restaurant card above */}
 
             <View className="flex-row justify-between items-center pt-3 mt-1 border-t border-gray-50">
-              <Text className="text-base font-heading text-gray-900">Total Amount</Text>
+              <Text className="text-base font-heading text-gray-900">
+                Total Amount
+              </Text>
               {loading ? (
                 <View className="bg-gray-100 h-6 w-20 rounded animate-pulse" />
               ) : (
-                <Text className="text-base font-heading text-gray-900">{formatMoney(total)}</Text>
+                <Text className="text-base font-heading text-gray-900">
+                  {formatMoney(total)}
+                </Text>
               )}
             </View>
           </View>
@@ -729,7 +803,7 @@ export default function CartScreen() {
       <View
         className="absolute left-4 right-4 bg-white border border-gray-100/50 rounded-3xl p-4 shadow-xl"
         style={{
-          bottom: insets.bottom > 0 ? insets.bottom + 65 : 65,
+          bottom: insets.bottom > 0 ? insets.bottom + 72 : 75,
           zIndex: 10,
           elevation: 10,
         }}
@@ -744,7 +818,9 @@ export default function CartScreen() {
             }}
           >
             <Ionicons name="trash-outline" size={14} color="#EF4444" />
-            <Text className="text-[12px] font-body-semibold text-red-500 ml-1">Clear Cart</Text>
+            <Text className="text-[12px] font-body-semibold text-red-500 ml-1">
+              Clear Cart
+            </Text>
           </TouchableOpacity>
 
           <Text className="text-base font-heading text-gray-900">
@@ -763,7 +839,7 @@ export default function CartScreen() {
               Add More
             </Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             onPress={() => router.push("/screens/cart/checkout")}
             activeOpacity={0.8}
@@ -773,12 +849,23 @@ export default function CartScreen() {
               colors={["#F5C518", "#E29E10"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={{ height: '100%', width: '100%', alignItems: 'center', justifyContent: 'center', flexDirection: 'row' }}
+              style={{
+                height: "100%",
+                width: "100%",
+                alignItems: "center",
+                justifyContent: "center",
+                flexDirection: "row",
+              }}
             >
               <Text className="text-sm font-body-semibold text-white">
                 Checkout
               </Text>
-              <Ionicons name="chevron-forward" size={16} color="#ffffff" style={{ marginLeft: 4 }} />
+              <Ionicons
+                name="chevron-forward"
+                size={16}
+                color="#ffffff"
+                style={{ marginLeft: 4 }}
+              />
             </LinearGradient>
           </TouchableOpacity>
         </View>

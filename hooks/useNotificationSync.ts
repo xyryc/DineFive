@@ -72,8 +72,6 @@ const saveSeenNotificationIds = async (ids: string[]) => {
 };
 
 const ensureNotificationPermissionsAsync = async () => {
-  if (Platform.OS === "web") return false;
-
   const current = await Notifications.getPermissionsAsync();
   let finalStatus = current.status;
 
@@ -104,7 +102,7 @@ export const useNotificationSync = () => {
   const { accessToken, fetchNotifications } = useStore() as any;
 
   useEffect(() => {
-    if (!accessToken || Platform.OS === "web") return;
+    if (!accessToken) return;
 
     let isMounted = true;
     let intervalId: ReturnType<typeof setInterval> | null = null;

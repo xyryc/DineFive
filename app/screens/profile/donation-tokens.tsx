@@ -371,11 +371,6 @@ export default function DonationTokensScreen() {
     setIsDownloading(true);
     try {
       const html = buildPdfHtml(tokens, summary);
-      if (Platform.OS === "web") {
-        await Print.printAsync({ html });
-        return;
-      }
-
       const { uri } = await Print.printToFileAsync({ html });
       const namedUri = FileSystem.cacheDirectory
         ? `${FileSystem.cacheDirectory}${fileName}`

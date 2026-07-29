@@ -8,6 +8,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   FlatList,
   Image,
   RefreshControl,
@@ -30,6 +31,54 @@ const formatDistance = (distanceKm?: any) => {
 
 const getCuisineLabel = (restaurant: Restaurant) =>
   restaurant?.cuisine?.filter(Boolean).join(" • ") || "Restaurant";
+
+function VerticalRestaurantCardSkeleton() {
+  const [pulseAnim] = React.useState(() => new Animated.Value(0.3));
+
+  React.useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 0.8,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 0.3,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [pulseAnim]);
+
+  return (
+    <View className="flex-row bg-white rounded-3xl p-3 mb-4 items-center border border-gray-100/60">
+      {/* Skeleton Image */}
+      <Animated.View style={{ width: 96, height: 96, borderRadius: 16, backgroundColor: "#E5E7EB", opacity: pulseAnim, marginRight: 16 }} />
+
+      {/* Info Column Skeleton */}
+      <View style={{ flex: 1, paddingVertical: 4, gap: 8 }}>
+        {/* Title skeleton */}
+        <Animated.View style={{ width: 140, height: 16, borderRadius: 6, backgroundColor: "#E5E7EB", opacity: pulseAnim }} />
+
+        {/* Cuisine skeleton */}
+        <Animated.View style={{ width: 100, height: 12, borderRadius: 4, backgroundColor: "#E5E7EB", opacity: pulseAnim }} />
+
+        {/* Rating/Distance row skeleton */}
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 4 }}>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <Animated.View style={{ width: 44, height: 18, borderRadius: 12, backgroundColor: "#E5E7EB", opacity: pulseAnim }} />
+            <Animated.View style={{ width: 44, height: 18, borderRadius: 12, backgroundColor: "#E5E7EB", opacity: pulseAnim }} />
+          </View>
+          <Animated.View style={{ width: 52, height: 18, borderRadius: 12, backgroundColor: "#E5E7EB", opacity: pulseAnim }} />
+        </View>
+      </View>
+    </View>
+  );
+}
 
 export default function AllRestaurantsScreen() {
   const router = useRouter();
@@ -647,8 +696,12 @@ export default function AllRestaurantsScreen() {
         }
         ListFooterComponent={
           loading ? (
-            <View className="py-6 items-center justify-center">
-              <ActivityIndicator size="small" color="#F5C518" />
+            <View style={{ paddingTop: 8 }}>
+              <VerticalRestaurantCardSkeleton />
+              <VerticalRestaurantCardSkeleton />
+              <VerticalRestaurantCardSkeleton />
+              <VerticalRestaurantCardSkeleton />
+              <VerticalRestaurantCardSkeleton />
             </View>
           ) : null
         }

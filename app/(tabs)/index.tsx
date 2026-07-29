@@ -2,7 +2,7 @@ import { Categories } from "@/components/home/Categories";
 import { DonateCard } from "@/components/home/DonateCard";
 import { HomeHeader } from "@/components/home/HomeHeader";
 import { PromoBanner } from "@/components/home/PromoBanner";
-import { RestaurantSection, SectionErrorBoundary } from "@/components/home/RestaurantSection";
+import { RestaurantSection, RestaurantSectionSkeleton, SectionErrorBoundary } from "@/components/home/RestaurantSection";
 import { useStore } from "@/stores/stores";
 import {
   type Restaurant,
@@ -552,11 +552,9 @@ export default function HomeScreen() {
               />
 
               {isInitialLoading && (
-                <View className="py-8 items-center">
-                  <ActivityIndicator size="small" color="#F5C518" />
-                  <Text className="text-xs font-body text-gray-400 mt-2">
-                    Loading restaurants...
-                  </Text>
+                <View style={{ marginTop: 12 }}>
+                  <RestaurantSectionSkeleton />
+                  <RestaurantSectionSkeleton />
                 </View>
               )}
 
