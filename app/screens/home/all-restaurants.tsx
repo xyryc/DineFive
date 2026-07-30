@@ -375,7 +375,7 @@ const FiltersHeader = React.memo(function FiltersHeader(props: FiltersHeaderProp
 
 // ─── Empty State Component ──────────────────────────────────────────────────────
 type EmptyProps = { loading: boolean; error: string | null; searchText: string; activeCategory: string; freeMealsOnly: boolean; radiusMeters: number; onRetry: () => void; onClear: () => void };
-function ListEmpty({ loading, error, searchText, activeCategory, freeMealsOnly, radiusMeters, onRetry, onClear }: EmptyProps) {
+const ListEmpty = React.memo(function ListEmpty({ loading, error, searchText, activeCategory, freeMealsOnly, radiusMeters, onRetry, onClear }: EmptyProps) {
   if (loading) return null;
   const hasFilters = searchText || activeCategory !== "All" || freeMealsOnly || radiusMeters !== 16000;
   return (
@@ -398,7 +398,7 @@ function ListEmpty({ loading, error, searchText, activeCategory, freeMealsOnly, 
       ) : null}
     </View>
   );
-}
+});
 
 // ─── Footer Skeleton ─────────────────────────────────────────────────────────────
 // ─── Free Meal Skeleton ────────────────────────────────────────────────────────
@@ -438,7 +438,7 @@ function FreeMealSkeleton() {
   );
 }
 
-function ListFooter({ loading, freeMealsOnly }: { loading: boolean; freeMealsOnly: boolean }) {
+const ListFooter = React.memo(function ListFooter({ loading, freeMealsOnly }: { loading: boolean; freeMealsOnly: boolean }) {
   if (!loading) return null;
   if (freeMealsOnly) {
     return (
@@ -458,7 +458,7 @@ function ListFooter({ loading, freeMealsOnly }: { loading: boolean; freeMealsOnl
       <RestaurantSkeleton />
     </View>
   );
-}
+});
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────────
 export default function AllRestaurantsScreen() {
@@ -616,10 +616,6 @@ export default function AllRestaurantsScreen() {
   }, []);
   const handleRetry = useCallback(() => loadRestaurants(), [loadRestaurants]);
 
-  // ── Stable component render functions for FlatList ────────────────────────
-  // IMPORTANT: These must be component functions (not JSX/useMemo elements).
-  // Passing JSX elements creates new instances each render → navigation context loss.
-
   const renderItem = useCallback(({ item }: { item: Restaurant }) => (
     freeMealsOnly
       ? <FreeMealCard item={item} onPress={handleOpenRestaurant} />
@@ -648,24 +644,6 @@ export default function AllRestaurantsScreen() {
     onRadiusChange: setRadiusMeters,
   }), [locationName, locationLoading, locationSearching, addressSearch, searchText, categories, activeCategory, sortBy, freeMealsOnly, radiusMeters, handleLocateMe, handleLocationSearch, handleFreeMealsToggle]);
 
-  // These are COMPONENT FUNCTIONS passed to FlatList — stable identity via useCallback
-  const ListHeaderComponent = useCallback(() => <FiltersHeader {...headerProps} />, [headerProps]);
-
-  const ListEmptyComponent = useCallback(() => (
-    <ListEmpty
-      loading={loading}
-      error={error}
-      searchText={searchText}
-      activeCategory={activeCategory}
-      freeMealsOnly={freeMealsOnly}
-      radiusMeters={radiusMeters}
-      onRetry={handleRetry}
-      onClear={handleClearFilters}
-    />
-  ), [loading, error, searchText, activeCategory, freeMealsOnly, radiusMeters, handleRetry, handleClearFilters]);
-
-  const ListFooterComponent = useCallback(() => <ListFooter loading={loading} freeMealsOnly={freeMealsOnly} />, [loading, freeMealsOnly]);
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }} edges={["top"]}>
       <StatusBar style="dark" />
@@ -683,14 +661,31 @@ export default function AllRestaurantsScreen() {
       </View>
 
       <FlatList
+        key={freeMealsOnly ? "free-meals-list" : "restaurants-list"}
         data={restaurants}
-        keyExtractor={(item) => item.providerId || item.id}
+        extraData={freeMealsOnly}
+        keyExtractor={(item, index) =>
+          freeMealsOnly
+            ? `food-${item.foodId || item.id || item.providerId || index}-${index}`
+            : `res-${item.providerId || item.id || index}-${index}`
+        }
         renderItem={renderItem}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={["#F5C518"]} />}
-        ListHeaderComponent={ListHeaderComponent}
-        ListEmptyComponent={ListEmptyComponent}
-        ListFooterComponent={ListFooterComponent}
+        ListHeaderComponent={<FiltersHeader {...headerProps} />}
+        ListEmptyComponent={
+          <ListEmpty
+            loading={loading}
+            error={error}
+            searchText={searchText}
+            activeCategory={activeCategory}
+            freeMealsOnly={freeMealsOnly}
+            radiusMeters={radiusMeters}
+            onRetry={handleRetry}
+            onClear={handleClearFilters}
+          />
+        }
+        ListFooterComponent={<ListFooter loading={loading} freeMealsOnly={freeMealsOnly} />}
       />
     </SafeAreaView>
   );
