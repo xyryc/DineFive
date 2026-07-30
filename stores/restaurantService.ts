@@ -24,6 +24,7 @@ export interface Restaurant {
   deliveryTimeMinutes?: number;
   mealName?: string;
   mealImage?: string;
+  image?: string;  // food photo URL (set when freeNearYou=true)
   foodId?: string;
   title?: string;
   productDescription?: string;
@@ -220,6 +221,9 @@ const normalizeRestaurant = (item: any, index: number): Restaurant => {
     deliveryTimeMinutes: Math.max(5, Math.min(60, deliveryTime)),
     mealName: String(item?.name || item?.title || ""),
     mealImage: normalizeImageUri(item?.image || item?.imageUrl || ""),
+    // For free-meal mode, the API returns item.image as the food photo.
+    // We expose it here so FreeMealCard can pick it up directly.
+    image: normalizeImageUri(item?.image || item?.imageUrl || ""),
     foodId: String(item?.foodId ?? item?.id ?? item?._id ?? id),
     title: String(item?.title ?? item?.name ?? ""),
     productDescription: String(

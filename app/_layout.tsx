@@ -20,7 +20,10 @@ configureReanimatedLogger({
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
-  const { isInitialized, initializeAuth, accessToken, user } = useStore() as any;
+  const isInitialized = useStore((state: any) => state.isInitialized);
+  const initializeAuth = useStore((state: any) => state.initializeAuth);
+  const accessToken = useStore((state: any) => state.accessToken);
+  const user = useStore((state: any) => state.user);
   const segments = useSegments();
   const router = useRouter();
   const [fontsLoaded] = useFonts({

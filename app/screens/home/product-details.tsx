@@ -341,7 +341,7 @@ function ProductDetailsInner() {
 
   try {
     return (
-      <View className="flex-1 bg-[#FBF9F6]">
+      <View className="flex-1 bg-white">
         <StatusBar style="light" />
 
         {/* Top Header Buttons Overlay */}
@@ -396,7 +396,7 @@ function ProductDetailsInner() {
         {/* Main Scrollable View */}
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 140 }}
+          contentContainerStyle={{ flexGrow: 1 }}
           className="flex-1"
         >
           {/* Hero Product Image */}
@@ -436,17 +436,14 @@ function ProductDetailsInner() {
           {/* Details Card */}
           <View
             style={{
+              flex: 1,
               marginTop: -30,
               backgroundColor: "#fff",
               borderTopLeftRadius: 40,
               borderTopRightRadius: 40,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: -4 },
-              shadowOpacity: 0.03,
-              shadowRadius: 10,
-              elevation: 5,
               paddingHorizontal: 20,
               paddingTop: 12,
+              paddingBottom: 140,
             }}
           >
             {/* Sheet Drag Handle */}
