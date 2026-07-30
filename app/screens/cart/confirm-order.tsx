@@ -127,6 +127,7 @@ export default function ConfirmOrderScreen() {
           </TouchableOpacity>
         </View>
         <EmptyState
+          icon="cart-outline"
           title="Your cart is empty!"
           message="Explore and add items to the cart to show here..."
           buttonText="Explore"

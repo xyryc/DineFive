@@ -101,6 +101,7 @@ function ProductDetailsInner() {
   const [isClaimingMeal, setIsClaimingMeal] = useState(false);
   const [isPlacingFreeOrder, setIsPlacingFreeOrder] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isAddedToCartSuccess, setIsAddedToCartSuccess] = useState(false);
   const [reviewsLoading, setReviewsLoading] = useState(true);
 
   const productId =
@@ -303,26 +304,31 @@ function ProductDetailsInner() {
     }
   };
 
-  const handleAddToCart = async () => {
-    if (isAddingToCart) return;
-    setIsAddingToCart(true);
-    try {
-      const result = await addToCart(product, quantity);
-      if (result) {
-        router.push("/(tabs)/cart");
-      } else {
-        const latestError = (useStore.getState() as any)?.error;
-        Alert.alert(
-          "Failed",
-          latestError || "Failed to add to cart. Please try again.",
-        );
-      }
-    } catch (error) {
-      console.log("Error adding to cart:", error);
-      Alert.alert("Failed", "Something went wrong while adding to cart.");
-    } finally {
-      setIsAddingToCart(false);
-    }
+  const handleAddToCart = () => {
+    // ── 0ms OPTIMISTIC UPDATE ──────────────────────────────────────────────
+    // Instantly reflect success state in 0ms without navigation or blocking UI
+    setIsAddedToCartSuccess(true);
+
+    setTimeout(() => {
+      setIsAddedToCartSuccess(false);
+    }, 1800);
+
+    // Network request runs asynchronously in background
+    addToCart(product, quantity)
+      .then((result: any) => {
+        if (!result) {
+          setIsAddedToCartSuccess(false);
+          const latestError = (useStore.getState() as any)?.error;
+          Alert.alert(
+            "Failed",
+            latestError || "Failed to add to cart. Please try again.",
+          );
+        }
+      })
+      .catch((error: any) => {
+        setIsAddedToCartSuccess(false);
+        Alert.alert("Failed", error?.message || "Something went wrong while adding to cart.");
+      });
   };
 
   const handleShare = async () => {
@@ -656,22 +662,26 @@ function ProductDetailsInner() {
               ) : (
                 <TouchableOpacity
                   onPress={handleAddToCart}
-                  disabled={isAddingToCart}
                   style={{
-                    backgroundColor: "#F5C518",
+                    backgroundColor: isAddedToCartSuccess ? "#10B981" : "#F5C518",
                     borderRadius: 16,
                     paddingVertical: 16,
                     alignItems: "center",
                     justifyContent: "center",
-                    shadowColor: "#F5C518",
+                    shadowColor: isAddedToCartSuccess ? "#10B981" : "#F5C518",
                     shadowOffset: { width: 0, height: 4 },
                     shadowOpacity: 0.25,
                     shadowRadius: 8,
                     elevation: 4,
                   }}
                 >
-                  {isAddingToCart ? (
-                    <ActivityIndicator size="small" color="#111827" />
+                  {isAddedToCartSuccess ? (
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                      <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+                      <Text style={{ color: "#FFFFFF", fontWeight: "bold", fontSize: 16 }}>
+                        Added to Cart!
+                      </Text>
+                    </View>
                   ) : (
                     <Text style={{ color: "#111827", fontWeight: "bold", fontSize: 16 }}>
                       Add to Cart • ${(quantity * parseFloat(product.price)).toFixed(2)}

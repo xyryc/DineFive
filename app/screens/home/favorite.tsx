@@ -94,6 +94,7 @@ export default function FavoriteScreen() {
         contentContainerStyle={{ flexGrow: 1, padding: 16 }}
         ListEmptyComponent={
           <EmptyState
+            icon="heart-outline"
             title="Nothing found here!"
             message="Explore and add items to the favorites to show here..."
             buttonText="Explore"

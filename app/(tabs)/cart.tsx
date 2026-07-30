@@ -195,9 +195,18 @@ export default function CartScreen() {
   const [cartItems, setCartItems] = React.useState<any[]>([]);
   const [cartGroups, setCartGroups] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
-  const [subtotal, setSubtotal] = React.useState(0);
+  const [isSyncing, setIsSyncing] = React.useState(false);
+  const [syncingItemId, setSyncingItemId] = React.useState<string | null>(null);
   const [cartMeta, setCartMeta] = React.useState<any>(null);
   const [includeUtensils, setIncludeUtensils] = React.useState(true);
+
+  // Derive subtotal dynamically from cartItems so totals update in 0ms on +/- taps
+  const subtotal = React.useMemo(() => {
+    return cartItems.reduce(
+      (acc: number, item: any) => acc + (toNumber(item.price, 0) * (Number(item.quantity) || 0)),
+      0,
+    );
+  }, [cartItems]);
 
   const loadCart = React.useCallback(
     async (showLoading = true) => {
@@ -339,98 +348,11 @@ export default function CartScreen() {
           };
         });
         setCartGroups(formattedGroups);
-
-        // Format flat items (either directly from root.items or derived by flattening the groups)
-        const itemsToFormat = rawItems.length
-          ? rawItems
-          : rawGroups.reduce((acc: any[], g: any) => [...acc, ...g.items], []);
-        const formattedItems = itemsToFormat.map((item: any) => {
-          const foodData =
-            item?.foodId && typeof item.foodId === "object"
-              ? item.foodId
-              : item?.food && typeof item.food === "object"
-                ? item.food
-                : null;
-
-          const resolvedFoodId = pickString(
-            foodData?._id,
-            foodData?.id,
-            item?.foodId,
-            item?.food?.foodId,
-            item?.food?.id,
-            item?._id,
-          );
-
-          return {
-            id: pickString(
-              foodData?._id,
-              foodData?.id,
-              item._id,
-              resolvedFoodId,
-            ),
-            cartItemId: pickString(item._id, resolvedFoodId),
-            name: pickString(
-              foodData?.title,
-              foodData?.name,
-              item.title,
-              item.name,
-              "Unknown item",
-            ),
-            price: toNumber(
-              item.baseRevenue ??
-                foodData?.baseRevenue ??
-                item.price ??
-                foodData?.price ??
-                foodData?.finalPriceTag,
-              0,
-            ),
-            image: pickString(foodData?.image, item.image),
-            quantity: Math.max(1, Math.floor(toNumber(item.quantity, 1))),
-            foodId: resolvedFoodId,
-            providerId: pickString(
-              item.providerId,
-              foodData?.providerId,
-              foodData?.providerID,
-            ),
-            providerProfile: pickString(
-              item.providerProfile,
-              foodData?.providerProfile,
-            ),
-            providerName: pickString(item.providerName, foodData?.providerName),
-            restaurantName: pickString(
-              root?.restaurantName,
-              item.restaurantName,
-              item.providerRestaurantName,
-              foodData?.restaurantName,
-              foodData?.providerRestaurantName,
-              foodData?.providerName,
-              item.providerName,
-            ),
-            restaurantAddress: pickString(
-              root?.restaurantAddress,
-              item.restaurantAddress,
-              foodData?.restaurantAddress,
-              item.address,
-            ),
-            distanceKm: toNumber(item.distanceKm ?? foodData?.distanceKm, NaN),
-            etaMinutes: toNumber(item.etaMinutes ?? foodData?.etaMinutes, NaN),
-            serviceFee: toNumber(item.serviceFee ?? foodData?.serviceFee, 0),
-          };
-        });
-        setCartItems(formattedItems);
-
-        const computedSubtotal = toNumber(
-          root.subtotal,
-          formattedItems.reduce(
-            (acc: number, item: any) => acc + item.price * item.quantity,
-            0,
-          ),
-        );
-        setSubtotal(computedSubtotal);
+        const allFlatItems = formattedGroups.reduce((acc: any[], g: any) => [...acc, ...g.items], []);
+        setCartItems(allFlatItems);
       } else {
         setCartItems([]);
         setCartGroups([]);
-        setSubtotal(0);
         setCartMeta(null);
       }
       if (showLoading) setLoading(false);
@@ -456,28 +378,30 @@ export default function CartScreen() {
     delta: number,
     currentQuantity: number,
   ) => {
-    if (!foodId) return;
-    const newQuantity = currentQuantity + delta;
+    if (!foodId || isSyncing) return;
+    const newQuantity = Math.max(0, currentQuantity + delta);
 
-    // Optimistic Update
-    setCartItems((prevItems) =>
-      prevItems
-        .map((item) => {
-          if (item.cartItemId === cartItemId) {
-            return { ...item, quantity: newQuantity };
-          }
-          return item;
-        })
-        .filter((item) => item.quantity > 0),
-    );
+    // ── Activate text skeletons on numbers ──────────────────────────
+    setIsSyncing(true);
+    setSyncingItemId(cartItemId);
 
     try {
-      if (newQuantity <= 0) await removeCartItem(foodId);
-      else await updateCartQuantity(foodId, newQuantity);
+      // ── API call to update backend cart ──────────────────────────
+      if (newQuantity <= 0) {
+        await removeCartItem(foodId);
+      } else {
+        await updateCartQuantity(foodId, newQuantity);
+      }
+
+      // ── Fetch fresh server calculations & item breakdown ───────
       await loadCart(false);
     } catch (error) {
-      console.log("Error updating quantity:", error);
+      console.log("Error updating cart item:", error);
       await loadCart(false);
+    } finally {
+      // ── Deactivate text skeletons to reveal updated numbers ─────
+      setIsSyncing(false);
+      setSyncingItemId(null);
     }
   };
 
@@ -501,6 +425,7 @@ export default function CartScreen() {
       <SafeAreaView className="flex-1 bg-[#FDFBF7]">
         <StatusBar style="dark" />
         <EmptyState
+          icon="basket-outline"
           title="Your cart is empty!"
           message="Explore and add items to the cart to show here..."
           buttonText="Explore"
@@ -651,15 +576,22 @@ export default function CartScreen() {
                           item.quantity,
                         )
                       }
-                      activeOpacity={0.7}
+                      disabled={isSyncing}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      activeOpacity={0.6}
+                      style={{ opacity: isSyncing ? 0.4 : 1 }}
                       className="w-8 h-8 rounded-xl bg-white border border-gray-100 items-center justify-center shadow-xs"
                     >
                       <Ionicons name="remove" size={14} color="#1F2937" />
                     </TouchableOpacity>
 
-                    <Text className="text-sm font-body-bold text-gray-800 min-w-[20px] text-center">
-                      {item.quantity}
-                    </Text>
+                    {isSyncing && syncingItemId === item.cartItemId ? (
+                      <View className="w-5 h-4 bg-gray-200 rounded animate-pulse" />
+                    ) : (
+                      <Text className="text-sm font-body-bold text-gray-800 min-w-[20px] text-center">
+                        {item.quantity}
+                      </Text>
+                    )}
 
                     <TouchableOpacity
                       onPress={() =>
@@ -670,7 +602,10 @@ export default function CartScreen() {
                           item.quantity,
                         )
                       }
-                      activeOpacity={0.7}
+                      disabled={isSyncing}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      activeOpacity={0.6}
+                      style={{ opacity: isSyncing ? 0.4 : 1 }}
                       className="w-8 h-8 rounded-xl bg-white border border-gray-100 items-center justify-center shadow-xs"
                     >
                       <Ionicons name="add" size={14} color="#1F2937" />
@@ -686,9 +621,13 @@ export default function CartScreen() {
                 <Text className="text-[11px] text-gray-400 font-body-semibold">
                   Subtotal
                 </Text>
-                <Text className="text-xs font-body-semibold text-gray-600">
-                  {formatMoney(group.subtotal)}
-                </Text>
+                {isSyncing ? (
+                  <View className="w-12 h-3.5 bg-gray-200 rounded animate-pulse" />
+                ) : (
+                  <Text className="text-xs font-body-semibold text-gray-600">
+                    {formatMoney(group.subtotal)}
+                  </Text>
+                )}
               </View>
 
               {group.stateTax > 0 && (
@@ -696,9 +635,13 @@ export default function CartScreen() {
                   <Text className="text-[11px] text-gray-400 font-body-semibold">
                     State Tax
                   </Text>
-                  <Text className="text-xs font-body-semibold text-gray-600">
-                    {formatMoney(group.stateTax)}
-                  </Text>
+                  {isSyncing ? (
+                    <View className="w-10 h-3.5 bg-gray-200 rounded animate-pulse" />
+                  ) : (
+                    <Text className="text-xs font-body-semibold text-gray-600">
+                      {formatMoney(group.stateTax)}
+                    </Text>
+                  )}
                 </View>
               )}
 
@@ -707,9 +650,13 @@ export default function CartScreen() {
                   <Text className="text-[11px] text-gray-400 font-body-semibold">
                     City Tax
                   </Text>
-                  <Text className="text-xs font-body-semibold text-gray-600">
-                    {formatMoney(group.cityTax)}
-                  </Text>
+                  {isSyncing ? (
+                    <View className="w-10 h-3.5 bg-gray-200 rounded animate-pulse" />
+                  ) : (
+                    <Text className="text-xs font-body-semibold text-gray-600">
+                      {formatMoney(group.cityTax)}
+                    </Text>
+                  )}
                 </View>
               )}
 
@@ -717,9 +664,13 @@ export default function CartScreen() {
                 <Text className="text-[12px] font-body-bold text-gray-800">
                   Total for this restaurant
                 </Text>
-                <Text className="text-sm font-heading text-gray-900">
-                  {formatMoney(group.total)}
-                </Text>
+                {isSyncing ? (
+                  <View className="w-14 h-4 bg-gray-200 rounded animate-pulse" />
+                ) : (
+                  <Text className="text-sm font-heading text-gray-900">
+                    {formatMoney(group.total)}
+                  </Text>
+                )}
               </View>
             </View>
           </View>
@@ -787,8 +738,8 @@ export default function CartScreen() {
               <Text className="text-base font-heading text-gray-900">
                 Total Amount
               </Text>
-              {loading ? (
-                <View className="bg-gray-100 h-6 w-20 rounded animate-pulse" />
+              {loading || isSyncing ? (
+                <View className="bg-gray-200 h-5 w-16 rounded animate-pulse" />
               ) : (
                 <Text className="text-base font-heading text-gray-900">
                   {formatMoney(total)}
@@ -812,6 +763,8 @@ export default function CartScreen() {
           <TouchableOpacity
             className="flex-row items-center"
             activeOpacity={0.7}
+            disabled={isSyncing}
+            style={{ opacity: isSyncing ? 0.5 : 1 }}
             onPress={async () => {
               await clearCart?.();
               await loadCart(false);
@@ -823,15 +776,21 @@ export default function CartScreen() {
             </Text>
           </TouchableOpacity>
 
-          <Text className="text-base font-heading text-gray-900">
-            Total: {formatMoney(total)}
-          </Text>
+          {isSyncing ? (
+            <View className="bg-gray-200 h-5 w-20 rounded animate-pulse" />
+          ) : (
+            <Text className="text-base font-heading text-gray-900">
+              Total: {formatMoney(total)}
+            </Text>
+          )}
         </View>
 
         <View className="flex-row gap-x-3">
           <TouchableOpacity
             onPress={() => router.push("/(tabs)")}
             activeOpacity={0.8}
+            disabled={isSyncing}
+            style={{ opacity: isSyncing ? 0.6 : 1 }}
             className="flex-1 h-12 rounded-2xl border border-gray-200 bg-white items-center justify-center flex-row"
           >
             <Ionicons name="add" size={18} color="#1F2937" />
@@ -843,6 +802,8 @@ export default function CartScreen() {
           <TouchableOpacity
             onPress={() => router.push("/screens/cart/checkout")}
             activeOpacity={0.8}
+            disabled={isSyncing}
+            style={{ opacity: isSyncing ? 0.6 : 1 }}
             className="flex-1 h-12 rounded-2xl overflow-hidden"
           >
             <LinearGradient
