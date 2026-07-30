@@ -164,12 +164,14 @@ const normalizeMenuSections = (payload: any): MenuSectionType[] => {
 function MenuItem({
   item,
   isAdding,
+  isAdded,
   onAdd,
   onOpen,
   isFreeFlow,
 }: {
   item: MenuItemType;
   isAdding: boolean;
+  isAdded?: boolean;
   onAdd: () => void;
   onOpen: () => void;
   isFreeFlow?: boolean;
@@ -251,7 +253,7 @@ function MenuItem({
           width: 40,
           height: 40,
           borderRadius: 16,
-          backgroundColor: isFreeFlow ? "#10B981" : "#F5C518",
+          backgroundColor: isAdded ? "#10B981" : isFreeFlow ? "#10B981" : "#F5C518",
           alignItems: "center",
           justifyContent: "center",
           marginLeft: 8,
@@ -262,7 +264,9 @@ function MenuItem({
           elevation: 1,
         }}
       >
-        {isAdding ? (
+        {isAdded ? (
+          <Ionicons name="checkmark" size={22} color="#FFFFFF" />
+        ) : isAdding ? (
           <ActivityIndicator size="small" color={isFreeFlow ? "#FFFFFF" : "#1F2937"} />
         ) : (
           <Ionicons name={isFreeFlow ? "arrow-forward" : "add"} size={22} color={isFreeFlow ? "#FFFFFF" : "#1F2937"} />
@@ -302,6 +306,7 @@ function RestaurantDetailScreenInner() {
   const [fetchedDetails, setFetchedDetails] = React.useState<any>(null);
   const [cartCount, setCartCount] = React.useState(0);
   const [addingItemId, setAddingItemId] = React.useState<string | null>(null);
+  const [addedSuccessIds, setAddedSuccessIds] = React.useState<Record<string, boolean>>({});
 
   const providerId = pickString(params.providerId, params.id);
   const restaurantName =
@@ -516,7 +521,7 @@ function RestaurantDetailScreenInner() {
   );
 
   const handleAdd = React.useCallback(
-    async (item: MenuItemType) => {
+    (item: MenuItemType) => {
       if (isFreeFlow) {
         if (!currentTokenId) {
           Alert.alert(
@@ -532,42 +537,56 @@ function RestaurantDetailScreenInner() {
         openFoodDetail(item);
         return;
       }
-      setAddingItemId(item.id);
-      try {
-        const result = await addToCart(
-          {
-            foodId: item.id,
-            id: item.id,
-            _id: item.id,
-            name: item.name,
-            price: item.price,
-            image: item.image,
-          },
-          1,
-        );
 
+      // ── 0ms OPTIMISTIC UPDATE ──────────────────────────────────────────────
+      // 1. Instantly increment cart count and show checkmark icon (0ms latency!)
+      setCartCount((prev) => prev + 1);
+      setAddedSuccessIds((prev) => ({ ...prev, [item.id]: true }));
+
+      // Clear checkmark after 1.5 seconds
+      setTimeout(() => {
+        setAddedSuccessIds((prev) => {
+          const next = { ...prev };
+          delete next[item.id];
+          return next;
+        });
+      }, 1500);
+
+      // 2. Perform network sync asynchronously in the background
+      addToCart(
+        {
+          foodId: item.id,
+          id: item.id,
+          _id: item.id,
+          name: item.name,
+          price: item.price,
+          image: item.image,
+        },
+        1,
+      ).then((result: any) => {
         if (!result) {
+          // Revert optimistic update on failure
+          setCartCount((prev) => Math.max(0, prev - 1));
+          setAddedSuccessIds((prev) => {
+            const next = { ...prev };
+            delete next[item.id];
+            return next;
+          });
           const latestError = (useStore.getState() as any)?.error;
-          Alert.alert(
-            "Failed",
-            latestError || "Could not add this item to cart.",
-          );
-          return;
+          Alert.alert("Failed", latestError || "Could not add item to cart.");
         }
-
-        await fetchCartCount?.();
-        await updateCartCount();
-        Alert.alert("Added", `${item.name} added to cart.`);
-      } catch (error: any) {
-        Alert.alert(
-          "Failed",
-          error?.message || "Could not add this item to cart.",
-        );
-      } finally {
-        setAddingItemId(null);
-      }
+      }).catch((error: any) => {
+        // Revert optimistic update on error
+        setCartCount((prev) => Math.max(0, prev - 1));
+        setAddedSuccessIds((prev) => {
+          const next = { ...prev };
+          delete next[item.id];
+          return next;
+        });
+        Alert.alert("Failed", error?.message || "Could not add item to cart.");
+      });
     },
-    [isFreeFlow, currentTokenId, openFoodDetail, addToCart, fetchCartCount, updateCartCount, handleClaimMeal],
+    [isFreeFlow, currentTokenId, openFoodDetail, addToCart, handleClaimMeal],
   );
 
   if (menuLoading && !fetchedDetails) {
@@ -936,6 +955,7 @@ function RestaurantDetailScreenInner() {
                       key={item.id}
                       item={item}
                       isAdding={addingItemId === item.id}
+                      isAdded={!!addedSuccessIds[item.id]}
                       onAdd={() => handleAdd(item)}
                       onOpen={() => openFoodDetail(item)}
                       isFreeFlow={isFreeFlow}

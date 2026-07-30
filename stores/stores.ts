@@ -1906,7 +1906,8 @@ export const useStore = create((rawSet, get) => {
           );
         }
 
-        await (get() as any).fetchCartCount?.();
+        // Trigger fetchCartCount in background so caller isn't blocked by a 2nd network round-trip
+        (get() as any).fetchCartCount?.().catch(() => {});
         set({ isLoading: false });
         return result;
       } catch (error: any) {
