@@ -1,3 +1,4 @@
+import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { useStore } from "@/stores/stores";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -218,17 +219,7 @@ export default function FavoriteScreen() {
             <StatusBar style="dark" />
 
             {/* Header */}
-            <View className="flex-row items-center justify-between px-5 pt-3 pb-4 border-b border-gray-100 bg-white">
-                <TouchableOpacity
-                    onPress={() => router.back()}
-                    activeOpacity={0.7}
-                    className="w-10 h-10 bg-white rounded-full items-center justify-center border border-gray-100 shadow-sm"
-                >
-                    <Ionicons name="chevron-back" size={20} color="#1F2937" />
-                </TouchableOpacity>
-                <Text className="text-lg font-heading text-gray-900">Favorites</Text>
-                <View className="w-10" />
-            </View>
+            <ScreenHeader title="Favorites" icon="heart-outline" iconColor="#EC407A" />
 
             {loading && !refreshing ? (
                 <FavoriteSkeleton />

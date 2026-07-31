@@ -1,4 +1,4 @@
-import LoginComponents from "@/components/LoginComponents";
+import { AuthComponents } from "@/components/AuthComponents";
 import { Image } from "expo-image";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
@@ -34,7 +34,7 @@ const Login = () => {
             />
           </View>
           {/* Login form */}
-          <LoginComponents />
+          <AuthComponents initialTab="login" />
         </ScrollView>
       </KeyboardAvoidingView>
     </View>

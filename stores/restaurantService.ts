@@ -70,8 +70,6 @@ export interface NearbyResponse {
 const BASE_URL = `${API_BASE_URL}/api/v1`;
 const REQUEST_TIMEOUT_MS = 15000;
 
-type RetryableError = Error & { retryable?: boolean };
-
 type RequestJsonOptions = RequestInit & {
   timeoutMs?: number;
 };

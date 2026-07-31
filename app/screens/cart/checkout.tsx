@@ -1,4 +1,5 @@
 import { DonateModal } from "@/components/home/DonateModal";
+import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { useStore } from "@/stores/stores";
 import { Ionicons } from "@expo/vector-icons";
 import { StripeProvider, useStripe } from "@stripe/stripe-react-native";
@@ -486,19 +487,7 @@ function CheckoutContent() {
       <StatusBar style="dark" />
 
       {/* Header */}
-      <View className="flex-row items-center justify-between px-6 py-4 bg-white">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-          className="w-10 h-10 rounded-full bg-[#F8F9FA] items-center justify-center border border-gray-100/50"
-        >
-          <Ionicons name="chevron-back" size={20} color="#1F2937" />
-        </TouchableOpacity>
-        <Text className="text-lg font-heading text-gray-900 tracking-tight">
-          {isDonationCheckout ? "Donate Meals" : "Checkout"}
-        </Text>
-        <View className="w-10" />
-      </View>
+      <ScreenHeader title={isDonationCheckout ? "Donate Meals" : "Checkout"} className="border-b-0" />
 
       {/* Stepper Progress bar */}
       <View className="bg-white px-6 pb-4 pt-1 border-b border-gray-100 flex-row items-center justify-between">

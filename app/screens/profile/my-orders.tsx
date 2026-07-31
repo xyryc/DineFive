@@ -1,4 +1,5 @@
 import { EmptyState } from "@/components/common/EmptyState";
+import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { DonateModal } from "@/components/home/DonateModal";
 import { useStore } from "@/stores/stores";
 import { Ionicons } from "@expo/vector-icons";
@@ -681,15 +682,7 @@ export default function MyOrdersScreen() {
       <StatusBar style="dark" />
 
       {/* Header */}
-      <View className="flex-row items-center justify-center pt-2 pb-6 relative px-4">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="absolute left-4 z-10 w-10 h-10 bg-white rounded-full items-center justify-center shadow-sm"
-        >
-          <Ionicons name="chevron-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text className="text-xl font-heading text-gray-900">My Orders</Text>
-      </View>
+      <ScreenHeader title="My Orders" className="bg-transparent border-b-0" />
 
       {/* Tabs */}
       <View className="px-6 mb-6">

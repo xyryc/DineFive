@@ -1,4 +1,5 @@
 import { EmptyState } from "@/components/common/EmptyState";
+import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { useStore } from "@/stores/stores";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -305,12 +306,7 @@ export default function CartScreen() {
       <StatusBar style="dark" />
 
       {/* Header */}
-      <View className="flex-row items-center justify-center pt-3 pb-4 border-b border-gray-100/50 bg-white">
-        <View className="flex-row items-center gap-2">
-          <Ionicons name="cart-outline" size={20} color="#1F2937" />
-          <Text className="text-lg font-heading text-gray-900">My Cart</Text>
-        </View>
-      </View>
+      <ScreenHeader title="My Cart" icon="cart-outline" showBack={false} />
 
       <ScrollView
         className="flex-1 px-4 mt-4"

@@ -29,7 +29,7 @@ const ForgotPassword = () => {
 
       if (result) {
         router.push({
-          pathname: "/(auth)/emailverify",
+          pathname: "/(auth)/email-verify",
           params: { email, type: "forgot" },
         });
       } else {

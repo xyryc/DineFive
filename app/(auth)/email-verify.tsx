@@ -21,7 +21,7 @@ const EmailVerify = () => {
     type?: string;
   }>();
   const [code, setCode] = useState("");
-  const { isLoading, verifyOTP, verifyForgotOTP } = useStore() as any; // adjust according to your store
+  const { isLoading, verifyOTP, verifyForgotOTP } = useStore() as any;
 
   const handleEmailVerif = async () => {
     if (!code) {
@@ -38,7 +38,6 @@ const EmailVerify = () => {
         "type:",
         type,
       );
-      // use different store methods based on type
       const result =
         type === "forgot"
           ? await verifyForgotOTP({ email, code })
@@ -76,63 +75,61 @@ const EmailVerify = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-            <View className="flex-1 items-center justify-center py-10">
-              <Image
-                source={require("@/assets/images/logo.jpg")}
-                contentFit="contain"
-                style={{
-                  height: 200,
-                  width: 200,
-                  backgroundColor: "#00000010",
-                  paddingBottom: 5,
-                  borderRadius: 100,
-                }}
-              />
-            </View>
-
-            <View
-              className="bg-white pt-8 px-6 pb-10 rounded-t-3xl"
+          <View className="flex-1 items-center justify-center py-10">
+            <Image
+              source={require("@/assets/images/logo.jpg")}
+              contentFit="contain"
               style={{
-                borderTopWidth: 2,
-                borderLeftWidth: 2,
-                borderRightWidth: 2,
-                borderColor: "#F59E0B",
-                borderTopLeftRadius: 28,
-                borderTopRightRadius: 28,
+                height: 200,
+                width: 200,
+                backgroundColor: "#00000010",
+                paddingBottom: 5,
+                borderRadius: 100,
               }}
-            >
-              <Text className="text-2xl font-heading text-center mb-4">
-                Enter Verification Code
-              </Text>
-              <Text className="text-gray-600 text-center mb-2">
-                We have sent a verification code to:
-              </Text>
-              <Text className="text-gray-900 font-body-bold text-center mb-6">
-                {email || "your email address"}
-              </Text>
+            />
+          </View>
 
-              {/* OTP Input Fields */}
-              <CustomInput
-                label="Enter Verification Code"
-                className="mt-2"
-                placeholder="123456"
-                value={code}
-                onChangeText={setCode}
-                keyboardType="number-pad"
-              />
+          <View
+            className="bg-white pt-8 px-6 pb-10 rounded-t-3xl"
+            style={{
+              borderTopWidth: 2,
+              borderLeftWidth: 2,
+              borderRightWidth: 2,
+              borderColor: "#F59E0B",
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
+            }}
+          >
+            <Text className="text-2xl font-heading text-center mb-4">
+              Enter Verification Code
+            </Text>
+            <Text className="text-gray-600 text-center mb-2">
+              We have sent a verification code to:
+            </Text>
+            <Text className="text-gray-900 font-body-bold text-center mb-6">
+              {email || "your email address"}
+            </Text>
 
-              {/* Verify button */}
-              <View className="mt-14 mb-4">
-                {isLoading ? (
-                  <View className="items-center py-4 bg-[#F5C518] rounded-full">
-                    <ActivityIndicator color="black" />
-                  </View>
-                ) : (
-                  <GradientButton title="Verify" onPress={handleEmailVerif} />
-                )}
-              </View>
+            <CustomInput
+              label="Enter Verification Code"
+              className="mt-2"
+              placeholder="123456"
+              value={code}
+              onChangeText={setCode}
+              keyboardType="number-pad"
+            />
+
+            <View className="mt-14 mb-4">
+              {isLoading ? (
+                <View className="items-center py-4 bg-[#F5C518] rounded-full">
+                  <ActivityIndicator color="black" />
+                </View>
+              ) : (
+                <GradientButton title="Verify" onPress={handleEmailVerif} />
+              )}
             </View>
-          </ScrollView>
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );

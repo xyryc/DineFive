@@ -1,4 +1,4 @@
-import SignupComponents from "@/components/SignupComponents";
+import { AuthComponents } from "@/components/AuthComponents";
 import { Image } from "expo-image";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
@@ -36,7 +36,7 @@ const Signup = () => {
             />
           </View>
           {/* Signup components */}
-          <SignupComponents />
+          <AuthComponents initialTab="signup" />
         </ScrollView>
       </KeyboardAvoidingView>
     </View>

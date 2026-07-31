@@ -9,9 +9,6 @@ export type { NearbyParams, Restaurant } from "./restaurantService";
 
 const FALLBACK_LOCATION = { latitude: 23.780704, longitude: 90.407756 };
 
-const isNear = (a: number, b: number, tolerance = 0.02) =>
-  Math.abs(a - b) <= tolerance;
-
 type FeedMode = "all" | "free";
 
 /** Helper to sync coordinate changes to user profile endpoint */
