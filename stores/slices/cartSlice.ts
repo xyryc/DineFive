@@ -96,6 +96,8 @@ export const createCartSlice = (set: any, get: () => RootStore): CartSlice => ({
       );
 
       const result = await response.json();
+      console.log("📥 [GET /api/v1/cart] API Response:", JSON.stringify(result, null, 2));
+
       if (!response.ok) {
         throw new Error(
           result?.message ||

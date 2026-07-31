@@ -110,6 +110,8 @@ export const createOrderSlice = (set: any, get: () => RootStore): OrderSlice => 
       if (!accessToken && !(get() as any).refreshToken)
         throw new Error("No access token found");
 
+      console.log("📤 [POST /api/v1/orders] Request Body:", JSON.stringify(orderData, null, 2));
+
       const response = await (get() as any).requestWithAuth(
         `${API_BASE_URL}/api/v1/orders`,
         {
@@ -122,7 +124,7 @@ export const createOrderSlice = (set: any, get: () => RootStore): OrderSlice => 
       );
 
       const result = await response.json();
-      console.log("createOrder result:", JSON.stringify(result, null, 2));
+      console.log("📥 [POST /api/v1/orders] API Response:", JSON.stringify(result, null, 2));
 
       if (!response.ok) {
         throw new Error(result.message || "Failed to place order");
@@ -131,7 +133,7 @@ export const createOrderSlice = (set: any, get: () => RootStore): OrderSlice => 
       set({ isLoading: false });
       return result;
     } catch (error: any) {
-      console.log("createOrder error:", error);
+      console.log("❌ [POST /api/v1/orders] Error:", error);
       set({ error: error.message, isLoading: false });
       return null;
     }
@@ -206,12 +208,22 @@ export const createOrderSlice = (set: any, get: () => RootStore): OrderSlice => 
     }
   },
 
-  createDonationPaymentIntent: async (mealCount: number) => {
+  createDonationPaymentIntent: async (payload: any) => {
     set({ isLoading: true, error: null });
     try {
       const { accessToken } = get() as any;
       if (!accessToken && !(get() as any).refreshToken)
         throw new Error("No access token found");
+
+      const bodyData =
+        typeof payload === "object" && payload !== null
+          ? payload
+          : { mealCount: payload };
+
+      console.log(
+        "📤 [POST /api/v1/donation/create-payment-intent] Request Body:",
+        JSON.stringify(bodyData, null, 2),
+      );
 
       const response = await (get() as any).requestWithAuth(
         `${API_BASE_URL}/api/v1/donation/create-payment-intent`,
@@ -220,11 +232,16 @@ export const createOrderSlice = (set: any, get: () => RootStore): OrderSlice => 
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ mealCount }),
+          body: JSON.stringify(bodyData),
         },
       );
 
       const result = await response.json();
+      console.log(
+        "📥 [POST /api/v1/donation/create-payment-intent] Response Body:",
+        JSON.stringify(result, null, 2),
+      );
+
       if (!response.ok) {
         throw new Error(
           result?.message || "Failed to create donation payment intent",
@@ -234,7 +251,7 @@ export const createOrderSlice = (set: any, get: () => RootStore): OrderSlice => 
       set({ isLoading: false });
       return result;
     } catch (error: any) {
-      console.log("createDonationPaymentIntent error:", error);
+      console.log("❌ [POST /api/v1/donation/create-payment-intent] Error:", error);
       set({ error: error.message, isLoading: false });
       return null;
     }
@@ -246,6 +263,8 @@ export const createOrderSlice = (set: any, get: () => RootStore): OrderSlice => 
       const { accessToken } = get() as any;
       if (!accessToken && !(get() as any).refreshToken)
         throw new Error("No access token found");
+
+      console.log("📤 [POST /api/v1/donation/confirm-payment] Request Payload:", JSON.stringify({ paymentIntentId }, null, 2));
 
       const response = await (get() as any).requestWithAuth(
         `${API_BASE_URL}/api/v1/donation/confirm-payment`,
@@ -259,6 +278,8 @@ export const createOrderSlice = (set: any, get: () => RootStore): OrderSlice => 
       );
 
       const result = await response.json();
+      console.log("📥 [POST /api/v1/donation/confirm-payment] API Response:", JSON.stringify(result, null, 2));
+
       if (!response.ok) {
         throw new Error(
           result?.message || "Failed to confirm donation payment",
@@ -268,7 +289,7 @@ export const createOrderSlice = (set: any, get: () => RootStore): OrderSlice => 
       set({ isLoading: false });
       return result;
     } catch (error: any) {
-      console.log("confirmDonationPayment error:", error);
+      console.log("❌ [POST /api/v1/donation/confirm-payment] Error:", error);
       set({ error: error.message, isLoading: false });
       return null;
     }
@@ -292,6 +313,8 @@ export const createOrderSlice = (set: any, get: () => RootStore): OrderSlice => 
       );
 
       const result = await response.json();
+      console.log("📥 [GET /api/v1/donation/my-tokens] API Response:", JSON.stringify(result, null, 2));
+
       if (!response.ok) {
         throw new Error(result?.message || "Failed to fetch donation tokens");
       }
@@ -299,7 +322,7 @@ export const createOrderSlice = (set: any, get: () => RootStore): OrderSlice => 
       set({ isLoading: false });
       return result;
     } catch (error: any) {
-      console.log("fetchDonationTokens error:", error);
+      console.log("❌ [GET /api/v1/donation/my-tokens] Error:", error);
       set({ error: error.message, isLoading: false });
       return null;
     }
@@ -316,13 +339,15 @@ export const createOrderSlice = (set: any, get: () => RootStore): OrderSlice => 
       );
 
       const result = await response.json();
+      console.log("📥 [GET /api/v1/stripe/config] API Response:", JSON.stringify(result, null, 2));
+
       if (!response.ok) {
         throw new Error(result.message || "Failed to fetch Stripe config");
       }
 
       return result;
     } catch (error: any) {
-      console.log("fetchStripeConfig error:", error);
+      console.log("❌ [GET /api/v1/stripe/config] Error:", error);
       return null;
     }
   },

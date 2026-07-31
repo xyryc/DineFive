@@ -496,18 +496,35 @@ export const restaurantService = {
     }
     const url = `${API_BASE_URL}/api/v1/donation/place-free-order`;
 
-    return requestJson(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(data),
-    });
+    console.log("📤 [POST /api/v1/donation/place-free-order] Request Payload:", JSON.stringify(data, null, 2));
+
+    try {
+      const response = await requestJson(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(data),
+      });
+
+      console.log("📥 [POST /api/v1/donation/place-free-order] API Response:", JSON.stringify(response, null, 2));
+      return response;
+    } catch (error: any) {
+      console.log("❌ [POST /api/v1/donation/place-free-order] API Error:", error?.message || error);
+      throw error;
+    }
   },
 
   getAvailableTokens: async (): Promise<any> => {
     const url = `${API_BASE_URL}/api/v1/donation/available-count`;
-    return requestJson(url, {
-      method: "GET",
-      headers: getAuthHeaders(),
-    });
+    try {
+      const response = await requestJson(url, {
+        method: "GET",
+        headers: getAuthHeaders(),
+      });
+      console.log("📥 [GET /api/v1/donation/available-count] API Response:", JSON.stringify(response, null, 2));
+      return response;
+    } catch (error: any) {
+      console.log("❌ [GET /api/v1/donation/available-count] API Error:", error?.message || error);
+      throw error;
+    }
   },
 };
