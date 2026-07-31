@@ -6,7 +6,10 @@ import React, { useEffect } from "react";
 import { View } from "react-native";
 import { Image } from "expo-image";
 import { useFonts } from "expo-font";
-import { configureReanimatedLogger, ReanimatedLogLevel } from "react-native-reanimated";
+import {
+  configureReanimatedLogger,
+  ReanimatedLogLevel,
+} from "react-native-reanimated";
 import { useNotificationSync } from "@/hooks/useNotificationSync";
 import { useStore } from "@/stores/stores";
 import "../global.css";
@@ -16,7 +19,8 @@ Sentry.init({
   tracesSampleRate: 1.0,
   enableLogs: true,
   enableNative: !__DEV__,
-  debug: __DEV__,
+  // Set debug to true (or __DEV__) for verbose sentry terminal debugging
+  debug: false,
 });
 
 // Suppress Reanimated strict-mode warnings that come from third-party dependencies
@@ -66,7 +70,9 @@ function RootLayout() {
     const inTabsGroup = group === "(tabs)";
     const inScreensGroup = group === "screens";
     const inSplashScreen = group === "splash-screen";
-    const isPendingVerification = Boolean(accessToken && user && user.isVerified === false);
+    const isPendingVerification = Boolean(
+      accessToken && user && user.isVerified === false,
+    );
 
     if (!isInitialized || inSplashScreen) return;
 
@@ -95,7 +101,14 @@ function RootLayout() {
 
   if (!isInitialized || !fontsLoaded) {
     return (
-      <View style={{ flex: 1, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center" }}>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "#FFFFFF",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <StatusBar style="dark" />
         <Image
           source={require("@/assets/images/icon.png")}
