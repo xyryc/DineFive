@@ -5,7 +5,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Image,
   Keyboard,
@@ -45,7 +44,6 @@ export default function CustomerSupportScreen() {
     fetchMessages,
     fetchConversations,
     createConversation,
-    createSupportTicket,
     sendMessageToProvider,
     user,
     isLoading,

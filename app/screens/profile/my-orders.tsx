@@ -515,12 +515,12 @@ export default function MyOrdersScreen() {
   useFocusEffect(
     useCallback(() => {
       loadOrders();
-    }, []),
+    }, [loadOrders]),
   );
 
   useEffect(() => {
     loadOrders();
-  }, [activeTab]);
+  }, [activeTab, loadOrders]);
 
   const onRefresh = async () => {
     setRefreshing(true);

@@ -277,12 +277,7 @@ function MenuItem({
 }
 
 export default function RestaurantDetailScreen() {
-  try {
-    return <RestaurantDetailScreenInner />;
-  } catch (error: any) {
-    console.error("❌ RestaurantDetailScreen CRASH STACK:", error.stack);
-    throw error;
-  }
+  return <RestaurantDetailScreenInner />;
 }
 
 function RestaurantDetailScreenInner() {
@@ -330,7 +325,7 @@ function RestaurantDetailScreenInner() {
   const [menuLoading, setMenuLoading] = React.useState(true);
   const [menuError, setMenuError] = React.useState<string | null>(null);
 
-  const handleClaimMeal = async () => {
+  const handleClaimMeal = React.useCallback(async () => {
     if (isClaimingMeal) return;
 
     setIsClaimingMeal(true);
@@ -366,7 +361,7 @@ function RestaurantDetailScreenInner() {
     } finally {
       setIsClaimingMeal(false);
     }
-  };
+  }, [isClaimingMeal, getAvailableTokens, claimToken]);
 
   const handleCall = () => {
     if (!restaurantPhone) {
@@ -540,6 +535,7 @@ function RestaurantDetailScreenInner() {
 
       // ── 0ms OPTIMISTIC UPDATE ──────────────────────────────────────────────
       // 1. Instantly increment cart count and show checkmark icon (0ms latency!)
+      setAddingItemId(item.id);
       setCartCount((prev) => prev + 1);
       setAddedSuccessIds((prev) => ({ ...prev, [item.id]: true }));
 
@@ -564,6 +560,7 @@ function RestaurantDetailScreenInner() {
         },
         1,
       ).then((result: any) => {
+        setAddingItemId(null);
         if (!result) {
           // Revert optimistic update on failure
           setCartCount((prev) => Math.max(0, prev - 1));
@@ -576,6 +573,7 @@ function RestaurantDetailScreenInner() {
           Alert.alert("Failed", latestError || "Could not add item to cart.");
         }
       }).catch((error: any) => {
+        setAddingItemId(null);
         // Revert optimistic update on error
         setCartCount((prev) => Math.max(0, prev - 1));
         setAddedSuccessIds((prev) => {

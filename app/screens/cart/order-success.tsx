@@ -13,10 +13,6 @@ export default function OrderSuccessScreen() {
     const params = useLocalSearchParams();
 
     // Get values from params
-    const restaurantAddress =
-        (params.restaurantAddress as string) ||
-        (params.pickupAddress as string) ||
-        'Restaurant address';
     const amountPaid = params.amount ? `$${params.amount}` : '$32.12';
     const isDonationSuccess = getSearchParam(params.type as string | string[]) === 'donation';
     const tokensCreated = Math.max(

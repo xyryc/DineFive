@@ -5,7 +5,6 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { LinearGradient } from "expo-linear-gradient";
 import React, { useState, useEffect } from "react";
 import {
   ActivityIndicator,
@@ -17,7 +16,6 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PhoneInput, {
@@ -27,6 +25,8 @@ import PhoneInput, {
   getCountryByCca2,
   isValidPhoneNumber,
 } from "rn-international-phone-number";
+
+import * as Location from "expo-location";
 
 const uriToBlob = (uri: string): Promise<Blob> => {
   return new Promise((resolve, reject) => {
@@ -42,8 +42,6 @@ const uriToBlob = (uri: string): Promise<Blob> => {
     xhr.send(null);
   });
 };
-
-import * as Location from "expo-location";
 
 export default function MyAccountScreen() {
   const router = useRouter();

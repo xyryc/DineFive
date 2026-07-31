@@ -1,9 +1,7 @@
 import { DonateModal } from "@/components/home/DonateModal";
 import { useStore } from "@/stores/stores";
-import { useRestaurantStore } from "@/stores/useRestaurantStore";
 import { Ionicons } from "@expo/vector-icons";
 import { StripeProvider, useStripe } from "@stripe/stripe-react-native";
-import * as Location from "expo-location";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
@@ -11,7 +9,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Modal,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -40,8 +37,6 @@ const pickString = (...values: unknown[]): string => {
 
 const formatMoney = (value: number) => `$${value.toFixed(2)}`;
 
-const formatTaxRate = (value: number) => `${(value * 100).toFixed(0)}%`;
-
 const getSearchParam = (value?: string | string[]) =>
   Array.isArray(value) ? value[0] : value;
 
@@ -55,113 +50,6 @@ type DonationBreakdown = {
   stateTaxRate?: number;
   total?: number;
   state?: string;
-};
-
-const normalizeTaxRate = (value: unknown): number => {
-  const rate = toNumber(value, 0);
-  return rate > 1 ? rate / 100 : rate;
-};
-
-const US_STATE_CODES: Record<string, string> = {
-  Alabama: "AL",
-  Alaska: "AK",
-  Arizona: "AZ",
-  Arkansas: "AR",
-  California: "CA",
-  Colorado: "CO",
-  Connecticut: "CT",
-  Delaware: "DE",
-  Florida: "FL",
-  Georgia: "GA",
-  Hawaii: "HI",
-  Idaho: "ID",
-  Illinois: "IL",
-  Indiana: "IN",
-  Iowa: "IA",
-  Kansas: "KS",
-  Kentucky: "KY",
-  Louisiana: "LA",
-  Maine: "ME",
-  Maryland: "MD",
-  Massachusetts: "MA",
-  Michigan: "MI",
-  Minnesota: "MN",
-  Mississippi: "MS",
-  Missouri: "MO",
-  Montana: "MT",
-  Nebraska: "NE",
-  Nevada: "NV",
-  "New Hampshire": "NH",
-  "New Jersey": "NJ",
-  "New Mexico": "NM",
-  "New York": "NY",
-  "North Carolina": "NC",
-  "North Dakota": "ND",
-  Ohio: "OH",
-  Oklahoma: "OK",
-  Oregon: "OR",
-  Pennsylvania: "PA",
-  "Rhode Island": "RI",
-  "South Carolina": "SC",
-  "South Dakota": "SD",
-  Tennessee: "TN",
-  Texas: "TX",
-  Utah: "UT",
-  Vermont: "VT",
-  Virginia: "VA",
-  Washington: "WA",
-  "West Virginia": "WV",
-  Wisconsin: "WI",
-  Wyoming: "WY",
-};
-
-const normalizeLocationCandidate = (value: unknown): string => {
-  if (typeof value !== "string") return "";
-  return value
-    .replace(/\b(division|district|province|state|region)\b/gi, "")
-    .replace(/\s+/g, " ")
-    .trim();
-};
-
-const buildTaxLocationCandidates = (place: any): string[] => {
-  const rawCandidates = [
-    place?.city,
-    place?.district,
-    place?.subregion,
-    place?.region,
-  ]
-    .map((value) => normalizeLocationCandidate(value))
-    .filter(Boolean);
-
-  const usaCode = US_STATE_CODES[normalizeLocationCandidate(place?.region)];
-  if (usaCode) {
-    rawCandidates.push(usaCode);
-  }
-
-  return Array.from(new Set(rawCandidates));
-};
-
-const extractTaxRateFromPayload = (payload: any): number => {
-  if (typeof payload === "number" || typeof payload === "string") {
-    return normalizeTaxRate(payload);
-  }
-
-  const source = payload?.data ?? payload;
-
-  return normalizeTaxRate(
-    source?.stateTaxRate ??
-    source?.taxRate ??
-    source?.rate ??
-    source?.percentage ??
-    source?.tax ??
-    source?.TaxRules ??
-    source?.tax_rate ??
-    source?.state_tax_rate ??
-    source?.combinedRate ??
-    source?.combined_rate ??
-    source?.totalTaxRate ??
-    source?.total_tax_rate,
-  );
 };
 
 function CheckoutContent() {
@@ -178,12 +66,9 @@ function CheckoutContent() {
     createPaymentIntent,
     createDonationPaymentIntent,
     confirmDonationPayment,
-    fetchStateTax,
   } = useStore() as any;
-  const { location, fetchLocation } = useRestaurantStore();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const [isDonateModalVisible, setIsDonateModalVisible] = useState(false);
-  const [includeUtensils, setIncludeUtensils] = useState(true);
   const [cartSubtotal, setCartSubtotal] = useState(0);
   const [cartGroups, setCartGroups] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -326,7 +211,6 @@ function CheckoutContent() {
   const stateTaxAmount = toNumber(cartRawData?.stateTaxAmount ?? cartRawData?.stateTax, 0);
   const countyTaxAmount = toNumber(cartRawData?.countyTaxAmount, 0);
   const effectiveTotal = toNumber(cartRawData?.total, cartSubtotal + platformFee + cityTax + stateTaxAmount + countyTaxAmount);
-  const donationMealLabel = donationMealCount === 1 ? "Meal" : "Meals";
   const pickupAddress =
     cartRawData?.restaurantAddress ||
     cartRawData?.items?.[0]?.foodId?.restaurantAddress ||

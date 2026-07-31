@@ -62,7 +62,7 @@ export const PromoBanner = ({ banners, deals }: PromoBannerProps) => {
       }, 100);
       return () => clearTimeout(timer);
     } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setIsInitialized(true);
       setActiveIndex(0);
     }

@@ -51,7 +51,7 @@ export default function OrderDetailsScreen() {
     };
 
     loadOrder();
-  }, [params.orderId, params._id]);
+  }, [params.orderId, params._id, fetchOrderById]);
 
   useEffect(() => {
     const checkExistingReview = async () => {
@@ -86,7 +86,7 @@ export default function OrderDetailsScreen() {
     ) {
       setRateModalVisible(true);
     }
-  }, [params.autoRate, currentState, params._id, params.orderId, orderData]);
+  }, [params.autoRate, currentState, params._id, params.orderId, orderData, fetchReviewByOrderId]);
 
   const currentOrderStatus = orderData?.status || currentState || "pending";
 

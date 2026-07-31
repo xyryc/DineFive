@@ -198,13 +198,13 @@ export default function HomeScreen() {
   React.useEffect(() => { fetchLocation(); }, [fetchLocation]);
 
   React.useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     loadBanners();
     loadCategories();
   }, [loadBanners, loadCategories]);
 
   React.useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     if (params.category) setActiveCategory(String(params.category));
   }, [params.category]);
 
@@ -234,7 +234,7 @@ export default function HomeScreen() {
 
   // Reset category if it no longer exists in list
   React.useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     if (!categories.includes(activeCategory)) setActiveCategory("All");
   }, [activeCategory, categories]);
 

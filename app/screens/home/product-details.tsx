@@ -12,7 +12,6 @@ import {
   Image,
   Modal,
   ScrollView,
-  Share,
   Text,
   TouchableOpacity,
   View,
@@ -59,12 +58,7 @@ const normalizeImageUri = (value: string | string[] | undefined): string => {
 };
 
 export default function ProductDetails() {
-  try {
-    return <ProductDetailsInner />;
-  } catch (error: any) {
-    console.error("❌ ProductDetails CRASH STACK:", error.stack);
-    throw error;
-  }
+  return <ProductDetailsInner />;
 }
 
 function ProductDetailsInner() {
@@ -100,7 +94,6 @@ function ProductDetailsInner() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isClaimingMeal, setIsClaimingMeal] = useState(false);
   const [isPlacingFreeOrder, setIsPlacingFreeOrder] = useState(false);
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isAddedToCartSuccess, setIsAddedToCartSuccess] = useState(false);
   const [reviewsLoading, setReviewsLoading] = useState(true);
 
@@ -329,20 +322,6 @@ function ProductDetailsInner() {
         setIsAddedToCartSuccess(false);
         Alert.alert("Failed", error?.message || "Something went wrong while adding to cart.");
       });
-  };
-
-  const handleShare = async () => {
-    try {
-      const message = `Check out this ${product.name} from ${product.restaurantName}!\n\n${product.description}\n\nPrice: $${product.price}\n\nView Image: ${product.image}`;
-
-      await Share.share({
-        message: message,
-        url: product.image,
-        title: product.name,
-      });
-    } catch (error: any) {
-      console.log("Error sharing product:", error);
-    }
   };
 
   try {

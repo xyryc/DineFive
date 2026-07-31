@@ -1,9 +1,7 @@
 import { EmptyState } from "@/components/common/EmptyState";
 import { useStore } from "@/stores/stores";
-import { useRestaurantStore } from "@/stores/useRestaurantStore";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
-import * as Location from "expo-location";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
 import {
@@ -42,156 +40,11 @@ const formatMoney = (value: unknown) => {
   return `$${num.toFixed(2)}`;
 };
 
-const formatTaxRate = (value: number) => `${(value * 100).toFixed(0)}%`;
-
-const normalizeTaxRate = (value: unknown): number => {
-  const rate = toNumber(value, 0);
-  return rate > 1 ? rate / 100 : rate;
-};
-
-const extractStateName = (...values: unknown[]): string => {
-  for (const value of values) {
-    if (typeof value === "string" && value.trim()) {
-      return value.trim();
-    }
-  }
-  return "";
-};
-
-const US_STATE_CODES: Record<string, string> = {
-  Alabama: "AL",
-  Alaska: "AK",
-  Arizona: "AZ",
-  Arkansas: "AR",
-  California: "CA",
-  Colorado: "CO",
-  Connecticut: "CT",
-  Delaware: "DE",
-  Florida: "FL",
-  Georgia: "GA",
-  Hawaii: "HI",
-  Idaho: "ID",
-  Illinois: "IL",
-  Indiana: "IN",
-  Iowa: "IA",
-  Kansas: "KS",
-  Kentucky: "KY",
-  Louisiana: "LA",
-  Maine: "ME",
-  Maryland: "MD",
-  Massachusetts: "MA",
-  Michigan: "MI",
-  Minnesota: "MN",
-  Mississippi: "MS",
-  Missouri: "MO",
-  Montana: "MT",
-  Nebraska: "NE",
-  Nevada: "NV",
-  "New Hampshire": "NH",
-  "New Jersey": "NJ",
-  "New Mexico": "NM",
-  "New York": "NY",
-  "North Carolina": "NC",
-  "North Dakota": "ND",
-  Ohio: "OH",
-  Oklahoma: "OK",
-  Oregon: "OR",
-  Pennsylvania: "PA",
-  "Rhode Island": "RI",
-  "South Carolina": "SC",
-  "South Dakota": "SD",
-  Tennessee: "TN",
-  Texas: "TX",
-  Utah: "UT",
-  Vermont: "VT",
-  Virginia: "VA",
-  Washington: "WA",
-  "West Virginia": "WV",
-  Wisconsin: "WI",
-  Wyoming: "WY",
-};
-
-const normalizeLocationCandidate = (value: unknown): string => {
-  if (typeof value !== "string") return "";
-  return value
-    .replace(/\b(division|district|province|state|region)\b/gi, "")
-    .replace(/\s+/g, " ")
-    .trim();
-};
-
-const buildTaxLocationCandidates = (place: any): string[] => {
-  const rawCandidates = [
-    place?.city,
-    place?.district,
-    place?.subregion,
-    place?.region,
-  ]
-    .map((value) => normalizeLocationCandidate(value))
-    .filter(Boolean);
-
-  const usaCode = US_STATE_CODES[normalizeLocationCandidate(place?.region)];
-  if (usaCode) {
-    rawCandidates.push(usaCode);
-  }
-
-  return Array.from(new Set(rawCandidates));
-};
-
-const findMatchedTaxRule = (payload: any, stateName: string) => {
-  const normalizedStateName = stateName.trim().toLowerCase();
-  const source = payload?.data ?? payload;
-  const stateRules = Array.isArray(source?.StateTexRules)
-    ? source.StateTexRules
-    : Array.isArray(source?.stateTaxRules)
-      ? source.stateTaxRules
-      : Array.isArray(source)
-        ? source
-        : [];
-
-  return stateRules.find((rule: any) => {
-    const ruleState =
-      typeof rule?.state === "string" ? rule.state.trim().toLowerCase() : "";
-    return ruleState === normalizedStateName;
-  });
-};
-
-const extractTaxRateFromPayload = (
-  payload: any,
-  stateName?: string,
-): number => {
-  if (typeof payload === "number" || typeof payload === "string") {
-    return normalizeTaxRate(payload);
-  }
-
-  const source = payload?.data ?? payload;
-  const matchedRule =
-    stateName && source && typeof source === "object"
-      ? findMatchedTaxRule(source, stateName)
-      : null;
-  const taxSource = matchedRule ?? source;
-
-  return normalizeTaxRate(
-    taxSource?.stateTaxRate ??
-      taxSource?.taxRate ??
-      taxSource?.rate ??
-      taxSource?.percentage ??
-      taxSource?.tax ??
-      taxSource?.TaxRules ??
-      taxSource?.tax_rate ??
-      taxSource?.state_tax_rate ??
-      taxSource?.combinedRate ??
-      taxSource?.combined_rate ??
-      taxSource?.totalTaxRate ??
-      taxSource?.total_tax_rate,
-  );
-};
-
 export default function CartScreen() {
   const router = useRouter();
   const { fetchCart, updateCartQuantity, removeCartItem, clearCart } =
     useStore() as any;
   const insets = useSafeAreaInsets();
-  const { location, fetchLocation } = useRestaurantStore();
   const [cartItems, setCartItems] = React.useState<any[]>([]);
   const [cartGroups, setCartGroups] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -434,28 +287,6 @@ export default function CartScreen() {
       </SafeAreaView>
     );
   }
-
-  const firstItem = cartItems[0];
-  const restaurantName = pickString(
-    cartMeta?.restaurantName,
-    firstItem?.restaurantName,
-    firstItem?.providerName,
-    "Restaurant",
-  );
-  const restaurantAddress = pickString(
-    cartMeta?.restaurantAddress,
-    firstItem?.restaurantAddress,
-    "Address unavailable",
-  );
-  const restaurantProfile = pickString(
-    cartMeta?.restaurantProfile,
-    firstItem?.providerProfile,
-    firstItem?.image,
-  );
-
-  const distanceMiles = Number.isFinite(firstItem?.distanceKm)
-    ? `${(firstItem.distanceKm * 0.621371).toFixed(1)} mi`
-    : pickString(cartMeta?.distance, "3.1 mi");
 
   const platformFee = toNumber(cartMeta?.platformFee, 0);
   const cityTax = toNumber(cartMeta?.cityTax, 0);

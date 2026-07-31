@@ -2,9 +2,8 @@ import { cardStore, Card } from "@/utils/cardStore";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { 
-  Alert, 
   Modal, 
   ScrollView, 
   Switch, 
@@ -47,13 +46,9 @@ const CardRow = ({
 
 export default function PaymentScreen() {
   const router = useRouter();
-  const [cards, setCards] = useState(() => cardStore.getAllCards());
+  const [cards] = useState(() => cardStore.getAllCards());
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [showModal, setShowModal] = useState(false);
-
-  const refreshCards = () => {
-    setCards(cardStore.getAllCards());
-  };
 
   const handleCardPress = (card: Card) => {
     setSelectedCard(card);

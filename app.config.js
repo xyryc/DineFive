@@ -2,7 +2,7 @@ module.exports = {
   expo: {
     name: "Dine Five",
     slug: "Dine-Five",
-    version: "1.0.3",
+    version: "1.0.4",
     orientation: "portrait",
     icon: "./assets/images/app-icon.png",
     scheme: "dinefive",
@@ -17,7 +17,7 @@ module.exports = {
     },
     android: {
       package: "com.dinefive.app",
-      versionCode: 4,
+      versionCode: 5,
       adaptiveIcon: {
         backgroundColor: "#E6F4FE",
         foregroundImage: "./assets/images/app-icon.png",
@@ -81,7 +81,6 @@ module.exports = {
       "expo-image",
       "expo-sharing",
       "expo-status-bar",
-      "expo-web-browser",
       "expo-video",
       "expo-asset",
     ],

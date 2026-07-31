@@ -1,6 +1,7 @@
 import GradientButton from "@/components/GradientButton";
 import React, { useState } from "react";
 import { Alert, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type DonateConfirmHandler = (mealCount: any) => void;
 
@@ -11,6 +12,7 @@ interface DonateModalProps {
 }
 
 export const DonateModal = ({ visible, onClose, onConfirm }: DonateModalProps) => {
+  const insets = useSafeAreaInsets();
   const [selectedMealCount, setSelectedMealCount] = useState("1");
   const [customMealCount, setCustomMealCount] = useState("");
 
@@ -56,7 +58,10 @@ export const DonateModal = ({ visible, onClose, onConfirm }: DonateModalProps) =
           />
 
           {/* Content */}
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { paddingBottom: Math.max(24, insets.bottom + 16) }]}>
+            {/* Handle Bar */}
+            <View className="w-12 h-1 bg-gray-200 rounded-full self-center mb-4" />
+
             {/* Title */}
             <Text className="text-xl font-heading text-[#1F2937] mb-2">
               Donate a meal
@@ -132,9 +137,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     paddingHorizontal: 18,
-    paddingTop: 24,
-    paddingBottom: 16,
-    marginBottom: 20,
+    paddingTop: 16,
+    marginBottom: 0,
   },
   amountContainer: {
     backgroundColor: '#F3F4F6',

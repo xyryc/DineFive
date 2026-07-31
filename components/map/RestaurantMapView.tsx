@@ -156,7 +156,7 @@ export default function RestaurantMapView({ onOpenRestaurant }: RestaurantMapVie
     const idx = filteredRestaurants.findIndex((r) => r.id === selectedRestaurant.id);
     if (idx === -1) {
       setSelectedRestaurant(filteredRestaurants[0]);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setActiveCardIndex(0);
       try { flatListRef.current?.scrollToIndex({ index: 0, animated: true }); } catch { }
       return;
