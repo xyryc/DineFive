@@ -1,7 +1,7 @@
 // restaurantService.ts
 import { API_BASE_URL } from "@/utils/api";
 import { normalizeImageUri } from "@/utils/userAvatar";
-import { useStore } from "./stores";
+import { useStore } from "@/stores/stores";
 
 export interface Restaurant {
   id: string;
@@ -121,7 +121,6 @@ const extractCoordinates = (item: any): { lat: number; lng: number } | null => {
 
   const coords = item?.location?.coordinates ?? item?.coordinates;
   if (Array.isArray(coords) && coords.length >= 2) {
-    // GeoJSON order: [lng, lat]
     const geoLng = toNumber(coords[0], NaN);
     const geoLat = toNumber(coords[1], NaN);
     if (isValidLatitude(geoLat) && isValidLongitude(geoLng)) {
@@ -148,7 +147,6 @@ const normalizeDistanceKm = (raw: any): number => {
   if (unit.includes("km") || unit.includes("kilometer"))
     return Math.max(0, value);
 
-  // Nearby API is radius-limited; very large values are usually meters.
   if (value > 30) return Math.max(0, value / 1000);
   return Math.max(0, value);
 };
@@ -219,8 +217,6 @@ const normalizeRestaurant = (item: any, index: number): Restaurant => {
     deliveryTimeMinutes: Math.max(5, Math.min(60, deliveryTime)),
     mealName: String(item?.name || item?.title || ""),
     mealImage: normalizeImageUri(item?.image || item?.imageUrl || ""),
-    // For free-meal mode, the API returns item.image as the food photo.
-    // We expose it here so FreeMealCard can pick it up directly.
     image: normalizeImageUri(item?.image || item?.imageUrl || ""),
     foodId: String(item?.foodId ?? item?.id ?? item?._id ?? id),
     title: String(item?.title ?? item?.name ?? ""),
@@ -282,7 +278,6 @@ const normalizeNearbyResponse = (payload: any): NearbyResponse => {
     normalizeRestaurant(item, index),
   );
 
-  // The donated-foods API returns token count inside `meta`
   const tokenCount = toNumber(
     payload?.meta?.availableTokenCount ??
     payload?.availableTokenCount ??
@@ -368,12 +363,6 @@ const requestJson = async (
 };
 
 export const restaurantService = {
-  /**
-   * GET /provider/donated-foods/nearby
-   * Used for both "Meal near you" (freeNearYou=false) and
-   * "Free meal near you" (freeNearYou=true).
-   * Backend expects radius in km (max 100).
-   */
   getNearby: async (params: NearbyParams): Promise<NearbyResponse> => {
     const radiusMeters = Math.max(10, Math.round(params.radius ?? 1000));
     const radiusKm = Math.min(100, Number((radiusMeters / 1000).toFixed(2)));
@@ -399,21 +388,6 @@ export const restaurantService = {
     }
 
     const url = `${BASE_URL}/provider/nearby?${queryParams.toString()}`;
-    console.log("🚀 [getNearby] Request:", {
-      url,
-      params: {
-        latitude: params.latitude,
-        longitude: params.longitude,
-        radiusKm,
-        page,
-        limit,
-        sortBy,
-        freeNearYou: params.freeNearYou ? "true" : "false",
-        cuisine: params.cuisine || undefined,
-        search: params.search || undefined,
-      },
-    });
-
     try {
       const res = await fetch(url, {
         method: "GET",
@@ -427,15 +401,6 @@ export const restaurantService = {
       } catch {
         json = null;
       }
-
-      console.log("📥 [getNearby] Response:", {
-        status: res.status,
-        success: json?.success,
-        message: json?.message,
-        dataCount: Array.isArray(json?.data) ? json.data.length : 0,
-        total: json?.pagination?.total,
-        firstRestaurant: json?.data?.[0]?.restaurantName || json?.data?.[0]?.name || "N/A",
-      });
 
       if (!res.ok) {
         throw new Error(
@@ -453,11 +418,6 @@ export const restaurantService = {
     }
   },
 
-  /**
-   * GET /provider/donated-foods/nearby?freeNearYou=true
-   * Alias that explicitly sets freeNearYou=true using the current user location
-   * from the store so callers don't have to pass coordinates.
-   */
   getFreeMeals: async (params: {
     page?: number;
     limit?: number;
@@ -489,7 +449,6 @@ export const restaurantService = {
     }
 
     const url = `${BASE_URL}/provider/nearby?${queryParams.toString()}`;
-    console.log("🚀 CALLING API ENDPOINT (getFreeMeals):", url);
 
     try {
       const res = await fetch(url, {
@@ -510,16 +469,12 @@ export const restaurantService = {
     }
   },
 
-  /**
-   * POST /api/v1/donation/claim/{{tokenId}}
-   */
   claimFreeMeal: async (tokenId: string): Promise<any> => {
     const headers = getAuthHeaders();
     if (!headers["Authorization"]) {
       throw new Error("You are not logged in! Please log in to claim a meal.");
     }
     const url = `${API_BASE_URL}/api/v1/donation/claim/${tokenId}`;
-    console.log("Claiming free meal:", url);
 
     return requestJson(url, {
       method: "POST",
@@ -527,9 +482,6 @@ export const restaurantService = {
     });
   },
 
-  /**
-   * POST /api/v1/donation/place-free-order
-   */
   placeFreeOrder: async (data: {
     tokenId: string;
     providerId: string;
@@ -543,7 +495,6 @@ export const restaurantService = {
       );
     }
     const url = `${API_BASE_URL}/api/v1/donation/place-free-order`;
-    console.log("Placing free order:", url, data);
 
     return requestJson(url, {
       method: "POST",
@@ -552,9 +503,6 @@ export const restaurantService = {
     });
   },
 
-  /**
-   * GET /api/v1/donation/available-count
-   */
   getAvailableTokens: async (): Promise<any> => {
     const url = `${API_BASE_URL}/api/v1/donation/available-count`;
     return requestJson(url, {

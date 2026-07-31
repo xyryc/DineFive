@@ -73,10 +73,7 @@ export const fetchWithLogging = async (
   url: string,
   options?: RequestInit,
 ): Promise<Response> => {
-  const timestamp = new Date().toISOString();
   const method = options?.method || "GET";
-
-  // console.log(`\n📡 [${timestamp}] ${method} ${url}`);
 
   if (options?.body) {
     try {
@@ -87,19 +84,8 @@ export const fetchWithLogging = async (
     }
   }
 
-  // if (options?.headers) {
-  //   console.log("📋 Headers:", options.headers);
-  // }
-
   try {
-    const response = await fetch(url, options);
-    const clonedResponse = response.clone();
-    const responseData = await clonedResponse.json().catch(() => null);
-
-    // console.log(`✅ Response Status: ${response.status}`);
-    // console.log("📥 Response Data:", responseData || "(no JSON)");
-
-    return response;
+    return await fetch(url, options);
   } catch (error) {
     console.error(`❌ Request Error: ${method} ${url}`, error);
     throw error;

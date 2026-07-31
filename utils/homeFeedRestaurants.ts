@@ -1,4 +1,4 @@
-import type { Restaurant } from "@/stores/restaurantService";
+import type { Restaurant } from "@/services/restaurantService";
 import { normalizeImageUri } from "@/utils/userAvatar";
 
 const toProviderKey = (item: any): string =>

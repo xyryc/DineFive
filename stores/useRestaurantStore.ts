@@ -1,11 +1,11 @@
 import * as Location from "expo-location";
 import { create } from "zustand";
-import type { NearbyParams, Restaurant } from "./restaurantService";
-import { restaurantService } from "./restaurantService";
+import type { NearbyParams, Restaurant } from "@/services/restaurantService";
+import { restaurantService } from "@/services/restaurantService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useStore } from "./stores";
 
-export type { NearbyParams, Restaurant } from "./restaurantService";
+export type { NearbyParams, Restaurant } from "@/services/restaurantService";
 
 const FALLBACK_LOCATION = { latitude: 23.780704, longitude: 90.407756 };
 

@@ -1,6 +1,6 @@
 import { useStore } from "@/stores/stores";
 import { useRestaurantStore } from "@/stores/useRestaurantStore";
-import { restaurantService } from "@/stores/restaurantService";
+import { restaurantService } from "@/services/restaurantService";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";

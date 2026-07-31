@@ -1,5 +1,5 @@
 import RestaurantMapView from '@/components/map/RestaurantMapView';
-import { Restaurant } from '@/stores/restaurantService';
+import { Restaurant } from '@/services/restaurantService';
 import { useRestaurantStore } from '@/stores/useRestaurantStore';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
