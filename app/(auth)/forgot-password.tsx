@@ -1,4 +1,5 @@
-import GradientButton from "@/components/GradientButton";
+import CustomInput from "@/components/auth/CustomInput";
+import GradientButton from "@/components/common/GradientButton";
 import { useStore } from "@/stores/stores";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -8,7 +9,6 @@ import {
   ActivityIndicator,
   Alert,
   Text,
-  TextInput,
   View,
   KeyboardAvoidingView,
   Platform,
@@ -90,18 +90,14 @@ const ForgotPassword = () => {
               </Text>
 
               {/* Email input */}
-              <View className="mb-4">
-                <Text className="text-gray-700 mb-2">Email Address</Text>
-                <TextInput
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="Enter your email"
-                  placeholderTextColor="#9CA3AF"
-                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-700"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              </View>
+              <CustomInput
+                label="Email Address"
+                value={email}
+                onChangeText={setEmail}
+                placeholder="Enter your email"
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
 
               {/* Continue button */}
               <View className="mt-14 mb-4">

@@ -13,10 +13,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import CustomInput from "./CustomInput";
 import GoogleLogin from "./GoogleLogin";
-import GradientButton from "./GradientButton";
-import TermsModal, { preloadLegalDocuments } from "./TermsModal";
+import GradientButton from "../common/GradientButton";
+import TermsModal, { preloadLegalDocuments } from "../common/TermsModal";
 
 interface AuthComponentsProps {
   initialTab?: "login" | "signup";
@@ -25,6 +26,7 @@ interface AuthComponentsProps {
 export const AuthComponents = ({
   initialTab = "login",
 }: AuthComponentsProps) => {
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<"login" | "signup">(initialTab);
   const [cardWidth, setCardWidth] = useState<number>(0);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -33,14 +35,12 @@ export const AuthComponents = ({
     preloadLegalDocuments();
   }, []);
 
-  // Login form state
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [isLoginShowPassword, setIsLoginShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmittingLogin, setIsSubmittingLogin] = useState(false);
 
-  // Signup form state
   const [signupName, setSignupName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
@@ -66,7 +66,7 @@ export const AuthComponents = ({
   };
 
   const handleLayout = (event: LayoutChangeEvent) => {
-    const width = event.nativeEvent.layout.width - 40; // Subtract padding px-5 (20px left + 20px right)
+    const width = event.nativeEvent.layout.width - 40;
     if (width > 0 && width !== cardWidth) {
       setCardWidth(width);
       if (initialTab === "signup") {
@@ -155,9 +155,9 @@ export const AuthComponents = ({
   return (
     <View
       onLayout={handleLayout}
-      className="pt-5 px-5 pb-10 bg-white rounded-t-3xl shadow-lg"
+      className="pt-5 px-5 bg-white rounded-t-3xl shadow-lg"
+      style={{ paddingBottom: Math.max(24, insets.bottom + 16) }}
     >
-      {/* Tab Selector */}
       <View className="flex-row items-center gap-5 bg-[#FFF3CD] rounded-2xl mb-4">
         {activeTab === "login" ? (
           <>
@@ -186,7 +186,6 @@ export const AuthComponents = ({
         )}
       </View>
 
-      {/* Horizontal Sliding Form Pager (Top App Standard) */}
       {cardWidth > 0 ? (
         <View style={{ width: cardWidth }} className="overflow-hidden bg-white">
           <ScrollView
@@ -199,7 +198,6 @@ export const AuthComponents = ({
             style={{ width: cardWidth }}
             className="bg-white overflow-hidden"
           >
-            {/* LOGIN FORM */}
             <View style={{ width: cardWidth }} className="bg-white">
               <CustomInput
                 label="Email"
@@ -267,7 +265,6 @@ export const AuthComponents = ({
               </View>
             </View>
 
-            {/* SIGNUP FORM */}
             <View style={{ width: cardWidth }} className="bg-white">
               <CustomInput
                 label="Name"
@@ -353,17 +350,14 @@ export const AuthComponents = ({
         </View>
       ) : null}
 
-      {/* Divider */}
       <View className="mt-4 flex-row items-center gap-3">
         <View className="h-px bg-[#EDEDED] mx-2 flex-1" />
         <Text className="text-[#8E8E8E] text-base">or</Text>
         <View className="flex-1 h-px bg-[#EDEDED] mx-2" />
       </View>
 
-      {/* Google Login */}
       <GoogleLogin />
 
-      {/* Restaurant Partner Dashboard Link */}
       <View className="mt-6 items-center">
         <Text className="text-xs font-body-medium text-[#6C757D]">
           Are you a restaurant partner?{" "}

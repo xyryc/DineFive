@@ -57,9 +57,14 @@ export default function FavoriteScreen() {
     const loadFavorites = async (silent = false) => {
         if (!silent) setLoading(true);
         try {
-            const data = await fetchFavorites();
-            if (data && data.favorites) {
-                setFavorites(data.favorites);
+            const result = await fetchFavorites();
+            if (result) {
+                const list =
+                    result.data?.favorites ||
+                    result.favorites ||
+                    result.data ||
+                    (Array.isArray(result) ? result : []);
+                setFavorites(Array.isArray(list) ? list : []);
             }
         } catch (error) {
             console.error("Error fetching favorites:", error);

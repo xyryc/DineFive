@@ -1,7 +1,7 @@
 import { signInWithGoogle } from "@/services/socialAuth";
 import { useStore } from "@/stores/stores";
 import { router } from "expo-router";
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -40,15 +40,9 @@ export default function GoogleLogin() {
         );
       }
 
-      console.log("--- START GOOGLE ID TOKEN ---");
-      console.log(idToken);
-      console.log("--- END GOOGLE ID TOKEN ---");
-
-      // Call our backend via the store
       const loginResult = await googleLogin({ idToken });
 
       if (loginResult) {
-        // Alert.alert("Success", "Signed in successfully!");
         router.replace("/(tabs)");
       }
     } catch (error: any) {
@@ -103,7 +97,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#E5E7EB",
-    // Soft, premium shadow
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,

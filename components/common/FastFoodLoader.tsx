@@ -54,14 +54,12 @@ export const FastFoodLoader: React.FC<FastFoodLoaderProps> = ({
     <View className="flex-1 bg-white items-center justify-center p-6">
       <StatusBar style="dark" />
 
-      {/* Outer Pulse Circle */}
       <Animated.View
         style={{
           transform: [{ scale: pulseAnim }],
         }}
         className="w-24 h-24 rounded-full bg-[#FFCD39]/20 items-center justify-center relative mb-5"
       >
-        {/* Spinning Dashed Ring */}
         <Animated.View
           style={{
             transform: [{ rotate: spin }],
@@ -75,18 +73,15 @@ export const FastFoodLoader: React.FC<FastFoodLoaderProps> = ({
           }}
         />
 
-        {/* Center Fast Food Icon */}
         <View className="w-16 h-16 rounded-full bg-[#FFCD39] items-center justify-center shadow-sm">
           <Ionicons name="fast-food-outline" size={30} color="#000000" />
         </View>
       </Animated.View>
 
-      {/* Loading Message */}
       <Text className="text-gray-900 font-heading-bold text-lg text-center tracking-tight">
         {message}
       </Text>
 
-      {/* Subtitle */}
       <Text className="text-gray-400 font-body-medium text-xs text-center mt-1">
         {subtitle}
       </Text>

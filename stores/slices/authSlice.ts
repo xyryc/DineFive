@@ -202,36 +202,60 @@ export const createAuthSlice = (set: any, get: () => RootStore): AuthSlice => ({
   verifyOTP: async (data: { email: string; code: string }) => {
     set({ isLoading: true, error: null });
     try {
+      const currentUser = (get() as any).user;
+      const currentAccessToken = (get() as any).accessToken;
+      const currentRefreshToken = (get() as any).refreshToken;
+
       const response = await fetchWithLogging(
-        `${API_BASE_URL}/api/v1/auth/verify-otp`,
+        `${API_BASE_URL}/api/v1/auth/verify-email`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
+          body: JSON.stringify({
+            email: data.email,
+            otp: data.code,
+          }),
         },
       );
 
       const result = await response.json();
-      console.log("verifyOTP result:", JSON.stringify(result, null, 2));
+      console.log("verifyOTP full result:", JSON.stringify(result, null, 2));
 
       if (!response.ok) {
         throw new Error(result.message || "Verification failed");
       }
 
-      const userData = extractUserPayload(result);
-      const sessionData = result.data?.session || result.session;
+      const userData =
+        result.data?.user || result.user || result.data || null;
+      const accessToken =
+        result.data?.session?.accessToken ||
+        result.session?.accessToken ||
+        result.accessToken ||
+        result.data?.accessToken ||
+        result.token;
+      const refreshToken =
+        result.data?.session?.refreshToken ||
+        result.session?.refreshToken ||
+        result.refreshToken ||
+        result.data?.refreshToken;
 
-      if (userData) {
+      const verifiedUser =
+        userData ||
+        (currentUser ? { ...currentUser, isVerified: true } : null);
+      const verifiedAccessToken = accessToken || currentAccessToken;
+      const verifiedRefreshToken = refreshToken || currentRefreshToken;
+
+      if (verifiedUser && verifiedAccessToken) {
         await (get() as any).persistAuthData(
-          userData,
-          sessionData?.accessToken,
-          sessionData?.refreshToken,
+          verifiedUser,
+          verifiedAccessToken,
+          verifiedRefreshToken,
         );
 
         set({
-          user: userData,
-          accessToken: sessionData?.accessToken || null,
-          refreshToken: sessionData?.refreshToken || null,
+          user: normalizeUserPayload(verifiedUser),
+          accessToken: verifiedAccessToken,
+          refreshToken: verifiedRefreshToken || null,
           isLoading: false,
         });
       } else {
@@ -240,8 +264,8 @@ export const createAuthSlice = (set: any, get: () => RootStore): AuthSlice => ({
 
       return result;
     } catch (error: any) {
+      console.log("verifyOTP error:", error);
       const parsedMessage = translateApiMessage(error.message);
-      console.log("verifyOTP error:", parsedMessage);
       set({ error: parsedMessage, isLoading: false });
       return null;
     }
@@ -307,44 +331,66 @@ export const createAuthSlice = (set: any, get: () => RootStore): AuthSlice => ({
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
+          body: JSON.stringify({
+            email: data.email,
+            otp: data.code,
+          }),
         },
       );
 
       const result = await response.json();
+      console.log("verifyForgotOTP full result:", JSON.stringify(result, null, 2));
+
       if (!response.ok) {
         throw new Error(result.message || "Verification failed");
       }
 
-      set({ isLoading: false });
+      const resetToken = result.data?.accessToken || result.accessToken;
+      set({ resetToken: resetToken || null, isLoading: false });
+
       return result;
     } catch (error: any) {
+      console.log("verifyForgotOTP error:", error);
       const parsedMessage = translateApiMessage(error.message);
       set({ error: parsedMessage, isLoading: false });
       return null;
     }
   },
 
-  resetPassword: async (data: { email: string; code: string; newPassword: string }) => {
+  resetPassword: async (data: { newPassword: string; confirmPassword: string }) => {
     set({ isLoading: true, error: null });
     try {
+      const { resetToken } = get() as any;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (resetToken) {
+        headers["Authorization"] = `Bearer ${resetToken}`;
+      }
+
       const response = await fetchWithLogging(
         `${API_BASE_URL}/api/v1/auth/reset-password`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
+          headers,
+          body: JSON.stringify({
+            newPassword: data.newPassword,
+            confirmPassword: data.confirmPassword || data.newPassword,
+          }),
         },
       );
 
       const result = await response.json();
+      console.log("resetPassword result:", JSON.stringify(result, null, 2));
+
       if (!response.ok) {
         throw new Error(result.message || "Reset password failed");
       }
 
-      set({ isLoading: false });
+      set({ isLoading: false, resetToken: null });
       return result;
     } catch (error: any) {
+      console.log("resetPassword error:", error);
       const parsedMessage = translateApiMessage(error.message);
       set({ error: parsedMessage, isLoading: false });
       return null;
@@ -449,47 +495,85 @@ export const createAuthSlice = (set: any, get: () => RootStore): AuthSlice => ({
     }
   },
 
-  socialAuth: async (data: any) => {
+  googleLogin: async (data: { idToken: string; requestedRole?: string }) => {
     set({ isLoading: true, error: null });
     try {
       const response = await fetchWithLogging(
-        `${API_BASE_URL}/api/v1/auth/social-login`,
+        `${API_BASE_URL}/api/auth/google`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
+          body: JSON.stringify({
+            idToken: data.idToken,
+            requestedRole: data.requestedRole || "CUSTOMER",
+          }),
+        },
+      );
+
+      const result = await response.json();
+      console.log("Google login result:", JSON.stringify(result, null, 2));
+
+      if (!response.ok) {
+        throw new Error(result.message || "Google login failed");
+      }
+
+      const userData = extractUserPayload(result) || result.data?.user || result.user || result.data;
+      const session = result.data?.session || result.session;
+      const accessToken =
+        session?.accessToken ||
+        result.accessToken ||
+        result.data?.accessToken;
+      const refreshToken =
+        session?.refreshToken ||
+        result.refreshToken ||
+        result.data?.refreshToken;
+
+      if (userData && accessToken) {
+        await (get() as any).persistAuthData(userData, accessToken, refreshToken);
+        set({
+          user: normalizeUserPayload(userData),
+          accessToken,
+          refreshToken: refreshToken || null,
+          isLoading: false,
+        });
+        return result;
+      } else {
+        throw new Error("Invalid response format: User or token is missing");
+      }
+    } catch (error: any) {
+      console.log("googleLogin error:", error);
+      const parsedMessage = translateApiMessage(error.message);
+      set({ error: parsedMessage, isLoading: false });
+      return null;
+    }
+  },
+
+  socialAuth: async (data: any) => {
+    return (get() as any).googleLogin(data);
+  },
+
+  deleteAccount: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await (get() as any).requestWithAuth(
+        `${API_BASE_URL}/api/v1/auth/account`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
         },
       );
 
       const result = await response.json();
       if (!response.ok) {
-        throw new Error(result.message || "Social login failed");
+        throw new Error(result.message || "Failed to delete account");
       }
 
-      const userData = extractUserPayload(result);
-      const sessionData = result.data?.session || result.session;
-
-      if (userData) {
-        await (get() as any).persistAuthData(
-          userData,
-          sessionData?.accessToken,
-          sessionData?.refreshToken,
-        );
-
-        set({
-          user: userData,
-          accessToken: sessionData?.accessToken || null,
-          refreshToken: sessionData?.refreshToken || null,
-          isLoading: false,
-        });
-      } else {
-        set({ isLoading: false });
-      }
-
-      return result;
+      await (get() as any).logout();
+      set({ isLoading: false });
+      return { success: true, message: result.message };
     } catch (error: any) {
-      const parsedMessage = translateApiMessage(error.message);
-      set({ error: parsedMessage, isLoading: false });
+      console.log("deleteAccount error:", error);
+      set({ error: error.message, isLoading: false });
       return null;
     }
   },

@@ -84,10 +84,12 @@ export interface AuthActions {
   sendOTP: (email: string) => Promise<any>;
   forgotPassword: (email: string) => Promise<any>;
   verifyForgotOTP: (data: { email: string; code: string }) => Promise<any>;
-  resetPassword: (data: { email: string; code: string; newPassword: string }) => Promise<any>;
+  resetPassword: (data: { newPassword: string; confirmPassword?: string }) => Promise<any>;
   updateProfile: (data: Partial<UserProfile>) => Promise<any>;
   updateAvatar: (imageUri: string) => Promise<any>;
   socialAuth: (data: any) => Promise<any>;
+  googleLogin: (data: { idToken: string; requestedRole?: string }) => Promise<any>;
+  deleteAccount: () => Promise<any>;
   requestWithAuth: (url: string, options?: RequestInit) => Promise<Response>;
 }
 
@@ -139,6 +141,34 @@ export interface ReviewActions {
   fetchStateTax: (candidates?: any) => Promise<any>;
 }
 
+export interface FeedState {
+  banners: any[];
+  categories: any[];
+  homeFeed: any | null;
+  notifications: any[];
+}
+
+export interface FeedActions {
+  fetchProfile: () => Promise<any>;
+  fetchHomeFeed: (params?: any) => Promise<any>;
+  fetchCategories: () => Promise<any[]>;
+  fetchBanners: () => Promise<any[]>;
+  fetchNotifications: () => Promise<any[]>;
+}
+
+export interface ChatState {
+  conversations: any[];
+  messages: any[];
+}
+
+export interface ChatActions {
+  fetchConversations: (limit?: number) => Promise<any>;
+  createConversation: (providerId: string) => Promise<any>;
+  fetchMessages: (conversationId: string, page?: number, limit?: number) => Promise<any>;
+  sendMessage: (conversationId: string, message: string, attachments?: any[]) => Promise<any>;
+  sendMessageToProvider: (providerId: string | undefined, message: string, attachments?: any[]) => Promise<any>;
+}
+
 export type RootStore = AuthState &
   AuthActions &
   CartState &
@@ -146,4 +176,8 @@ export type RootStore = AuthState &
   OrderState &
   OrderActions &
   ReviewState &
-  ReviewActions;
+  ReviewActions &
+  FeedState &
+  FeedActions &
+  ChatState &
+  ChatActions;

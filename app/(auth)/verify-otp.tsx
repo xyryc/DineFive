@@ -1,5 +1,5 @@
-import CustomInput from "@/components/CustomInput";
-import GradientButton from "@/components/GradientButton";
+import CustomInput from "@/components/auth/CustomInput";
+import GradientButton from "@/components/common/GradientButton";
 import { useStore } from "@/stores/stores";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
@@ -22,7 +22,8 @@ const VerifyOTP = () => {
     return Array.isArray(value) ? value[0] : value;
   }, [params.email]);
   const [code, setCode] = useState("");
-  const { verifyOTP, isLoading } = useStore() as any;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { verifyOTP } = useStore() as any;
 
   const handleVerifyOTP = async () => {
     if (!email) {
@@ -34,11 +35,11 @@ const VerifyOTP = () => {
       return;
     }
 
-    if (!code) {
-      // Code খালি থাকলে কোনো alert না দেখিয়ে শুধু return
+    if (!code || isSubmitting) {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       console.log("Verifying OTP for:", email, "with code:", code);
       const result = await verifyOTP({ email, code });
@@ -48,19 +49,18 @@ const VerifyOTP = () => {
       console.log("Auth state after verification:", { user, accessToken });
 
       if (result?.success) {
-        // OTP verified
         if (user && accessToken) {
-          router.replace("/(tabs)"); // logged in → go to tabs
+          router.replace("/(tabs)");
         } else {
-          router.replace("/(auth)/login"); // not logged in → go to login
+          router.replace("/(auth)/login");
         }
       } else {
-        // OTP invalid → stay on same screen or handle error silently
         console.log("Invalid OTP");
       }
     } catch (error: any) {
       console.log("Verification error:", error);
-      // Optional: handle error silently or show a toast/snackbar if needed
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -122,7 +122,7 @@ const VerifyOTP = () => {
 
               {/* Verify button */}
               <View className="mt-14 mb-4">
-                {isLoading ? (
+                {isSubmitting ? (
                   <View className="items-center py-4 bg-yellow-400 rounded-full">
                     <ActivityIndicator color="black" />
                   </View>

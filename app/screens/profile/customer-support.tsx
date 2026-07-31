@@ -144,24 +144,40 @@ export default function CustomerSupportScreen() {
       const data = await fetchMessages(conversationId);
       if (data && (data.messages || Array.isArray(data))) {
         const rawMessages = data.messages || (Array.isArray(data) ? data : []);
-        const formattedMessages = rawMessages.map((m: any) => ({
-          id: m.id || m._id || m.messageId || Math.random().toString(),
-          text: m.content || m.text || m.message || "",
-          // Improved isSupport logic: True if sender is Admin, Super Admin, Provider or not the current user
-          isSupport:
-            m.sender?.role === "ADMIN" ||
-            m.sender?.role === "SUPER_ADMIN" ||
-            m.sender?.role === "PROVIDER" ||
-            m.senderId === providerId ||
-            (!!m.senderId && m.senderId !== user?.id && m.senderId !== user?._id),
-          time: new Date(m.createdAt).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          attachments: m.attachmentUrl
-            ? [{ uri: m.attachmentUrl, type: 'image' }]
-            : (m.attachments || (m.imageUrl ? [{ uri: m.imageUrl, type: 'image' }] : [])),
-        }));
+        const currentUserId = String(user?.id || user?._id || user?.userId || "");
+
+        const formattedMessages = rawMessages.map((m: any) => {
+          const senderRole = String(m.senderRole || m.sender?.role || "").toUpperCase();
+          const msgSenderId = String(
+            m.senderId || (typeof m.sender === "object" ? m.sender?._id || m.sender?.id : m.sender) || ""
+          );
+
+          let isSupport = false;
+          if (senderRole === "ADMIN" || senderRole === "SUPER_ADMIN" || senderRole === "PROVIDER") {
+            isSupport = true;
+          } else if (senderRole === "USER" || senderRole === "CUSTOMER") {
+            isSupport = false;
+          } else if (currentUserId && msgSenderId) {
+            isSupport = currentUserId !== msgSenderId;
+          } else if (providerId && msgSenderId === String(providerId)) {
+            isSupport = true;
+          }
+
+          return {
+            id: m.id || m._id || m.messageId || Math.random().toString(),
+            text: m.content || m.text || m.message || "",
+            isSupport,
+            time: m.createdAt
+              ? new Date(m.createdAt).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "",
+            attachments: m.attachmentUrl
+              ? [{ uri: m.attachmentUrl, type: "image" }]
+              : m.attachments || (m.imageUrl ? [{ uri: m.imageUrl, type: "image" }] : []),
+          };
+        });
 
         setMessages(formattedMessages);
       }

@@ -1,4 +1,4 @@
-import GradientButton from "@/components/GradientButton";
+import GradientButton from "@/components/common/GradientButton";
 import React, { useState } from "react";
 import { Alert, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

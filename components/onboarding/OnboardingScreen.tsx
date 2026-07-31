@@ -1,4 +1,4 @@
-import GradientButton from "@/components/GradientButton";
+import GradientButton from "@/components/common/GradientButton";
 import { router } from "expo-router";
 import React, { useRef, useState } from "react";
 import {

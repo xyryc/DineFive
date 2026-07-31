@@ -3,6 +3,8 @@ import { createAuthSlice } from "./slices/authSlice";
 import { createCartSlice } from "./slices/cartSlice";
 import { createOrderSlice } from "./slices/orderSlice";
 import { createReviewSlice } from "./slices/reviewSlice";
+import { createFeedSlice } from "./slices/feedSlice";
+import { createChatSlice } from "./slices/chatSlice";
 import type { RootStore } from "./types";
 
 export type {
@@ -15,6 +17,10 @@ export type {
   OrderActions,
   ReviewState,
   ReviewActions,
+  FeedState,
+  FeedActions,
+  ChatState,
+  ChatActions,
   UserProfile,
   CartItem,
   Order,
@@ -25,4 +31,6 @@ export const useStore = create<RootStore>((set, get) => ({
   ...createCartSlice(set, get),
   ...createOrderSlice(set, get),
   ...createReviewSlice(set, get),
+  ...createFeedSlice(set, get),
+  ...createChatSlice(set, get),
 }));

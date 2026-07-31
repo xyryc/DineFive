@@ -98,7 +98,7 @@ export const createReviewSlice = (set: any, get: () => RootStore): ReviewSlice =
         throw new Error("No access token found");
 
       const response = await (get() as any).requestWithAuth(
-        `${API_BASE_URL}/api/v1/favorites?page=${page}&limit=${limit}`,
+        `${API_BASE_URL}/api/v1/favorites/feed?page=${page}&limit=${limit}`,
         {
           method: "GET",
           headers: {
@@ -108,13 +108,18 @@ export const createReviewSlice = (set: any, get: () => RootStore): ReviewSlice =
       );
 
       const result = await response.json();
+      console.log("fetchFavorites result:", JSON.stringify(result, null, 2));
+
       if (!response.ok) {
         throw new Error(result.message || "Failed to fetch favorites");
       }
 
-      const favItems = result.data || [];
-      const favIds = favItems.map((item: any) => item.foodId?._id || item.foodId || item._id);
+      const favItems = result.data?.favorites || result.favorites || result.data || (Array.isArray(result) ? result : []);
+      const favIds = Array.isArray(favItems)
+        ? favItems.map((item: any) => item.foodId?._id || item.foodId || item._id)
+        : [];
       set({ favorites: favIds, isLoading: false });
+
       return result;
     } catch (error: any) {
       console.log("fetchFavorites error:", error);

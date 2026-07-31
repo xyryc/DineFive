@@ -501,14 +501,25 @@ export default function MyOrdersScreen() {
   const loadOrders = useCallback(async () => {
     setIsLoading(true);
     if (activeTab === "current") {
-      const data = await fetchCurrentOrders();
-      if (data) {
-        console.log("Fetched Current Orders:", JSON.stringify(data, null, 2));
-        setCurrentOrders(data);
+      const result = await fetchCurrentOrders();
+      if (result) {
+        const list = Array.isArray(result)
+          ? result
+          : result.data || result.orders || [];
+        setCurrentOrders(Array.isArray(list) ? list : []);
+      } else {
+        setCurrentOrders([]);
       }
     } else {
       const result = await fetchPreviousOrders();
-      if (result && result.data) setPreviousOrders(result.data);
+      if (result) {
+        const list = Array.isArray(result)
+          ? result
+          : result.data || result.orders || [];
+        setPreviousOrders(Array.isArray(list) ? list : []);
+      } else {
+        setPreviousOrders([]);
+      }
     }
     setIsLoading(false);
   }, [activeTab, fetchCurrentOrders, fetchPreviousOrders]);
@@ -675,7 +686,8 @@ export default function MyOrdersScreen() {
     );
   };
 
-  const ordersToShow = activeTab === "current" ? currentOrders : previousOrders;
+  const rawOrders = activeTab === "current" ? currentOrders : previousOrders;
+  const ordersToShow = Array.isArray(rawOrders) ? rawOrders : [];
 
   return (
     <SafeAreaView className="flex-1 bg-[#FDFBF7]">

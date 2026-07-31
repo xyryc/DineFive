@@ -1,5 +1,5 @@
-import CustomInput from "@/components/CustomInput";
-import GradientButton from "@/components/GradientButton";
+import CustomInput from "@/components/auth/CustomInput";
+import GradientButton from "@/components/common/GradientButton";
 import { useStore } from "@/stores/stores";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
@@ -21,14 +21,13 @@ const EmailVerify = () => {
     type?: string;
   }>();
   const [code, setCode] = useState("");
-  const { isLoading, verifyOTP, verifyForgotOTP } = useStore() as any;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { verifyOTP, verifyForgotOTP } = useStore() as any;
 
   const handleEmailVerif = async () => {
-    if (!code) {
-      console.log("Please enter the verification code");
-      return;
-    }
+    if (!code || isSubmitting) return;
 
+    setIsSubmitting(true);
     try {
       console.log(
         "Verifying email for:",
@@ -60,6 +59,8 @@ const EmailVerify = () => {
     } catch (error: any) {
       console.log("Verification failed:", error);
       Alert.alert("Error", String(error.message || "Something went wrong"));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -120,7 +121,7 @@ const EmailVerify = () => {
             />
 
             <View className="mt-14 mb-4">
-              {isLoading ? (
+              {isSubmitting ? (
                 <View className="items-center py-4 bg-[#F5C518] rounded-full">
                   <ActivityIndicator color="black" />
                 </View>

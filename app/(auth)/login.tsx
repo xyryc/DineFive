@@ -1,4 +1,4 @@
-import { AuthComponents } from "@/components/AuthComponents";
+import { AuthComponents } from "@/components/auth/AuthComponents";
 import { Image } from "expo-image";
 import { StatusBar } from "expo-status-bar";
 import React from "react";

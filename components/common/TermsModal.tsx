@@ -127,7 +127,6 @@ const TermsModal: React.FC<TermsModalProps> = ({ visible, type, onClose }) => {
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={[styles.safeArea, { paddingTop: insets.top }]}>
-        {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <View style={styles.iconBadge}>
@@ -158,10 +157,8 @@ const TermsModal: React.FC<TermsModalProps> = ({ visible, type, onClose }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Divider */}
         <View style={styles.divider} />
 
-        {/* Content */}
         {loading && !activeDoc ? (
           <View style={styles.centerContent}>
             <ActivityIndicator size="large" color="#D32F1E" />
@@ -186,8 +183,12 @@ const TermsModal: React.FC<TermsModalProps> = ({ visible, type, onClose }) => {
           </ScrollView>
         ) : null}
 
-        {/* Accept Button */}
-        <View style={styles.acceptContainer}>
+        <View
+          style={[
+            styles.acceptContainer,
+            { paddingBottom: Math.max(16, insets.bottom + 12) },
+          ]}
+        >
           <TouchableOpacity style={styles.acceptBtn} onPress={onClose}>
             <Feather name="check-circle" size={18} color="#fff" />
             <Text style={styles.acceptBtnText}>I Understand</Text>

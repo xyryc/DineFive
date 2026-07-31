@@ -1,4 +1,5 @@
-import GradientButton from "@/components/GradientButton";
+import CustomInput from "@/components/auth/CustomInput";
+import GradientButton from "@/components/common/GradientButton";
 import { useStore } from "@/stores/stores";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -9,7 +10,6 @@ import {
   ActivityIndicator,
   Alert,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
   KeyboardAvoidingView,
@@ -18,9 +18,8 @@ import {
 } from "react-native";
 
 const ResetPassword = () => {
-  const { email, code } = useLocalSearchParams<{
+  const { email } = useLocalSearchParams<{
     email: string;
-    code: string;
   }>();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -38,10 +37,8 @@ const ResetPassword = () => {
     try {
       console.log("Resetting password for:", email);
       const result = await resetPassword({
-        email,
-        otp: code,
-        newPassword, // new password
-        confirmPassword, // confirm password
+        newPassword,
+        confirmPassword,
       });
 
       if (result) {
@@ -103,54 +100,42 @@ const ResetPassword = () => {
               </Text>
 
               {/* New Password Input */}
-              <View className="mb-4">
-                <Text className="text-gray-700 mb-2">New Password</Text>
-                <View className="relative">
-                  <TextInput
-                    value={newPassword}
-                    onChangeText={setNewPassword}
-                    placeholder="Enter new password"
-                    placeholderTextColor="#9CA3AF"
-                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-700 pr-12"
-                    secureTextEntry={!showPassword}
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3"
-                  >
+              <CustomInput
+                label="New Password"
+                value={newPassword}
+                onChangeText={setNewPassword}
+                placeholder="Enter new password"
+                secureTextEntry={!showPassword}
+                className="mb-4"
+                icon={
+                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                     {showPassword ? (
                       <Ionicons name="eye-outline" size={24} color="black" />
                     ) : (
                       <Ionicons name="eye-off-outline" size={24} color="black" />
                     )}
                   </TouchableOpacity>
-                </View>
-              </View>
+                }
+              />
 
               {/* Confirm Password Input */}
-              <View className="mb-6">
-                <Text className="text-gray-700 mb-2">Confirm Password</Text>
-                <View className="relative">
-                  <TextInput
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    placeholder="Confirm new password"
-                    placeholderTextColor="#9CA3AF"
-                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-700 pr-12"
-                    secureTextEntry={!showConfirmPassword}
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-3"
-                  >
+              <CustomInput
+                label="Confirm Password"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="Confirm new password"
+                secureTextEntry={!showConfirmPassword}
+                className="mb-6"
+                icon={
+                  <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
                     {showConfirmPassword ? (
                       <Ionicons name="eye-outline" size={24} color="black" />
                     ) : (
                       <Ionicons name="eye-off-outline" size={24} color="black" />
                     )}
                   </TouchableOpacity>
-                </View>
-              </View>
+                }
+              />
 
               {/* Reset button */}
               <View className="mt-14 mb-4">

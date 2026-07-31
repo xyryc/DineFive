@@ -16,7 +16,7 @@ export const createOrderSlice = (set: any, get: () => RootStore): OrderSlice => 
         throw new Error("No access token found");
 
       const response = await (get() as any).requestWithAuth(
-        `${API_BASE_URL}/api/v1/orders/current`,
+        `${API_BASE_URL}/api/v1/customer/orders/current`,
         {
           method: "GET",
           headers: {
@@ -30,7 +30,8 @@ export const createOrderSlice = (set: any, get: () => RootStore): OrderSlice => 
         throw new Error(result.message || "Failed to fetch current orders");
       }
 
-      set({ currentOrders: result.data || [], ordersLoading: false });
+      const orders = result.data || (Array.isArray(result) ? result : []);
+      set({ currentOrders: orders, ordersLoading: false });
       return result;
     } catch (error: any) {
       console.log("fetchCurrentOrders error:", error);
@@ -39,7 +40,7 @@ export const createOrderSlice = (set: any, get: () => RootStore): OrderSlice => 
     }
   },
 
-  fetchPreviousOrders: async () => {
+  fetchPreviousOrders: async (page = 1, limit = 10) => {
     set({ ordersLoading: true, error: null });
     try {
       const { accessToken } = get() as any;
@@ -47,7 +48,7 @@ export const createOrderSlice = (set: any, get: () => RootStore): OrderSlice => 
         throw new Error("No access token found");
 
       const response = await (get() as any).requestWithAuth(
-        `${API_BASE_URL}/api/v1/orders/previous`,
+        `${API_BASE_URL}/api/v1/customer/orders/previous?page=${page}&limit=${limit}`,
         {
           method: "GET",
           headers: {
@@ -61,7 +62,8 @@ export const createOrderSlice = (set: any, get: () => RootStore): OrderSlice => 
         throw new Error(result.message || "Failed to fetch previous orders");
       }
 
-      set({ previousOrders: result.data || [], ordersLoading: false });
+      const prevOrders = result.data || result.orders || (Array.isArray(result) ? result : []);
+      set({ previousOrders: prevOrders, ordersLoading: false });
       return result;
     } catch (error: any) {
       console.log("fetchPreviousOrders error:", error);
@@ -145,15 +147,17 @@ export const createOrderSlice = (set: any, get: () => RootStore): OrderSlice => 
       const response = await (get() as any).requestWithAuth(
         `${API_BASE_URL}/api/v1/orders/${orderId}/cancel`,
         {
-          method: "POST",
+          method: "PATCH",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ reason }),
+          body: JSON.stringify({ reason, status: "cancelled" }),
         },
       );
 
       const result = await response.json();
+      console.log("Cancel Order Response:", JSON.stringify(result, null, 2));
+
       if (!response.ok) {
         throw new Error(result.message || "Failed to cancel order");
       }
