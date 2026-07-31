@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react-native";
 import { API_BASE_URL, fetchWithLogging } from "@/utils/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { AuthState, AuthActions, RootStore } from "../types";
@@ -25,9 +26,18 @@ export const createAuthSlice = (set: any, get: () => RootStore): AuthSlice => ({
 
   persistAuthData: async (user: any, accessToken: any, refreshToken: any) => {
     try {
+      const normalizedUser = normalizeUserPayload(user);
       const promises = [
-        AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user)),
+        AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(normalizedUser)),
       ];
+
+      if (normalizedUser) {
+        Sentry.setUser({
+          id: normalizedUser._id || normalizedUser.id,
+          email: normalizedUser.email,
+          username: normalizedUser.name || normalizedUser.fullName,
+        });
+      }
 
       if (accessToken) {
         promises.push(
@@ -180,6 +190,7 @@ export const createAuthSlice = (set: any, get: () => RootStore): AuthSlice => ({
 
   logout: async () => {
     try {
+      Sentry.setUser(null);
       await Promise.all([
         AsyncStorage.removeItem(STORAGE_KEYS.USER),
         AsyncStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN),

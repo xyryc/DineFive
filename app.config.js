@@ -83,6 +83,13 @@ module.exports = {
       "expo-status-bar",
       "expo-video",
       "expo-asset",
+      [
+        "@sentry/react-native/expo",
+        {
+          organization: "xyryc",
+          project: "dine-five",
+        },
+      ],
     ],
     experiments: {
       typedRoutes: true,

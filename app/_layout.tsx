@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react-native";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -10,6 +11,14 @@ import { useNotificationSync } from "@/hooks/useNotificationSync";
 import { useStore } from "@/stores/stores";
 import "../global.css";
 
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  tracesSampleRate: 1.0,
+  enableLogs: true,
+  enableNative: !__DEV__,
+  debug: __DEV__,
+});
+
 // Suppress Reanimated strict-mode warnings that come from third-party dependencies
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
@@ -19,7 +28,7 @@ configureReanimatedLogger({
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-export default function RootLayout() {
+function RootLayout() {
   const isInitialized = useStore((state: any) => state.isInitialized);
   const initializeAuth = useStore((state: any) => state.initializeAuth);
   const accessToken = useStore((state: any) => state.accessToken);
@@ -111,3 +120,5 @@ export default function RootLayout() {
     </>
   );
 }
+
+export default Sentry.wrap(RootLayout);

@@ -1,6 +1,7 @@
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { useStore } from "@/stores/stores";
 import { Ionicons } from "@expo/vector-icons";
+import * as Sentry from "@sentry/react-native";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
@@ -140,6 +141,35 @@ export default function SettingsScreen() {
               </View>
               <Text className="text-[15px] font-body-bold text-gray-800">
                 Log Out
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#CCCCCC" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => {
+              // Send test logs as recommended in the Sentry dashboard setup guide
+              if (Sentry.logger) {
+                Sentry.logger.info("This is an info log from Dine-Five");
+                Sentry.logger.warn("This is a warning log", { log_type: "test" });
+                Sentry.logger.error("This is an error log");
+              }
+              Sentry.captureMessage("Test Sentry connection from Dine-Five!");
+
+              Alert.alert(
+                "Sentry Test Logs Sent!",
+                "Sent info, warning, error & message logs to Sentry! Refresh your Sentry onboarding page to verify.",
+              );
+            }}
+            activeOpacity={0.7}
+            className="flex-row items-center justify-between p-4 border-b border-gray-50"
+          >
+            <View className="flex-row items-center gap-4">
+              <View className="w-9 h-9 rounded-xl bg-[#EEF2FF] items-center justify-center border border-[#C7D2FE]">
+                <Ionicons name="bug-outline" size={18} color="#6366F1" />
+              </View>
+              <Text className="text-[15px] font-body-bold text-gray-800">
+                Test Sentry Integration
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color="#CCCCCC" />
