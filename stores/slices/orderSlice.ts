@@ -269,4 +269,57 @@ export const createOrderSlice = (set: any, get: () => RootStore): OrderSlice => 
       return null;
     }
   },
+
+  fetchDonationTokens: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const { accessToken } = get() as any;
+      if (!accessToken && !(get() as any).refreshToken)
+        throw new Error("No access token found");
+
+      const response = await (get() as any).requestWithAuth(
+        `${API_BASE_URL}/api/v1/donation/my-tokens`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result?.message || "Failed to fetch donation tokens");
+      }
+
+      set({ isLoading: false });
+      return result;
+    } catch (error: any) {
+      console.log("fetchDonationTokens error:", error);
+      set({ error: error.message, isLoading: false });
+      return null;
+    }
+  },
+
+  fetchStripeConfig: async () => {
+    try {
+      const response = await (get() as any).requestWithAuth(
+        `${API_BASE_URL}/api/v1/stripe/config`,
+        {
+          method: "GET",
+          headers: {},
+        },
+      );
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to fetch Stripe config");
+      }
+
+      return result;
+    } catch (error: any) {
+      console.log("fetchStripeConfig error:", error);
+      return null;
+    }
+  },
 });

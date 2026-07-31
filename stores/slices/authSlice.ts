@@ -354,14 +354,17 @@ export const createAuthSlice = (set: any, get: () => RootStore): AuthSlice => ({
   updateProfile: async (data: Partial<any>) => {
     set({ isLoading: true, error: null });
     try {
+      const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
+      const headers: Record<string, string> = isFormData
+        ? {}
+        : { "Content-Type": "application/json" };
+
       const response = await (get() as any).requestWithAuth(
-        `${API_BASE_URL}/api/v1/users/profile`,
+        `${API_BASE_URL}/api/v1/profile`,
         {
           method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
+          headers,
+          body: isFormData ? data : JSON.stringify(data),
         },
       );
 
@@ -372,7 +375,7 @@ export const createAuthSlice = (set: any, get: () => RootStore): AuthSlice => ({
 
       const updatedUser = extractUserPayload(result) || {
         ...get().user,
-        ...data,
+        ...(isFormData ? {} : data),
       };
 
       set((state: any) => ({
