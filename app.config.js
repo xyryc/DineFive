@@ -2,7 +2,7 @@ module.exports = {
   expo: {
     name: "Dine Five",
     slug: "Dine-Five",
-    version: "1.0.4",
+    version: "1.0.5",
     orientation: "portrait",
     icon: "./assets/images/app-icon.png",
     scheme: "dinefive",
@@ -17,7 +17,7 @@ module.exports = {
     },
     android: {
       package: "com.dinefive.app",
-      versionCode: 5,
+      versionCode: 6,
       adaptiveIcon: {
         backgroundColor: "#E6F4FE",
         foregroundImage: "./assets/images/app-icon.png",
@@ -88,6 +88,7 @@ module.exports = {
         {
           organization: "xyryc",
           project: "dine-five",
+          disableAutoUpload: process.env.SENTRY_AUTH_TOKEN ? false : true,
         },
       ],
     ],

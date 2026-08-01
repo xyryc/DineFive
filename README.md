@@ -115,12 +115,14 @@ Your `.env` file should include the following keys:
 # Backend API Base URL
 EXPO_PUBLIC_API_URL=https://dine-five-backend-production.up.railway.app
 
-# Google Maps API Key
+# Google Maps API Key (for native maps and geocoding)
 GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
 EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
 
-# Sentry Error Tracking & Crash Reporting DSN
+# Sentry Error Tracking & Crash Reporting DSN & Auth Options
 EXPO_PUBLIC_SENTRY_DSN=your_sentry_dsn_here
+SENTRY_DISABLE_AUTO_UPLOAD=true
+# SENTRY_AUTH_TOKEN=your_sentry_auth_token_here
 ```
 
 - **Note:** LAN and Emulator host redirects are automatically handled in `utils/api.ts` when running against a local development backend.
