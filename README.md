@@ -31,11 +31,11 @@ Dine-Five is a premium, mobile-first food ordering app built with Expo, React Na
 ## 📱 App Screenshots
 
 <p align="center">
-  <img src="./screenshots/Screenshot_1783593026.png" width="19%" style="margin: 1%; border-radius: 12px;" alt="Onboarding / Login" />
-  <img src="./screenshots/Screenshot_1783593042.png" width="19%" style="margin: 1%; border-radius: 12px;" alt="Home Feed" />
-  <img src="./screenshots/Screenshot_1783593062.png" width="19%" style="margin: 1%; border-radius: 12px;" alt="Restaurant Menu" />
-  <img src="./screenshots/Screenshot_1783593072.png" width="19%" style="margin: 1%; border-radius: 12px;" alt="Checkout Bag" />
-  <img src="./screenshots/Screenshot_1783593119.png" width="19%" style="margin: 1%; border-radius: 12px;" alt="Profile Screen" />
+  <img src="./screenshots/1.png" width="19%" style="margin: 1%; border-radius: 12px;" alt="Home Feed & Discovery" />
+  <img src="./screenshots/2.png" width="19%" style="margin: 1%; border-radius: 12px;" alt="Interactive Map" />
+  <img src="./screenshots/3.png" width="19%" style="margin: 1%; border-radius: 12px;" alt="Shopping Cart" />
+  <img src="./screenshots/4.png" width="19%" style="margin: 1%; border-radius: 12px;" alt="User Profile" />
+  <img src="./screenshots/5.png" width="19%" style="margin: 1%; border-radius: 12px;" alt="Order Details" />
 </p>
 
 ---

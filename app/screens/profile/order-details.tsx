@@ -304,12 +304,12 @@ export default function OrderDetailsScreen() {
           />
           <View>
             <Text className={`font-heading text-base ${activeStep === 2 ? "text-gray-900" : "text-gray-400"}`}>
-              Ready for Pickup / Delivery
+              Ready for Pickup
             </Text>
             {activeStep === 2 && (
               <View className="mt-1">
                 <Text className="text-gray-500 text-xs">
-                  Please collect your food or wait for delivery partner.
+                  Please collect your food from the restaurant counter.
                 </Text>
                 {orderData?.logisticsType?.toLowerCase() === "pickup" && (
                   <TouchableOpacity className="mt-2.5 border border-gray-200 rounded-xl py-2 px-4 items-center bg-white shadow-sm self-start">
@@ -562,45 +562,23 @@ export default function OrderDetailsScreen() {
         );
       })}
 
-        {/* Logistics & Payment details */}
+        {/* Pickup & Payment details */}
         <View className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 mb-6">
           <Text className="text-[10px] text-gray-400 font-body-semibold uppercase tracking-wider mb-3">Order Details</Text>
           
           <View className="space-y-3">
             <View className="flex-row justify-between items-start">
-              <View className="flex-row items-center gap-2.5 mr-4" style={{ width: 100 }}>
+              <View className="flex-row items-center gap-2.5 mr-2">
                 <Ionicons name="location-outline" size={16} color="#6B7280" />
-                <Text className="text-gray-500 text-xs font-body-semibold">
-                  {orderData?.logisticsType?.toLowerCase() === "delivery" ? "Deliver to" : "Pickup at"}
-                </Text>
+                <Text className="text-gray-500 text-xs font-body-semibold">Pickup from</Text>
               </View>
-              {orderData?.logisticsType?.toLowerCase() === "delivery" ? (
-                <Text className="text-gray-800 font-body-semibold text-xs flex-1 text-right" numberOfLines={2}>
-                  {orderData.state || "NY"}
-                </Text>
-              ) : (
-                <View className="flex-col flex-1 items-end gap-1">
-                  {groups.map((group: any, idx: number) => (
-                    <Text key={idx} className="text-gray-800 font-body-semibold text-[11px] text-right" numberOfLines={2}>
-                      {group.restaurantName}: {group.restaurantAddress || "No address"}
-                    </Text>
-                  ))}
-                </View>
-              )}
-            </View>
-
-            <View className="flex-row justify-between items-center">
-              <View className="flex-row items-center gap-2.5">
-                <Ionicons
-                  name={orderData?.logisticsType?.toLowerCase() === "pickup" ? "walk-outline" : "bicycle-outline"}
-                  size={16}
-                  color="#6B7280"
-                />
-                <Text className="text-gray-500 text-xs font-body-semibold">Logistics</Text>
+              <View className="flex-col flex-1 items-end gap-1">
+                {groups.map((group: any, idx: number) => (
+                  <Text key={idx} className="text-gray-800 font-body-semibold text-xs text-right" numberOfLines={2}>
+                    {group.restaurantName}{group.restaurantAddress ? ` (${group.restaurantAddress})` : ""}
+                  </Text>
+                ))}
               </View>
-              <Text className="text-gray-800 font-body-semibold text-xs capitalize">
-                {orderData?.logisticsType || "Delivery"}
-              </Text>
             </View>
 
             <View className="flex-row justify-between items-center">
