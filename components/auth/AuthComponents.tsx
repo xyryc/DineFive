@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   Alert,
   LayoutChangeEvent,
-  Linking,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -357,18 +356,6 @@ export const AuthComponents = ({
       </View>
 
       <GoogleLogin />
-
-      <View className="mt-6 items-center">
-        <Text className="text-xs font-body-medium text-[#6C757D]">
-          Are you a restaurant partner?{" "}
-          <Text
-            className="text-[#E29E10] font-body-bold underline"
-            onPress={() => Linking.openURL("https://restaurant.dinefive.com")}
-          >
-            Go to Partner Dashboard
-          </Text>
-        </Text>
-      </View>
     </View>
   );
 };
