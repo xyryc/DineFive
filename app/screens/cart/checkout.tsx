@@ -66,6 +66,7 @@ function CheckoutContent() {
     clearCart,
     createPaymentIntent,
     createDonationPaymentIntent,
+    fetchDonationBreakdown,
     confirmDonationPayment,
   } = useStore() as any;
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
@@ -101,7 +102,18 @@ function CheckoutContent() {
       setCartRawData(null);
       setCartSubtotal(0);
       setCartGroups([]);
-      setIsCheckoutLoading(false);
+      try {
+        const res = await fetchDonationBreakdown(donationMealCount);
+        const breakdownObj =
+          res?.data?.breakdown || res?.breakdown || res?.data;
+        if (breakdownObj) {
+          setDonationBreakdown(breakdownObj);
+        }
+      } catch (err) {
+        console.log("fetchDonationBreakdown load error:", err);
+      } finally {
+        setIsCheckoutLoading(false);
+      }
       return;
     }
 
@@ -177,7 +189,7 @@ function CheckoutContent() {
     } finally {
       setIsCheckoutLoading(false);
     }
-  }, [fetchCart, isDonationCheckout]);
+  }, [fetchCart, isDonationCheckout, fetchDonationBreakdown, donationMealCount]);
 
   useFocusEffect(
     useCallback(() => {

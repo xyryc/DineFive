@@ -122,6 +122,7 @@ export interface OrderActions {
   cancelOrder: (orderId: string, reason?: string) => Promise<any>;
   createPaymentIntent: (data: any) => Promise<any>;
   createDonationPaymentIntent: (data: any) => Promise<any>;
+  fetchDonationBreakdown: (mealCount: number) => Promise<any>;
   confirmDonationPayment: (data: any) => Promise<any>;
   fetchDonationTokens: () => Promise<any>;
   fetchStripeConfig: () => Promise<any>;

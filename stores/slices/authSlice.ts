@@ -632,6 +632,55 @@ export const createAuthSlice = (set: any, get: () => RootStore): AuthSlice => ({
       Authorization: `Bearer ${token}`,
     };
 
-    return fetchWithLogging(url, { ...options, headers });
+    let response = await fetchWithLogging(url, { ...options, headers });
+
+    if (response.status === 401 && (get() as any).refreshToken) {
+      const currentState = get() as any;
+      if (!refreshSessionPromise) {
+        refreshSessionPromise = (async () => {
+          try {
+            const res = await fetchWithLogging(
+              `${API_BASE_URL}/api/v1/auth/refresh`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ refreshToken: currentState.refreshToken }),
+              },
+            );
+            const data = await res.json();
+            if (!res.ok) throw new Error("Session expired");
+
+            const newAccess = data.accessToken || data.data?.accessToken;
+            const newRefresh = data.refreshToken || data.data?.refreshToken;
+
+            set({ accessToken: newAccess });
+            if (newRefresh) set({ refreshToken: newRefresh });
+
+            await (get() as any).persistAuthData(currentState.user, newAccess, newRefresh || currentState.refreshToken);
+            return newAccess;
+          } catch (err) {
+            await (get() as any).logout();
+            throw err;
+          } finally {
+            refreshSessionPromise = null;
+          }
+        })();
+      }
+
+      try {
+        const newAccess = await refreshSessionPromise;
+        if (newAccess) {
+          const retryHeaders = {
+            ...headersToRecord(options.headers),
+            Authorization: `Bearer ${newAccess}`,
+          };
+          response = await fetchWithLogging(url, { ...options, headers: retryHeaders });
+        }
+      } catch (err) {
+        console.log("Token refresh failed on 401 retry:", err);
+      }
+    }
+
+    return response;
   },
 });

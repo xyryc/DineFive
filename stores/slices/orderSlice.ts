@@ -257,6 +257,48 @@ export const createOrderSlice = (set: any, get: () => RootStore): OrderSlice => 
     }
   },
 
+  fetchDonationBreakdown: async (mealCount: number) => {
+    try {
+      const { accessToken } = get() as any;
+      if (!accessToken && !(get() as any).refreshToken)
+        throw new Error("No access token found");
+
+      const bodyData = { mealCount };
+      console.log(
+        "📤 [POST /api/v1/donation/checkout-breakdown] Request Body:",
+        JSON.stringify(bodyData, null, 2),
+      );
+
+      const response = await (get() as any).requestWithAuth(
+        `${API_BASE_URL}/api/v1/donation/checkout-breakdown`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(bodyData),
+        },
+      );
+
+      const result = await response.json();
+      console.log(
+        "📥 [POST /api/v1/donation/checkout-breakdown] Response Body:",
+        JSON.stringify(result, null, 2),
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          result?.message || "Failed to fetch donation checkout breakdown",
+        );
+      }
+
+      return result;
+    } catch (error: any) {
+      console.log("❌ [POST /api/v1/donation/checkout-breakdown] Error:", error);
+      return null;
+    }
+  },
+
   confirmDonationPayment: async (paymentIntentId: string) => {
     set({ isLoading: true, error: null });
     try {
