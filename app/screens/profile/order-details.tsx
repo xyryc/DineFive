@@ -613,24 +613,59 @@ export default function OrderDetailsScreen() {
               <Text className="text-xs font-body-semibold text-gray-800">${orderData?.subtotal?.toFixed(2) || "0.00"}</Text>
             </View>
 
-            <View className="flex-row justify-between items-center">
-              <Text className="text-xs text-gray-500 font-body-semibold">Platform Fee</Text>
-              <Text className="text-xs font-body-semibold text-gray-800">${orderData?.platformFee?.toFixed(2) || "0.00"}</Text>
-            </View>
-
             {orderData?.cityTax > 0 && (
               <View className="flex-row justify-between items-center">
-                <Text className="text-xs text-gray-500 font-body-semibold">City Tax</Text>
+                <Text className="text-xs text-gray-500 font-body-semibold">
+                  {(() => {
+                    const explicitRate = orderData?.cityTaxRate ?? orderData?.items?.[0]?.cityTaxRate;
+                    const numRate = Number(explicitRate);
+                    let pctStr = "";
+                    if (Number.isFinite(numRate) && numRate > 0) {
+                      const pct = numRate > 1 ? numRate : numRate * 100;
+                      pctStr = `${pct % 1 === 0 ? pct.toFixed(0) : pct.toFixed(1)}%`;
+                    } else if (orderData?.subtotal > 0) {
+                      const calcPct = (orderData.cityTax / orderData.subtotal) * 100;
+                      if (Number.isFinite(calcPct) && calcPct > 0) {
+                        pctStr = `${calcPct % 1 === 0 ? calcPct.toFixed(0) : calcPct.toFixed(1)}%`;
+                      }
+                    }
+                    return pctStr ? `City Tax (${pctStr})` : "City Tax";
+                  })()}
+                </Text>
                 <Text className="text-xs font-body-semibold text-gray-800">${orderData.cityTax.toFixed(2)}</Text>
               </View>
             )}
 
-            {orderData?.stateTax > 0 && (
+            {(orderData?.stateTax > 0 || orderData?.stateTaxAmount > 0) && (
               <View className="flex-row justify-between items-center">
-                <Text className="text-xs text-gray-500 font-body-semibold">State Tax</Text>
-                <Text className="text-xs font-body-semibold text-gray-800">${orderData.stateTax.toFixed(2)}</Text>
+                <Text className="text-xs text-gray-500 font-body-semibold">
+                  {(() => {
+                    const taxAmt = orderData?.stateTax || orderData?.stateTaxAmount || 0;
+                    const explicitRate = orderData?.stateTaxRate ?? orderData?.items?.[0]?.stateTaxRate;
+                    const numRate = Number(explicitRate);
+                    let pctStr = "";
+                    if (Number.isFinite(numRate) && numRate > 0) {
+                      const pct = numRate > 1 ? numRate : numRate * 100;
+                      pctStr = `${pct % 1 === 0 ? pct.toFixed(0) : pct.toFixed(1)}%`;
+                    } else if (orderData?.subtotal > 0 && taxAmt > 0) {
+                      const calcPct = (taxAmt / orderData.subtotal) * 100;
+                      if (Number.isFinite(calcPct) && calcPct > 0) {
+                        pctStr = `${calcPct % 1 === 0 ? calcPct.toFixed(0) : calcPct.toFixed(1)}%`;
+                      }
+                    }
+                    return pctStr ? `State Tax (${pctStr})` : "State Tax";
+                  })()}
+                </Text>
+                <Text className="text-xs font-body-semibold text-gray-800">
+                  ${(orderData?.stateTax || orderData?.stateTaxAmount || 0).toFixed(2)}
+                </Text>
               </View>
             )}
+
+            <View className="flex-row justify-between items-center">
+              <Text className="text-xs text-gray-500 font-body-semibold">Platform Fee</Text>
+              <Text className="text-xs font-body-semibold text-gray-800">${orderData?.platformFee?.toFixed(2) || "0.00"}</Text>
+            </View>
 
             {orderData?.isDonation && (
               <View className="flex-row justify-between items-center">

@@ -41,11 +41,30 @@ const formatMoney = (value: unknown) => {
   return `$${num.toFixed(2)}`;
 };
 
-const formatTaxLabel = (baseLabel: string, rate?: number) => {
-  if (typeof rate === "number" && !isNaN(rate) && rate > 0) {
-    const pct = rate > 1 ? rate : rate * 100;
+const formatTaxLabel = (
+  baseLabel: string,
+  rate?: number,
+  taxAmount?: number,
+  subtotal?: number,
+) => {
+  const numRate = Number(rate);
+  if (Number.isFinite(numRate) && numRate > 0) {
+    const pct = numRate > 1 ? numRate : numRate * 100;
     const formatted = pct % 1 === 0 ? pct.toFixed(0) : pct.toFixed(1);
     return `${baseLabel} (${formatted}%)`;
+  }
+  if (
+    typeof taxAmount === "number" &&
+    taxAmount > 0 &&
+    typeof subtotal === "number" &&
+    subtotal > 0
+  ) {
+    const calcPct = (taxAmount / subtotal) * 100;
+    if (Number.isFinite(calcPct) && calcPct > 0) {
+      const formatted =
+        calcPct % 1 === 0 ? calcPct.toFixed(0) : calcPct.toFixed(1);
+      return `${baseLabel} (${formatted}%)`;
+    }
   }
   return baseLabel;
 };
@@ -478,7 +497,7 @@ export default function CartScreen() {
               {group.stateTax > 0 && (
                 <View className="flex-row justify-between items-center">
                   <Text className="text-[11px] text-gray-400 font-body-semibold">
-                    {formatTaxLabel("State Tax", group.stateTaxRate)}
+                    {formatTaxLabel("State Tax", group.stateTaxRate, group.stateTax, group.subtotal)}
                   </Text>
                   {isSyncing ? (
                     <View className="w-10 h-3.5 bg-gray-200 rounded animate-pulse" />
@@ -493,7 +512,7 @@ export default function CartScreen() {
               {group.cityTax > 0 && (
                 <View className="flex-row justify-between items-center">
                   <Text className="text-[11px] text-gray-400 font-body-semibold">
-                    {formatTaxLabel("City Tax", group.cityTaxRate)}
+                    {formatTaxLabel("City Tax", group.cityTaxRate, group.cityTax, group.subtotal)}
                   </Text>
                   {isSyncing ? (
                     <View className="w-10 h-3.5 bg-gray-200 rounded animate-pulse" />
@@ -582,7 +601,7 @@ export default function CartScreen() {
             {stateTaxAmount > 0 && (
               <View className="flex-row justify-between items-center">
                 <Text className="text-sm font-body-medium text-gray-500">
-                  {formatTaxLabel("State Tax", cartMeta?.stateTaxRate)}
+                  {formatTaxLabel("State Tax", cartMeta?.stateTaxRate, stateTaxAmount, subtotal)}
                 </Text>
                 {loading ? (
                   <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
@@ -597,7 +616,7 @@ export default function CartScreen() {
             {cityTax > 0 && (
               <View className="flex-row justify-between items-center">
                 <Text className="text-sm font-body-medium text-gray-500">
-                  {formatTaxLabel("City Tax", cartMeta?.cityTaxRate)}
+                  {formatTaxLabel("City Tax", cartMeta?.cityTaxRate, cityTax, subtotal)}
                 </Text>
                 {loading ? (
                   <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
