@@ -41,6 +41,15 @@ const formatMoney = (value: unknown) => {
   return `$${num.toFixed(2)}`;
 };
 
+const formatTaxLabel = (baseLabel: string, rate?: number) => {
+  if (typeof rate === "number" && !isNaN(rate) && rate > 0) {
+    const pct = rate > 1 ? rate : rate * 100;
+    const formatted = pct % 1 === 0 ? pct.toFixed(0) : pct.toFixed(1);
+    return `${baseLabel} (${formatted}%)`;
+  }
+  return baseLabel;
+};
+
 export default function CartScreen() {
   const router = useRouter();
   const { fetchCart, updateCartQuantity, removeCartItem, clearCart } =
@@ -197,6 +206,15 @@ export default function CartScreen() {
             subtotal: subtotalVal,
             stateTax: stateTaxVal,
             cityTax: cityTaxVal,
+            platformFee: toNumber(group.platformFee, 0),
+            stateTaxRate: toNumber(
+              group.stateTaxRate ?? group.items?.[0]?.stateTaxRate ?? root?.stateTaxRate,
+              0,
+            ),
+            cityTaxRate: toNumber(
+              group.cityTaxRate ?? group.items?.[0]?.cityTaxRate ?? root?.cityTaxRate,
+              0,
+            ),
             total: totalVal,
             items: formattedGroupItems,
           };
@@ -460,7 +478,7 @@ export default function CartScreen() {
               {group.stateTax > 0 && (
                 <View className="flex-row justify-between items-center">
                   <Text className="text-[11px] text-gray-400 font-body-semibold">
-                    State Tax
+                    {formatTaxLabel("State Tax", group.stateTaxRate)}
                   </Text>
                   {isSyncing ? (
                     <View className="w-10 h-3.5 bg-gray-200 rounded animate-pulse" />
@@ -475,13 +493,28 @@ export default function CartScreen() {
               {group.cityTax > 0 && (
                 <View className="flex-row justify-between items-center">
                   <Text className="text-[11px] text-gray-400 font-body-semibold">
-                    City Tax
+                    {formatTaxLabel("City Tax", group.cityTaxRate)}
                   </Text>
                   {isSyncing ? (
                     <View className="w-10 h-3.5 bg-gray-200 rounded animate-pulse" />
                   ) : (
                     <Text className="text-xs font-body-semibold text-gray-600">
                       {formatMoney(group.cityTax)}
+                    </Text>
+                  )}
+                </View>
+              )}
+
+              {group.platformFee > 0 && (
+                <View className="flex-row justify-between items-center">
+                  <Text className="text-[11px] text-gray-400 font-body-semibold">
+                    Platform Fee
+                  </Text>
+                  {isSyncing ? (
+                    <View className="w-10 h-3.5 bg-gray-200 rounded animate-pulse" />
+                  ) : (
+                    <Text className="text-xs font-body-semibold text-gray-600">
+                      {formatMoney(group.platformFee)}
                     </Text>
                   )}
                 </View>
@@ -545,6 +578,36 @@ export default function CartScreen() {
                 </Text>
               )}
             </View>
+
+            {stateTaxAmount > 0 && (
+              <View className="flex-row justify-between items-center">
+                <Text className="text-sm font-body-medium text-gray-500">
+                  {formatTaxLabel("State Tax", cartMeta?.stateTaxRate)}
+                </Text>
+                {loading ? (
+                  <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
+                ) : (
+                  <Text className="text-sm font-body-semibold text-gray-800">
+                    {formatMoney(stateTaxAmount)}
+                  </Text>
+                )}
+              </View>
+            )}
+
+            {cityTax > 0 && (
+              <View className="flex-row justify-between items-center">
+                <Text className="text-sm font-body-medium text-gray-500">
+                  {formatTaxLabel("City Tax", cartMeta?.cityTaxRate)}
+                </Text>
+                {loading ? (
+                  <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
+                ) : (
+                  <Text className="text-sm font-body-semibold text-gray-800">
+                    {formatMoney(cityTax)}
+                  </Text>
+                )}
+              </View>
+            )}
 
             <View className="flex-row justify-between items-center">
               <Text className="text-sm font-body-medium text-gray-500">

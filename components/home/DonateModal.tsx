@@ -44,10 +44,11 @@ export const DonateModal = ({ visible, onClose, onConfirm }: DonateModalProps) =
       animationType="slide"
       transparent={true}
       visible={visible}
+      statusBarTranslucent
       onRequestClose={onClose}
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={{ flex: 1 }}
       >
         <View style={styles.modalContainer}>
@@ -103,7 +104,6 @@ export const DonateModal = ({ visible, onClose, onConfirm }: DonateModalProps) =
                   keyboardType="numeric"
                   style={styles.customInput}
                   placeholderTextColor="#9CA3AF"
-                  autoFocus={true}
                 />
               </View>
             )}

@@ -54,7 +54,9 @@ describe("FreeMealTaxCheckoutModal Component", () => {
     taxBreakdown: {
       mealPrice: 5.99,
       stateTax: 0.54,
+      stateTaxRate: 0.09,
       cityTax: 0.6,
+      cityTaxRate: 0.1,
       totalTax: 1.14,
       providerState: "NY",
       providerCity: "Dhaka",

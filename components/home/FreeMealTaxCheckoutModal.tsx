@@ -265,7 +265,11 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
             {stateTax > 0 && (
               <View className="flex-row justify-between items-center mt-1">
                 <Text className="text-sm font-body text-gray-600">
-                  State Tax{taxBreakdown?.providerState ? ` (${taxBreakdown.providerState})` : ""}
+                  State Tax
+                  {taxBreakdown?.stateTaxRate && taxBreakdown.stateTaxRate > 0
+                    ? ` (${(taxBreakdown.stateTaxRate > 1 ? taxBreakdown.stateTaxRate : taxBreakdown.stateTaxRate * 100).toFixed((taxBreakdown.stateTaxRate * 100) % 1 === 0 ? 0 : 1)}%)`
+                    : ""}
+                  {taxBreakdown?.providerState ? ` - ${taxBreakdown.providerState}` : ""}
                 </Text>
                 <Text className="text-sm font-body text-gray-900">
                   {formatMoney(stateTax)}
@@ -276,7 +280,11 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
             {cityTax > 0 && (
               <View className="flex-row justify-between items-center mt-1">
                 <Text className="text-sm font-body text-gray-600">
-                  City Tax{taxBreakdown?.providerCity ? ` (${taxBreakdown.providerCity})` : ""}
+                  City Tax
+                  {taxBreakdown?.cityTaxRate && taxBreakdown.cityTaxRate > 0
+                    ? ` (${(taxBreakdown.cityTaxRate > 1 ? taxBreakdown.cityTaxRate : taxBreakdown.cityTaxRate * 100).toFixed((taxBreakdown.cityTaxRate * 100) % 1 === 0 ? 0 : 1)}%)`
+                    : ""}
+                  {taxBreakdown?.providerCity ? ` - ${taxBreakdown.providerCity}` : ""}
                 </Text>
                 <Text className="text-sm font-body text-gray-900">
                   {formatMoney(cityTax)}
