@@ -60,6 +60,13 @@ interface RestaurantState {
     quantity: number;
   }) => Promise<any>;
   getAvailableTokens: () => Promise<any>;
+  getFreeMealTaxBreakdown: (providerId: string) => Promise<any>;
+  createFreeMealPaymentIntent: (data: {
+    tokenId: string;
+    providerId: string;
+    foodId: string;
+  }) => Promise<any>;
+  confirmFreeMealPayment: (paymentIntentId: string) => Promise<any>;
 }
 
 export const useRestaurantStore = create<RestaurantState>((set, get) => ({
@@ -357,6 +364,44 @@ export const useRestaurantStore = create<RestaurantState>((set, get) => ({
     } catch (err: any) {
       console.error("[useRestaurantStore] getAvailableTokens error:", err);
       throw err;
+    }
+  },
+
+  getFreeMealTaxBreakdown: async (providerId: string) => {
+    try {
+      const result = await restaurantService.getFreeMealTaxBreakdown(providerId);
+      return result;
+    } catch (err: any) {
+      console.error("[useRestaurantStore] getFreeMealTaxBreakdown error:", err);
+      throw err;
+    }
+  },
+
+  createFreeMealPaymentIntent: async (data) => {
+    set({ restaurantsLoading: true, restaurantsError: null });
+    try {
+      const result = await restaurantService.createFreeMealPaymentIntent(data);
+      return result;
+    } catch (err: any) {
+      console.error("[useRestaurantStore] createFreeMealPaymentIntent error:", err);
+      set({ restaurantsError: err.message || "Failed to create tax payment intent" });
+      throw err;
+    } finally {
+      set({ restaurantsLoading: false });
+    }
+  },
+
+  confirmFreeMealPayment: async (paymentIntentId: string) => {
+    set({ restaurantsLoading: true, restaurantsError: null });
+    try {
+      const result = await restaurantService.confirmFreeMealPayment(paymentIntentId);
+      return result;
+    } catch (err: any) {
+      console.error("[useRestaurantStore] confirmFreeMealPayment error:", err);
+      set({ restaurantsError: err.message || "Failed to confirm tax payment" });
+      throw err;
+    } finally {
+      set({ restaurantsLoading: false });
     }
   },
 }));

@@ -19,6 +19,7 @@ import {
 import { useRestaurantStore } from "@/stores/useRestaurantStore";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
+import { FreeMealTaxCheckoutModal } from "@/components/home/FreeMealTaxCheckoutModal";
 
 const firstParam = (value: string | string[] | undefined): string =>
   Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
@@ -85,15 +86,16 @@ function ProductDetailsInner() {
     tokenId,
   } = params;
 
-  const { claimToken, placeFreeOrder, getAvailableTokens } =
+  const { claimToken, getAvailableTokens, getFreeMealTaxBreakdown } =
     useRestaurantStore();
   
   const [currentTokenId, setCurrentTokenId] = useState<string | null>(
     firstParam(tokenId as string | string[] | undefined) || null,
   );
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showTaxModal, setShowTaxModal] = useState(false);
+  const [taxBreakdown, setTaxBreakdown] = useState<any>(null);
   const [isClaimingMeal, setIsClaimingMeal] = useState(false);
-  const [isPlacingFreeOrder, setIsPlacingFreeOrder] = useState(false);
   const [isAddedToCartSuccess, setIsAddedToCartSuccess] = useState(false);
   const [reviewsLoading, setReviewsLoading] = useState(true);
 
@@ -258,43 +260,32 @@ function ProductDetailsInner() {
     }
   };
 
-  const handlePlaceFreeOrder = async () => {
-    if (isPlacingFreeOrder) return;
+  useEffect(() => {
+    if (isFreeMeal) {
+      const pId =
+        firstParam(params.providerId as string | string[] | undefined) ||
+        product.providerId ||
+        product.id;
+      if (pId) {
+        getFreeMealTaxBreakdown(pId)
+          .then((res: any) => {
+            if (res?.success && res?.data) {
+              setTaxBreakdown(res.data);
+            }
+          })
+          .catch((err: any) => {
+            console.log("[ProductDetails] Tax breakdown pre-fetch note:", err?.message);
+          });
+      }
+    }
+  }, [isFreeMeal, params.providerId, product.providerId, product.id, getFreeMealTaxBreakdown]);
+
+  const handlePlaceFreeOrder = () => {
     if (!currentTokenId) {
-      Alert.alert("Error", "Missing token information for order");
+      Alert.alert("Error", "Please claim your meal token first.");
       return;
     }
-
-    setIsPlacingFreeOrder(true);
-    try {
-      const result = await placeFreeOrder({
-        tokenId: currentTokenId,
-        providerId:
-          firstParam(params.providerId as string | string[] | undefined) ||
-          product.id,
-        foodId: product.foodId,
-        quantity: quantity,
-      });
-
-      Alert.alert(
-        "Success",
-        result.message || "Free order placed successfully!",
-        [
-          {
-            text: "View Orders",
-            onPress: () => router.push("/screens/profile/my-orders"),
-          },
-          { text: "OK", onPress: () => router.back() },
-        ],
-      );
-    } catch (error: any) {
-      Alert.alert(
-        "Order Failed",
-        error.message || "Could not place free order",
-      );
-    } finally {
-      setIsPlacingFreeOrder(false);
-    }
+    setShowTaxModal(true);
   };
 
   const handleAddToCart = () => {
@@ -589,7 +580,6 @@ function ProductDetailsInner() {
                 currentTokenId ? (
                   <TouchableOpacity
                     onPress={handlePlaceFreeOrder}
-                    disabled={isPlacingFreeOrder}
                     style={{
                       backgroundColor: "#10B981",
                       width: "100%",
@@ -604,13 +594,11 @@ function ProductDetailsInner() {
                       elevation: 2,
                     }}
                   >
-                    {isPlacingFreeOrder ? (
-                      <ActivityIndicator size="small" color="#FFFFFF" />
-                    ) : (
-                      <Text style={{ color: "#FFFFFF", fontWeight: "bold", fontSize: 16 }}>
-                        Place Free Order
-                      </Text>
-                    )}
+                    <Text style={{ color: "#FFFFFF", fontWeight: "bold", fontSize: 16 }}>
+                      {taxBreakdown && typeof taxBreakdown.totalTax === "number" && taxBreakdown.totalTax > 0
+                        ? `Pay Tax ($${taxBreakdown.totalTax.toFixed(2)}) & Place Order`
+                        : "Place Free Order"}
+                    </Text>
                   </TouchableOpacity>
                 ) : (
                   <TouchableOpacity
@@ -714,6 +702,24 @@ function ProductDetailsInner() {
                 </View>
               </View>
             </Modal>
+
+            {/* Free Meal Tax Checkout Modal */}
+            <FreeMealTaxCheckoutModal
+              visible={showTaxModal}
+              onClose={() => setShowTaxModal(false)}
+              tokenId={currentTokenId || ""}
+              providerId={
+                firstParam(params.providerId as string | string[] | undefined) ||
+                product.providerId ||
+                product.id
+              }
+              foodId={product.foodId}
+              foodTitle={product.title}
+              restaurantName={
+                product.restaurantName || product.providerName || "Restaurant"
+              }
+              taxBreakdown={taxBreakdown}
+            />
 
             {/* Customer Reviews Section */}
             {reviewsLoading ? (

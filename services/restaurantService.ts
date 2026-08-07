@@ -527,4 +527,73 @@ export const restaurantService = {
       throw error;
     }
   },
+
+  getFreeMealTaxBreakdown: async (providerId: string): Promise<any> => {
+    const headers = getAuthHeaders();
+    if (!headers["Authorization"]) {
+      throw new Error("You are not logged in! Please log in to view tax details.");
+    }
+    const url = `${API_BASE_URL}/api/v1/donation/free-meal/tax-breakdown?providerId=${providerId}`;
+    console.log(`📤 [GET /api/v1/donation/free-meal/tax-breakdown] providerId: ${providerId}`);
+
+    try {
+      const response = await requestJson(url, {
+        method: "GET",
+        headers,
+      });
+      console.log("📥 [GET /api/v1/donation/free-meal/tax-breakdown] API Response:", JSON.stringify(response, null, 2));
+      return response;
+    } catch (error: any) {
+      console.log("❌ [GET /api/v1/donation/free-meal/tax-breakdown] API Error:", error?.message || error);
+      throw error;
+    }
+  },
+
+  createFreeMealPaymentIntent: async (data: {
+    tokenId: string;
+    providerId: string;
+    foodId: string;
+  }): Promise<any> => {
+    const headers = getAuthHeaders();
+    if (!headers["Authorization"]) {
+      throw new Error("You are not logged in! Please log in to process payment.");
+    }
+    const url = `${API_BASE_URL}/api/v1/donation/free-meal/create-payment-intent`;
+    console.log("📤 [POST /api/v1/donation/free-meal/create-payment-intent] Payload:", JSON.stringify(data, null, 2));
+
+    try {
+      const response = await requestJson(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(data),
+      });
+      console.log("📥 [POST /api/v1/donation/free-meal/create-payment-intent] API Response:", JSON.stringify(response, null, 2));
+      return response;
+    } catch (error: any) {
+      console.log("❌ [POST /api/v1/donation/free-meal/create-payment-intent] API Error:", error?.message || error);
+      throw error;
+    }
+  },
+
+  confirmFreeMealPayment: async (paymentIntentId: string): Promise<any> => {
+    const headers = getAuthHeaders();
+    if (!headers["Authorization"]) {
+      throw new Error("You are not logged in! Please log in to confirm order.");
+    }
+    const url = `${API_BASE_URL}/api/v1/donation/free-meal/confirm-payment`;
+    console.log(`📤 [POST /api/v1/donation/free-meal/confirm-payment] paymentIntentId: ${paymentIntentId}`);
+
+    try {
+      const response = await requestJson(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ paymentIntentId }),
+      });
+      console.log("📥 [POST /api/v1/donation/free-meal/confirm-payment] API Response:", JSON.stringify(response, null, 2));
+      return response;
+    } catch (error: any) {
+      console.log("❌ [POST /api/v1/donation/free-meal/confirm-payment] API Error:", error?.message || error);
+      throw error;
+    }
+  },
 };
