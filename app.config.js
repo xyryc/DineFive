@@ -21,12 +21,6 @@ module.exports = {
         NSCameraUsageDescription:
           "Allow Dine Five to use your camera to take profile photos and support attachments.",
       },
-      config: {
-        googleMapsApiKey:
-          process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ||
-          process.env.GOOGLE_MAPS_API_KEY ||
-          "",
-      },
     },
     android: {
       package: "com.dinefive.app",
