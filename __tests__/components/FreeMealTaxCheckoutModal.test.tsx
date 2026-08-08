@@ -57,7 +57,9 @@ describe("FreeMealTaxCheckoutModal Component", () => {
       stateTaxRate: 0.09,
       cityTax: 0.6,
       cityTaxRate: 0.1,
+      platformFee: 0.5,
       totalTax: 1.14,
+      totalToPay: 1.64,
       providerState: "NY",
       providerCity: "Dhaka",
     },
@@ -69,6 +71,6 @@ describe("FreeMealTaxCheckoutModal Component", () => {
     expect(getByText("Free Meal Checkout")).toBeTruthy();
     expect(getByText("Culinary Restaurant")).toBeTruthy();
     expect(getByText("Chicken Fried Rice")).toBeTruthy();
-    expect(getByText("$1.14")).toBeTruthy();
+    expect(getByText("$1.64")).toBeTruthy();
   });
 });

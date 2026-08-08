@@ -16,8 +16,13 @@ import { useRestaurantStore } from "@/stores/useRestaurantStore";
 interface TaxBreakdownData {
   mealPrice?: number;
   stateTax?: number;
+  stateTaxRate?: number;
   cityTax?: number;
+  cityTaxRate?: number;
+  platformFee?: number;
   totalTax?: number;
+  totalToPay?: number;
+  totalAmount?: number;
   providerState?: string;
   providerCity?: string;
 }
@@ -193,7 +198,12 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
   const mealPrice = taxBreakdown?.mealPrice ?? 5.99;
   const stateTax = taxBreakdown?.stateTax ?? 0;
   const cityTax = taxBreakdown?.cityTax ?? 0;
+  const platformFee = taxBreakdown?.platformFee ?? 0;
   const totalTax = taxBreakdown?.totalTax ?? stateTax + cityTax;
+  const totalToPay =
+    taxBreakdown?.totalToPay ??
+    taxBreakdown?.totalAmount ??
+    totalTax + platformFee;
 
   return (
     <Modal
@@ -233,24 +243,24 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
           </View>
 
           {/* Item details */}
-          <View className="my-4 bg-gray-50 p-4 rounded-2xl border border-gray-100 flex-row justify-between items-center">
-            <View className="flex-1 pr-2">
-              <Text className="text-base font-body-semibold text-gray-900">
-                {foodTitle}
-              </Text>
-              <Text className="text-xs font-body text-emerald-600 font-semibold mt-1">
+          <View className="my-4 bg-gray-50 p-4 rounded-2xl border border-gray-100 space-y-1.5">
+            <Text className="text-base font-body-semibold text-gray-900">
+              {foodTitle}
+            </Text>
+            <View className="flex-row justify-between items-center pt-0.5">
+              <Text className="text-xs font-body-semibold text-emerald-600">
                 🎁 1 Free Donated Meal Token Applied
               </Text>
+              <Text className="text-sm font-heading text-emerald-600 line-through">
+                {formatMoney(mealPrice)}
+              </Text>
             </View>
-            <Text className="text-sm font-heading text-emerald-600 line-through">
-              {formatMoney(mealPrice)}
-            </Text>
           </View>
 
-          {/* Tax Breakdown */}
+          {/* Tax & Fee Breakdown */}
           <View className="bg-amber-50/60 p-4 rounded-2xl border border-amber-100 space-y-2 mb-6">
             <Text className="text-xs font-body-semibold uppercase tracking-wider text-amber-800 mb-1">
-              Required Tax Summary
+              Cost & Tax Breakdown
             </Text>
 
             <View className="flex-row justify-between items-center">
@@ -292,20 +302,31 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
               </View>
             )}
 
+            {platformFee > 0 && (
+              <View className="flex-row justify-between items-center mt-1">
+                <Text className="text-sm font-body text-gray-600">
+                  Platform Fee
+                </Text>
+                <Text className="text-sm font-body text-gray-900">
+                  {formatMoney(platformFee)}
+                </Text>
+              </View>
+            )}
+
             <View className="border-t border-amber-200/80 pt-2 flex-row justify-between items-center mt-2">
               <Text className="text-base font-heading text-amber-950">
-                Total Tax to Pay
+                Total to Pay
               </Text>
               <Text className="text-xl font-heading text-amber-600">
-                {totalTax > 0 && totalTax < 0.5 ? "$0.00 (Waived)" : formatMoney(totalTax)}
+                {totalToPay > 0 && totalToPay < 0.5 ? "$0.00 (Waived)" : formatMoney(totalToPay)}
               </Text>
             </View>
 
-            {totalTax > 0 && totalTax < 0.5 && (
+            {totalToPay > 0 && totalToPay < 0.5 && (
               <View className="bg-emerald-50 border border-emerald-200/80 rounded-xl p-2.5 mt-2 flex-row items-center gap-2">
                 <Ionicons name="sparkles" size={16} color="#059669" />
                 <Text className="text-xs font-body-semibold text-emerald-800 flex-1">
-                  Tax ({formatMoney(totalTax)}) is under Stripe's $0.50 minimum and has been waived!
+                  Amount ({formatMoney(totalToPay)}) is under Stripe's $0.50 minimum and has been waived!
                 </Text>
               </View>
             )}
@@ -327,9 +348,9 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
             <Text className="text-base font-heading text-gray-950">
               {isLoading
                 ? "Processing Order..."
-                : totalTax >= 0.5
-                ? `Pay Tax ${formatMoney(totalTax)} & Place Order`
-                : totalTax > 0
+                : totalToPay >= 0.5
+                ? `Pay ${formatMoney(totalToPay)} & Place Order`
+                : totalToPay > 0
                 ? "Place Free Order (Tax Waived)"
                 : "Place Free Order"}
             </Text>

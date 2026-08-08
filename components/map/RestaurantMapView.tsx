@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import * as Location from "expo-location";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import Constants from "expo-constants";
 import {
   ActivityIndicator,
   Alert,

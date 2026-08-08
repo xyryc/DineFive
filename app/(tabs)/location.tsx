@@ -3,7 +3,6 @@ import { Restaurant } from '@/services/restaurantService';
 import { useRestaurantStore } from '@/stores/useRestaurantStore';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import Constants from 'expo-constants';
 import React, { useEffect } from 'react';
 import { Platform, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';

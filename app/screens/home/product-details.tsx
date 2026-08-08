@@ -267,14 +267,16 @@ function ProductDetailsInner() {
         product.providerId ||
         product.id;
       if (pId) {
+        console.log(`📤 [ProductDetails] Requesting Free Meal Cost Breakdown for providerId: ${pId}`);
         getFreeMealTaxBreakdown(pId)
           .then((res: any) => {
+            console.log("📥 [FreeMealCostBreakdown API Response]:", JSON.stringify(res, null, 2));
             if (res?.success && res?.data) {
               setTaxBreakdown(res.data);
             }
           })
           .catch((err: any) => {
-            console.log("[ProductDetails] Tax breakdown pre-fetch note:", err?.message);
+            console.log("❌ [ProductDetails] Free Meal Cost Breakdown error:", err?.message || err);
           });
       }
     }
@@ -595,9 +597,22 @@ function ProductDetailsInner() {
                     }}
                   >
                     <Text style={{ color: "#FFFFFF", fontWeight: "bold", fontSize: 16 }}>
-                      {taxBreakdown && typeof taxBreakdown.totalTax === "number" && taxBreakdown.totalTax > 0
-                        ? `Pay Tax ($${taxBreakdown.totalTax.toFixed(2)}) & Place Order`
-                        : "Place Free Order"}
+                      {(() => {
+                        const totalToPay =
+                          taxBreakdown?.totalToPay ??
+                          taxBreakdown?.totalAmount ??
+                          (typeof taxBreakdown?.totalTax === "number"
+                            ? taxBreakdown.totalTax + (taxBreakdown?.platformFee ?? 0)
+                            : 0);
+
+                        if (totalToPay >= 0.5) {
+                          return `Pay $${totalToPay.toFixed(2)} & Place Order`;
+                        } else if (totalToPay > 0) {
+                          return "Place Free Order (Tax Waived)";
+                        } else {
+                          return "Place Free Order";
+                        }
+                      })()}
                     </Text>
                   </TouchableOpacity>
                 ) : (
