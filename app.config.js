@@ -12,7 +12,7 @@ module.exports = {
       buildNumber: "6",
       supportsTablet: true,
       usesAppleSignIn: true,
-      googleServicesFile: "./GoogleServices-Info.plist",
+      googleServiceFile: "./GoogleService-Info.plist",
       infoPlist: {
         NSLocationWhenInUseUsageDescription:
           "Allow Dine Five to use your location to find nearby restaurants, calculate delivery distance, and autofill your address.",
