@@ -44,13 +44,18 @@ const getSearchParam = (value?: string | string[]) =>
 type DonationBreakdown = {
   mealCount?: number;
   pricePerMeal?: number;
+  restaurantGetsPerMeal?: number;
   platformFeePerMeal?: number;
   subtotal?: number;
+  vendorAmount?: number;
   platformFee?: number;
   stateTax?: number;
   stateTaxRate?: number;
+  cityTax?: number;
+  cityTaxRate?: number;
   total?: number;
   state?: string;
+  city?: string;
 };
 
 function CheckoutContent() {
@@ -60,18 +65,17 @@ function CheckoutContent() {
     mealCount?: string | string[];
     type?: string | string[];
   }>();
+
   const {
     fetchCart,
-    createOrder,
-    clearCart,
     createPaymentIntent,
-    createDonationPaymentIntent,
     fetchDonationBreakdown,
+    createDonationPaymentIntent,
     confirmDonationPayment,
   } = useStore() as any;
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const [isDonateModalVisible, setIsDonateModalVisible] = useState(false);
-  const [cartSubtotal, setCartSubtotal] = useState(0);
+  const [cartSubtotal, setCartSubtotal] = useState<number>(0);
   const [cartGroups, setCartGroups] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(true);
@@ -84,15 +88,17 @@ function CheckoutContent() {
   const isDonationCheckout =
     getSearchParam(params.type) === "donation" || !!rawMealCount;
   const donationPricePerMeal = donationBreakdown?.pricePerMeal ?? 5.99;
-  const donationFeePerMeal = donationBreakdown?.platformFeePerMeal ?? 0.5;
+  const donationFeePerMeal = donationBreakdown?.platformFeePerMeal ?? 0;
   const donationSubtotal =
     donationBreakdown?.subtotal ?? donationMealCount * donationPricePerMeal;
   const donationPlatformFee =
-    donationBreakdown?.platformFee ?? donationMealCount * donationFeePerMeal;
+    donationBreakdown?.platformFee ??
+    (donationBreakdown?.platformFeePerMeal ? donationMealCount * donationFeePerMeal : 0);
   const donationStateTax = donationBreakdown?.stateTax ?? 0;
+  const donationCityTax = donationBreakdown?.cityTax ?? 0;
   const donationTotal =
     donationBreakdown?.total ??
-    donationSubtotal + donationPlatformFee + donationStateTax;
+    donationSubtotal + donationPlatformFee + donationStateTax + donationCityTax;
 
 
 
@@ -655,13 +661,15 @@ function CheckoutContent() {
                   <Text className="text-sm font-body-medium text-gray-500 pl-6">Meal Subtotal</Text>
                   <Text className="text-sm font-body-semibold text-gray-700">{formatMoney(donationSubtotal)}</Text>
                 </View>
-                <View className="flex-row justify-between items-center">
-                  <View className="flex-row items-center gap-2">
-                    <Ionicons name="server-outline" size={16} color="#9CA3AF" />
-                    <Text className="text-sm font-body-medium text-gray-600">Platform Service Fee</Text>
+                {donationPlatformFee > 0 && (
+                  <View className="flex-row justify-between items-center">
+                    <View className="flex-row items-center gap-2">
+                      <Ionicons name="server-outline" size={16} color="#9CA3AF" />
+                      <Text className="text-sm font-body-medium text-gray-600">Platform Service Fee</Text>
+                    </View>
+                    <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(donationPlatformFee)}</Text>
                   </View>
-                  <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(donationPlatformFee)}</Text>
-                </View>
+                )}
                 {donationStateTax > 0 && (
                   <View className="flex-row justify-between items-center">
                     <View className="flex-row items-center gap-2">
@@ -671,6 +679,17 @@ function CheckoutContent() {
                       </Text>
                     </View>
                     <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(donationStateTax)}</Text>
+                  </View>
+                )}
+                {donationCityTax > 0 && (
+                  <View className="flex-row justify-between items-center">
+                    <View className="flex-row items-center gap-2">
+                      <Ionicons name="location-outline" size={16} color="#9CA3AF" />
+                      <Text className="text-sm font-body-medium text-gray-600">
+                        City Tax{donationBreakdown?.city ? ` (${donationBreakdown.city})` : ""}
+                      </Text>
+                    </View>
+                    <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(donationCityTax)}</Text>
                   </View>
                 )}
                 
