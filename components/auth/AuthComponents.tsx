@@ -15,6 +15,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import CustomInput from "./CustomInput";
 import GoogleLogin from "./GoogleLogin";
+import AppleLogin from "./AppleLogin";
 import GradientButton from "../common/GradientButton";
 import TermsModal, { preloadLegalDocuments } from "../common/TermsModal";
 
@@ -356,6 +357,7 @@ export const AuthComponents = ({
       </View>
 
       <GoogleLogin />
+      <AppleLogin />
     </View>
   );
 };

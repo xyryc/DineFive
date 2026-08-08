@@ -559,6 +559,60 @@ export const createAuthSlice = (set: any, get: () => RootStore): AuthSlice => ({
     }
   },
 
+  appleLogin: async (data: { identityToken: string; fullName?: any; requestedRole?: string }) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fetchWithLogging(
+        `${API_BASE_URL}/api/auth/apple`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            identityToken: data.identityToken,
+            fullName: data.fullName,
+            requestedRole: data.requestedRole || "CUSTOMER",
+          }),
+        },
+      );
+
+      const result = await response.json();
+      console.log("Apple login result:", JSON.stringify(result, null, 2));
+
+      if (!response.ok) {
+        throw new Error(result.message || "Apple login failed");
+      }
+
+      const userData = extractUserPayload(result) || result.data?.user || result.user || result.data;
+      const session = result.data?.session || result.session;
+      const accessToken =
+        session?.accessToken ||
+        result.accessToken ||
+        result.data?.accessToken;
+      const refreshToken =
+        session?.refreshToken ||
+        result.refreshToken ||
+        result.data?.refreshToken;
+
+      if (userData && accessToken) {
+        await (get() as any).persistAuthData(userData, accessToken, refreshToken);
+        set({
+          user: normalizeUserPayload(userData),
+          accessToken,
+          refreshToken: refreshToken || null,
+          isLoading: false,
+        });
+        return result;
+      } else {
+        throw new Error("Invalid response format: User or token is missing");
+      }
+    } catch (error: any) {
+      console.log("appleLogin error:", error);
+      const parsedMessage = translateApiMessage(error.message);
+      set({ error: parsedMessage, isLoading: false });
+      return null;
+    }
+  },
+
   socialAuth: async (data: any) => {
     return (get() as any).googleLogin(data);
   },

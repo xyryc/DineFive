@@ -16,6 +16,7 @@ release-apk/
 
 # Firebase / Google services
 google-services.json
+GoogleService-Info.plist
 
 # Signing & certificate files
 *.jks

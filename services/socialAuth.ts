@@ -1,3 +1,5 @@
+import { Platform } from "react-native";
+
 type GoogleModule = typeof import("@react-native-google-signin/google-signin");
 
 let googleModulePromise: Promise<GoogleModule> | null = null;
@@ -63,6 +65,42 @@ export const signOutCurrentUser = async () => {
   }
 };
 
+export const isAppleAuthAvailable = async (): Promise<boolean> => {
+  if (Platform.OS !== "ios") return false;
+  try {
+    const AppleAuthentication = await import("expo-apple-authentication");
+    return await AppleAuthentication.isAvailableAsync();
+  } catch {
+    return false;
+  }
+};
+
+export const signInWithApple = async () => {
+  if (Platform.OS !== "ios") {
+    throw new Error("Sign in with Apple is only available on iOS devices.");
+  }
+  const AppleAuthentication = await import("expo-apple-authentication");
+  const isAvailable = await AppleAuthentication.isAvailableAsync();
+  if (!isAvailable) {
+    throw new Error("Sign in with Apple is not available on this device.");
+  }
+
+  try {
+    const credential = await AppleAuthentication.signInAsync({
+      requestedScopes: [
+        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      ],
+    });
+    return credential;
+  } catch (e: any) {
+    if (e.code === "ERR_REQUEST_CANCELED") {
+      console.log("User cancelled Apple Sign-In");
+    }
+    throw e;
+  }
+};
+
 // Mock versions of other services mentioned in user's original code
 export const signInWithFacebook = async () => {
   throw new Error("Facebook login not implemented");
@@ -71,7 +109,6 @@ export const signInWithTwitter = async () => {
   throw new Error("Twitter login not implemented");
 };
 export const observeAuthState = (callback: (user: any) => void) => {
-  // This is usually handled by Firebase, but since we are just doing Google Sign In + Backend,
-  // we might not need a persistent listener here if the store handles it.
   return () => {};
 };
+

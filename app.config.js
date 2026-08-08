@@ -9,10 +9,17 @@ module.exports = {
     userInterfaceStyle: "automatic",
     ios: {
       bundleIdentifier: "com.dinefive.app",
+      buildNumber: "6",
       supportsTablet: true,
+      usesAppleSignIn: true,
+      googleServicesFile: "./GoogleServices-Info.plist",
       infoPlist: {
         NSLocationWhenInUseUsageDescription:
-          "Allow app to use your location to find nearby restaurants.",
+          "Allow Dine Five to use your location to find nearby restaurants, calculate delivery distance, and autofill your address.",
+        NSPhotoLibraryUsageDescription:
+          "Allow Dine Five to access your photo library to upload profile avatars and support attachments.",
+        NSCameraUsageDescription:
+          "Allow Dine Five to use your camera to take profile photos and support attachments.",
       },
     },
     android: {
@@ -48,13 +55,23 @@ module.exports = {
     plugins: [
       "expo-router",
       "expo-notifications",
+      "expo-apple-authentication",
+      [
+        "expo-image-picker",
+        {
+          photosPermission:
+            "Allow Dine Five to access your photo library to upload profile avatars and support attachments.",
+          cameraPermission:
+            "Allow Dine Five to use your camera to take profile photos and support attachments.",
+        },
+      ],
       ["@stripe/stripe-react-native", {}],
       "@react-native-google-signin/google-signin",
       [
         "expo-location",
         {
           locationWhenInUsePermission:
-            "Allow Dine-Five to use your location to find nearby restaurants.",
+            "Allow Dine Five to use your location to find nearby restaurants, calculate delivery distance, and autofill your address.",
         },
       ],
       [
