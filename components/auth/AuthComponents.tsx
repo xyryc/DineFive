@@ -1,6 +1,5 @@
 import { useStore } from "@/stores/stores";
 import { Ionicons } from "@expo/vector-icons";
-import { Checkbox, Host } from "@expo/ui";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -155,7 +154,7 @@ export const AuthComponents = ({
   return (
     <View
       onLayout={handleLayout}
-      className="pt-5 px-5 bg-white rounded-t-3xl shadow-lg"
+      className="pt-5 px-5 bg-white rounded-t-3xl"
       style={{ paddingBottom: Math.max(24, insets.bottom + 16) }}
     >
       <View className="flex-row items-center gap-5 bg-[#FFF3CD] rounded-2xl mb-4">
@@ -230,20 +229,26 @@ export const AuthComponents = ({
               />
 
               <View className="mt-3 flex-row items-center justify-between">
-                <View className="flex-row items-center">
-                  <Host style={{ width: 24, height: 24 }}>
-                    <Checkbox
-                      value={rememberMe}
-                      onValueChange={setRememberMe}
-                    />
-                  </Host>
-                  <Text
-                    onPress={() => setRememberMe(!rememberMe)}
-                    className="ml-2 text-[#1F2A33] font-body-medium text-sm"
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => setRememberMe(!rememberMe)}
+                  className="flex-row items-center py-1"
+                >
+                  <View
+                    className={`w-5 h-5 rounded-md items-center justify-center border ${
+                      rememberMe
+                        ? "bg-[#E29E10] border-[#E29E10]"
+                        : "bg-white border-gray-300"
+                    }`}
                   >
+                    {rememberMe && (
+                      <Ionicons name="checkmark" size={13} color="#FFFFFF" />
+                    )}
+                  </View>
+                  <Text className="ml-2 text-[#1F2A33] font-body-medium text-sm">
                     Remember me
                   </Text>
-                </View>
+                </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={() => router.push("/(auth)/forgot-password")}
@@ -311,12 +316,23 @@ export const AuthComponents = ({
               />
 
               <View className="mt-3 flex-row items-center">
-                <Host style={{ width: 24, height: 24 }}>
-                  <Checkbox
-                    value={agree}
-                    onValueChange={setAgree}
-                  />
-                </Host>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => setAgree(!agree)}
+                  className="mr-2 py-1"
+                >
+                  <View
+                    className={`w-5 h-5 rounded-md items-center justify-center border ${
+                      agree
+                        ? "bg-[#E29E10] border-[#E29E10]"
+                        : "bg-white border-gray-300"
+                    }`}
+                  >
+                    {agree && (
+                      <Ionicons name="checkmark" size={13} color="#FFFFFF" />
+                    )}
+                  </View>
+                </TouchableOpacity>
                 <Text className="ml-2 text-[#1F2A33] font-body-medium text-sm flex-1">
                   I agree to our{" "}
                   <Text

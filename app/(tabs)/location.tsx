@@ -3,14 +3,23 @@ import { Restaurant } from '@/services/restaurantService';
 import { useRestaurantStore } from '@/stores/useRestaurantStore';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import Constants from 'expo-constants';
 import React, { useEffect } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function LocationScreen() {
   const { setRadiusMeters } = useRestaurantStore();
 
   useEffect(() => {
+    const expoPublicMapKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+    console.log("📍 [LocationScreen] Mounted on Platform:", Platform.OS);
+    console.log("📍 [LocationScreen] EXPO_PUBLIC_GOOGLE_MAPS_API_KEY:", expoPublicMapKey
+      ? `Loaded (${expoPublicMapKey.substring(0, 6)}...${expoPublicMapKey.slice(-4)}) [length: ${expoPublicMapKey.length}]`
+      : "❌ NOT FOUND / UNDEFINED"
+    );
+
     setRadiusMeters(5000);
   }, [setRadiusMeters]);
 

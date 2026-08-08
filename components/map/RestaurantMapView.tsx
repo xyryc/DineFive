@@ -2,10 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import * as Location from "expo-location";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import Constants from "expo-constants";
 import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -111,8 +113,21 @@ export default function RestaurantMapView({
     return () => clearTimeout(handler);
   }, [searchText]);
 
+  // Debug logs for Google Maps API Key & Environment
+  useEffect(() => {
+    const expoPublicMapKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+    console.log("🗺️ [RestaurantMapView] Initialized on Platform:", Platform.OS);
+    console.log("🗺️ [RestaurantMapView] EXPO_PUBLIC_GOOGLE_MAPS_API_KEY:", expoPublicMapKey
+      ? `Found (${expoPublicMapKey.substring(0, 6)}...${expoPublicMapKey.slice(-4)}) [len: ${expoPublicMapKey.length}]`
+      : "❌ UNDEFINED/MISSING"
+    );
+    console.log("🗺️ [RestaurantMapView] Map Provider:", PROVIDER_GOOGLE);
+  }, []);
+
   // Fetch location on mount
   useEffect(() => {
+    console.log("🗺️ [RestaurantMapView] Fetching user location...");
     fetchLocation();
   }, [fetchLocation]);
 
@@ -470,7 +485,7 @@ export default function RestaurantMapView({
       {/* Map */}
       <MapView
         ref={mapRef}
-        provider={PROVIDER_GOOGLE}
+        provider={Platform.OS === "android" ? PROVIDER_GOOGLE : undefined}
         style={{ flex: 1, width: "100%", height: "100%" }}
         mapPadding={{ top: 0, right: 0, bottom: 100, left: 0 }}
         initialRegion={{
@@ -483,6 +498,9 @@ export default function RestaurantMapView({
         showsMyLocationButton={false}
         showsCompass={false}
         onPress={() => setSelectedRestaurant(null)}
+        onMapReady={() => console.log("🗺️ [RestaurantMapView] Map is READY (onMapReady fired successfully)")}
+        onMapLoaded={() => console.log("🗺️ [RestaurantMapView] Map tiles LOADED (onMapLoaded fired)")}
+        onLayout={(e) => console.log("🗺️ [RestaurantMapView] Map layout dimensions:", e.nativeEvent.layout)}
       >
         {/* User location dot */}
         {hasLocation && (
