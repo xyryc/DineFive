@@ -1,189 +1,319 @@
+import GradientButton from "@/components/common/GradientButton";
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import React from "react";
 import {
-  View,
+  Linking,
+  ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  ScrollView,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Image } from "expo-image";
-import { StatusBar } from "expo-status-bar";
-import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 
 export default function RoleSelectionScreen() {
   const router = useRouter();
 
+  const handleCall = () => {
+    Linking.openURL("tel:+18582804156").catch(() => {});
+  };
+
+  const handleEmail = () => {
+    Linking.openURL("mailto:support@dinefive.com").catch(() => {});
+  };
+
+  const handleWebsite = () => {
+    Linking.openURL("https://dinefive.com").catch(() => {});
+  };
+
   return (
-    <SafeAreaView className="flex-1 bg-[#F9FAFB]">
+    <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingVertical: 16 }}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* Header Branding */}
-        <View className="items-center mt-2 mb-6">
+        <View style={styles.header}>
           <Image
             source={require("@/assets/images/logo.jpg")}
             contentFit="contain"
-            style={{ width: 130, height: 130 }}
+            style={styles.logo}
           />
-          <Text className="text-2xl font-heading text-gray-900 mt-1 text-center">
-            Welcome to DineFive
-          </Text>
-          <Text className="text-xs font-body text-gray-500 text-center mt-1">
-            Choose how you would like to continue
+          <Text style={styles.headerTitle}>Welcome to Dine Five</Text>
+          <Text style={styles.headerSubtitle}>
+            Select your account type to get started
           </Text>
         </View>
 
         {/* Role Cards Container */}
-        <View className="flex-1 justify-center gap-y-5">
-
-          {/* Option 1: Customer Card */}
-          <TouchableOpacity
-            activeOpacity={0.88}
-            onPress={() => router.push("/(auth)/login")}
-            className="bg-white rounded-3xl border border-amber-200 shadow-sm overflow-hidden p-5"
-          >
-            {/* Header Row */}
-            <View className="flex-row items-center justify-between mb-3">
-              <View className="flex-row items-center flex-1">
-                <View className="w-12 h-12 rounded-2xl bg-amber-500 items-center justify-center mr-3">
-                  <Ionicons name="person" size={24} color="#FFFFFF" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-lg font-heading text-gray-900 leading-tight">
-                    Customer / Diner
-                  </Text>
-                  <Text className="text-xs font-body-semibold text-amber-700 mt-0.5">
-                    Food Pickup & Meal Donations
-                  </Text>
-                </View>
+        <View style={styles.cardsContainer}>
+          {/* Card 1: Customer */}
+          <View style={styles.roleCard}>
+            <View style={styles.cardHeader}>
+              <View style={styles.iconBadgeAmber}>
+                <Ionicons name="person-outline" size={24} color="#D97706" />
               </View>
-
-              <View className="bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-full">
-                <Text className="text-[10px] font-body-bold text-amber-900 uppercase">
-                  Diner
-                </Text>
+              <View style={styles.cardHeaderText}>
+                <Text style={styles.cardTitle}>Customer / Diner</Text>
+                <Text style={styles.cardBadgeText}>Customer Account</Text>
               </View>
             </View>
-
-            {/* Description */}
-            <Text className="text-xs font-body text-gray-600 leading-relaxed mb-4">
-              Enjoy fresh, affordable meals from top local restaurants and help support meal donation initiatives.
+            <Text style={styles.cardDescription}>
+              Browse $5.99 fresh meals from top local spots, order for pickup &
+              support meal donations.
             </Text>
+            <GradientButton
+              title="Continue as Customer"
+              onPress={() => router.push("/(auth)/login")}
+            />
+          </View>
 
-            {/* Feature Bullet Points */}
-            <View className="bg-amber-50/80 p-3 rounded-2xl border border-amber-100 mb-4 gap-y-2">
-              <View className="flex-row items-center gap-x-2">
-                <Ionicons name="checkmark-circle" size={16} color="#D97706" />
-                <Text className="text-xs font-body-semibold text-gray-800 flex-1">
-                  Discover & order nearby meals for pickup
-                </Text>
+          {/* Card 2: Restaurant Owner */}
+          <View style={styles.roleCard}>
+            <View style={styles.cardHeader}>
+              <View style={styles.iconBadgeOrange}>
+                <Ionicons name="restaurant-outline" size={24} color="#EA580C" />
               </View>
-              <View className="flex-row items-center gap-x-2">
-                <Ionicons name="checkmark-circle" size={16} color="#D97706" />
-                <Text className="text-xs font-body-semibold text-gray-800 flex-1">
-                  Donate meals to support community members
-                </Text>
-              </View>
-              <View className="flex-row items-center gap-x-2">
-                <Ionicons name="checkmark-circle" size={16} color="#D97706" />
-                <Text className="text-xs font-body-semibold text-gray-800 flex-1">
-                  Fast, secure checkout & order tracking
-                </Text>
+              <View style={styles.cardHeaderText}>
+                <Text style={styles.cardTitle}>Restaurant Owner</Text>
+                <Text style={styles.cardBadgeTextOrange}>Partner Portal</Text>
               </View>
             </View>
-
-            {/* CTA Button */}
-            <View className="bg-[#F5C518] rounded-2xl py-3 px-4 flex-row items-center justify-between">
-              <Text className="text-sm font-heading-semibold text-gray-950">
-                Continue as Customer
-              </Text>
-              <View className="w-7 h-7 rounded-full bg-black/10 items-center justify-center">
-                <Ionicons name="arrow-forward" size={16} color="#000000" />
-              </View>
-            </View>
-          </TouchableOpacity>
-
-          {/* Option 2: Restaurant Owner Card */}
-          <TouchableOpacity
-            activeOpacity={0.88}
-            onPress={() => router.push("/(auth)/restaurant-partner")}
-            className="bg-white rounded-3xl border border-orange-200 shadow-sm overflow-hidden p-5"
-          >
-            {/* Header Row */}
-            <View className="flex-row items-center justify-between mb-3">
-              <View className="flex-row items-center flex-1">
-                <View className="w-12 h-12 rounded-2xl bg-[#FF6B35] items-center justify-center mr-3">
-                  <Ionicons name="restaurant" size={24} color="#FFFFFF" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-lg font-heading text-gray-900 leading-tight">
-                    Restaurant Owner
-                  </Text>
-                  <Text className="text-xs font-body-semibold text-[#FF6B35] mt-0.5">
-                    Extra Revenue During Slow Hours
-                  </Text>
-                </View>
-              </View>
-
-              <View className="bg-orange-100 border border-orange-200 px-2.5 py-1 rounded-full">
-                <Text className="text-[10px] font-body-bold text-[#FF6B35] uppercase">
-                  Partner
-                </Text>
-              </View>
-            </View>
-
-            {/* Description */}
-            <Text className="text-xs font-body text-gray-600 leading-relaxed mb-4">
-              Sell meals you might not have sold anyway. Maximize revenue without changing menus or hiring extra staff.
+            <Text style={styles.cardDescription}>
+              Fill off-peak hours, boost margin & generate extra revenue with
+              zero menu changes.
             </Text>
-
-            {/* Feature Bullet Points */}
-            <View className="bg-orange-50/80 p-3 rounded-2xl border border-orange-100 mb-4 gap-y-2">
-              <View className="flex-row items-center gap-x-2">
-                <Ionicons name="trending-up" size={16} color="#FF6B35" />
-                <Text className="text-xs font-body-semibold text-gray-800 flex-1">
-                  {"Earn up to "}
-                  <Text className="font-body-bold text-[#FF6B35]">$64,000+/year</Text>
-                  {" in extra sales"}
-                </Text>
-              </View>
-              <View className="flex-row items-center gap-x-2">
-                <Ionicons name="checkmark-circle" size={16} color="#FF6B35" />
-                <Text className="text-xs font-body-semibold text-gray-800 flex-1">
-                  Zero menu changes & zero extra staff needed
-                </Text>
-              </View>
-              <View className="flex-row items-center gap-x-2">
-                <Ionicons name="checkmark-circle" size={16} color="#FF6B35" />
-                <Text className="text-xs font-body-semibold text-gray-800 flex-1">
-                  Turn off-peak slow hours into pure margin
-                </Text>
-              </View>
-            </View>
-
-            {/* CTA Button */}
-            <View className="bg-[#FF6B35] rounded-2xl py-3 px-4 flex-row items-center justify-between">
-              <Text className="text-sm font-heading-semibold text-white">
-                Explore Owner Opportunity
-              </Text>
-              <View className="w-7 h-7 rounded-full bg-white/20 items-center justify-center">
-                <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
-              </View>
-            </View>
-          </TouchableOpacity>
-
+            <GradientButton
+              title="Restaurant Portal & Signup"
+              onPress={() => router.push("/(auth)/restaurant-partner")}
+            />
+          </View>
         </View>
 
-        {/* Footer info */}
-        <View className="items-center mt-6 mb-2">
-          <Text className="text-[11px] font-body text-gray-400 text-center">
-            DineFive Mobile • Partner Portal © 2026
+        {/* Support & Contact Section */}
+        <View style={styles.supportCard}>
+          <View style={styles.supportHeader}>
+            <Ionicons name="help-buoy-outline" size={20} color="#2563EB" />
+            <Text style={styles.supportTitle}>Need Help & Support?</Text>
+          </View>
+          <Text style={styles.supportSubtitle}>
+            Have questions or issues signing up to the restaurant portal? Reach
+            out directly:
           </Text>
+
+          <View style={styles.contactList}>
+            {/* Call */}
+            <TouchableOpacity
+              style={styles.contactItem}
+              activeOpacity={0.7}
+              onPress={handleCall}
+            >
+              <View style={styles.contactLeft}>
+                <Ionicons name="call-outline" size={16} color="#2563EB" />
+                <Text style={styles.contactText}>+1 (858) 280-4156</Text>
+              </View>
+              <Text style={styles.actionText}>Call</Text>
+            </TouchableOpacity>
+
+            {/* Email */}
+            <TouchableOpacity
+              style={styles.contactItem}
+              activeOpacity={0.7}
+              onPress={handleEmail}
+            >
+              <View style={styles.contactLeft}>
+                <Ionicons name="mail-outline" size={16} color="#2563EB" />
+                <Text style={styles.contactText}>support@dinefive.com</Text>
+              </View>
+              <Text style={styles.actionText}>Email</Text>
+            </TouchableOpacity>
+
+            {/* Website */}
+            <TouchableOpacity
+              style={styles.contactItem}
+              activeOpacity={0.7}
+              onPress={handleWebsite}
+            >
+              <View style={styles.contactLeft}>
+                <Ionicons name="globe-outline" size={16} color="#2563EB" />
+                <Text style={styles.contactText}>https://dinefive.com</Text>
+              </View>
+              <Text style={styles.actionText}>Visit</Text>
+            </TouchableOpacity>
+          </View>
         </View>
+
+        {/* Footer */}
+        <Text style={styles.footerText}>© 2026 DineFive LLC</Text>
       </ScrollView>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  header: {
+    alignItems: "center",
+    marginTop: 4,
+    marginBottom: 20,
+  },
+  logo: {
+    width: 110,
+    height: 110,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#111827",
+    marginTop: 4,
+    textAlign: "center",
+  },
+  headerSubtitle: {
+    fontSize: 13,
+    color: "#6B7280",
+    textAlign: "center",
+    marginTop: 4,
+  },
+  cardsContainer: {
+    rowGap: 16,
+  },
+  roleCard: {
+    backgroundColor: "#FAF9F6",
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    padding: 18,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  iconBadgeAmber: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: "#FEF3C7",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  iconBadgeOrange: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: "#FFEDD5",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  cardHeaderText: {
+    flex: 1,
+  },
+  cardTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  cardBadgeText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#D97706",
+    marginTop: 1,
+  },
+  cardBadgeTextOrange: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#EA580C",
+    marginTop: 1,
+  },
+  cardDescription: {
+    fontSize: 13,
+    color: "#4B5563",
+    lineHeight: 18,
+    marginBottom: 14,
+  },
+  supportCard: {
+    marginTop: 22,
+    backgroundColor: "#FFF",
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  supportHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 8,
+    marginBottom: 4,
+  },
+  supportTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  supportSubtitle: {
+    fontSize: 12,
+    color: "#6B7280",
+    lineHeight: 16,
+    marginBottom: 12,
+  },
+  contactList: {
+    rowGap: 8,
+  },
+  contactItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#F9FAFB",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#F3F4F6",
+  },
+  contactLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    columnGap: 8,
+  },
+  contactText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#1F2937",
+  },
+  actionText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#2563EB",
+  },
+  footerText: {
+    fontSize: 11,
+    color: "#9CA3AF",
+    textAlign: "center",
+    marginTop: 20,
+    marginBottom: 8,
+  },
+});
