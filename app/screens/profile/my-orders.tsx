@@ -50,7 +50,7 @@ function CurrentOrderCard({
           </Text>
           <View className="flex-row items-center mt-1">
             <Text className="text-xs text-gray-400 font-body-medium">
-              #{order.orderId ? order.orderId.split("-").pop() : "N/A"}
+              #{order.orderId || order._id || "N/A"}
             </Text>
             <View className="w-1 h-1 rounded-full bg-gray-300 mx-2" />
             <Text className="text-xs text-gray-400">
@@ -211,7 +211,7 @@ function PreviousOrderCard({
             </View>
             <View className="flex-row items-center mt-1">
               <Text className="text-xs text-gray-400 font-body-medium">
-                #{order.orderId ? order.orderId.split("-").pop() : "N/A"}
+                #{order.orderId || order._id || "N/A"}
               </Text>
               <View className="w-1 h-1 rounded-full bg-gray-300 mx-2" />
               <Text className="text-xs text-gray-400">
@@ -334,7 +334,7 @@ function PreviousOrderCard({
           </Text>
           <View className="flex-row items-center mt-1">
             <Text className="text-xs text-gray-400 font-body-medium">
-              #{order.orderId ? order.orderId.split("-").pop() : "N/A"}
+              #{order.orderId || order._id || "N/A"}
             </Text>
             <View className="w-1 h-1 rounded-full bg-gray-300 mx-2" />
             <Text className="text-xs text-gray-400">

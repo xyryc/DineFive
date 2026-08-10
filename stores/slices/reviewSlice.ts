@@ -78,15 +78,80 @@ export const createReviewSlice = (set: any, get: () => RootStore): ReviewSlice =
 
       const result = await response.json();
       if (!response.ok) {
-        throw new Error(result.message || "Failed to submit review");
+        throw new Error(result.message || result.error?.message || "Failed to submit review");
       }
 
       set({ isLoading: false });
-      return result;
+      return { success: true, ...result };
     } catch (error: any) {
       console.log("createReview error:", error);
       set({ error: error.message, isLoading: false });
-      return null;
+      return { success: false, message: error.message };
+    }
+  },
+
+  submitReview: async (
+    orderId: string,
+    foodId: string,
+    rating: number,
+    comment: string
+  ) => {
+    const payload: any = { rating, comment };
+
+    if (orderId) {
+      if (typeof orderId === "string") {
+        payload.orderId = orderId;
+      } else if (typeof orderId === "object") {
+        payload.orderId = (orderId as any)._id || (orderId as any).id;
+      }
+    }
+
+    if (foodId) {
+      if (typeof foodId === "string" && foodId !== "[object Object]") {
+        payload.foodId = foodId;
+      } else if (typeof foodId === "object") {
+        const id = (foodId as any)._id || (foodId as any).id;
+        if (id) payload.foodId = id;
+      }
+    }
+
+    console.log("📤 Submitting review payload:", JSON.stringify(payload, null, 2));
+
+    const res = await (get() as any).createReview(payload);
+    if (res && res.success) {
+      return { success: true, data: res.data?.reviews?.[0] || res.data || res };
+    }
+    return {
+      success: false,
+      message: res?.message || "Failed to submit review",
+    };
+  },
+
+  updateReview: async (reviewId: string, rating: number, comment?: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await (get() as any).requestWithAuth(
+        `${API_BASE_URL}/api/v1/reviews/${reviewId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ rating, comment }),
+        },
+      );
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to update review");
+      }
+
+      set({ isLoading: false });
+      return { success: true, data: result.data || result };
+    } catch (error: any) {
+      console.log("updateReview error:", error);
+      set({ error: error.message, isLoading: false });
+      return { success: false, message: error.message };
     }
   },
 

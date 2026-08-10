@@ -108,11 +108,6 @@ export default function OrderDetailsScreen() {
   };
 
   const handleReviewSubmit = async () => {
-    if (!["picked_up", "delivered", "completed"].includes(currentOrderStatus.toLowerCase())) {
-      Alert.alert("Notice", "You can only review completed orders");
-      return;
-    }
-
     if (rating === 0) {
       Alert.alert(
         "Rating Required",
@@ -122,15 +117,30 @@ export default function OrderDetailsScreen() {
     }
 
     try {
-      const orderIdToSend = (params.orderId as string) || (params._id as string);
+      const orderIdToSend =
+        orderData?._id ||
+        (params._id as string) ||
+        (params.orderId as string) ||
+        "";
 
       if (!orderIdToSend) {
         Alert.alert("Error", "Order ID not found");
         return;
       }
 
+      const rawFood =
+        params.foodId ||
+        orderData?.items?.[0]?.foodId ||
+        orderData?.items?.[0]?.food;
+
+      const foodIdToSend =
+        typeof rawFood === "string" && rawFood !== "[object Object]"
+          ? rawFood
+          : typeof rawFood === "object" && rawFood
+            ? rawFood._id || rawFood.id || ""
+            : "";
+
       let result;
-      const foodIdToSend = (params.foodId as string) || "";
       setIsSubmittingReview(true);
       if (existingReviewId) {
         result = await updateReview(existingReviewId, rating, review);
@@ -139,7 +149,7 @@ export default function OrderDetailsScreen() {
       }
       setIsSubmittingReview(false);
 
-      if (result.success) {
+      if (result && result.success) {
         Alert.alert(
           "Success",
           existingReviewId
@@ -152,34 +162,18 @@ export default function OrderDetailsScreen() {
         }
 
         setRateModalVisible(false);
-      }
-    } catch (error: any) {
-      setIsSubmittingReview(false);
-      const errorMsg = error.message || "";
-
-      if (
-        errorMsg.includes("completed orders") ||
-        errorMsg.includes("NOT_COMPLETED")
-      ) {
-        Alert.alert(
-          "Review Not Available",
-          "Your order hasn't been fully processed by the system yet. Please try again once the order status is finalized.",
-        );
-      } else if (
-        errorMsg.toLowerCase().includes("already") ||
-        errorMsg.toLowerCase().includes("exists")
-      ) {
-        Alert.alert(
-          "Already Reviewed",
-          "You have already submitted a review for this order.",
-        );
-        setRateModalVisible(false);
       } else {
         Alert.alert(
           "Review Error",
-          errorMsg || "Something went wrong. Please try again.",
+          result?.message || "Failed to submit review. Please try again.",
         );
       }
+    } catch (error: any) {
+      setIsSubmittingReview(false);
+      Alert.alert(
+        "Review Error",
+        error?.message || "Something went wrong. Please try again.",
+      );
     }
   };
 
@@ -254,68 +248,63 @@ export default function OrderDetailsScreen() {
     }
   };
 
-  const getTimeline = () => {
-    const activeStep = getStepIndex(currentOrderStatus);
-    
+  const getTimeline = (status: string) => {
+    const activeStep = getStepIndex(status);
+
     return (
-      <View className="ml-4 border-l-2 border-gray-100 pl-6 py-2 relative">
+      <View className="ml-4 border-l-2 border-gray-100 pl-6 py-2 relative my-2">
         {/* Step 0: Placed */}
-        <View className="relative mb-6">
+        <View className="relative mb-5">
           <View
             className={`absolute -left-[31px] w-4 h-4 rounded-full border-2 ${
               activeStep >= 0 ? "bg-[#FFC107] border-[#FFC107]" : "bg-gray-100 border-gray-200"
             } z-10`}
           />
           <View>
-            <Text className={`font-heading text-base ${activeStep === 0 ? "text-gray-900" : "text-gray-400"}`}>
+            <Text className={`font-heading text-sm ${activeStep === 0 ? "text-gray-900 font-bold" : "text-gray-400"}`}>
               Order Placed
             </Text>
             <Text className="text-gray-500 text-xs mt-0.5">
-              Your order has been received and confirmed
+              Order confirmed by restaurant
             </Text>
           </View>
         </View>
 
         {/* Step 1: Preparing */}
-        <View className="relative mb-6">
+        <View className="relative mb-5">
           <View
             className={`absolute -left-[31px] w-4 h-4 rounded-full border-2 ${
               activeStep >= 1 ? "bg-[#FFC107] border-[#FFC107]" : "bg-gray-100 border-gray-200"
             } z-10`}
           />
           <View>
-            <Text className={`font-heading text-base ${activeStep === 1 ? "text-gray-900" : "text-gray-400"}`}>
-              Preparing your food
+            <Text className={`font-heading text-sm ${activeStep === 1 ? "text-gray-900 font-bold" : "text-gray-400"}`}>
+              Preparing food
             </Text>
             {activeStep === 1 && (
-              <Text className="text-gray-500 text-xs mt-0.5">
-                We are preparing your food with magic and care. Est: 7-10 mins.
+              <Text className="text-amber-700 text-xs mt-0.5 font-body-medium">
+                Kitchen is preparing your food. Est: 7-10 mins.
               </Text>
             )}
           </View>
         </View>
 
         {/* Step 2: Ready */}
-        <View className="relative mb-6">
+        <View className="relative mb-5">
           <View
             className={`absolute -left-[31px] w-4 h-4 rounded-full border-2 ${
               activeStep >= 2 ? "bg-[#FFC107] border-[#FFC107]" : "bg-gray-100 border-gray-200"
             } z-10`}
           />
           <View>
-            <Text className={`font-heading text-base ${activeStep === 2 ? "text-gray-900" : "text-gray-400"}`}>
+            <Text className={`font-heading text-sm ${activeStep === 2 ? "text-gray-900 font-bold" : "text-gray-400"}`}>
               Ready for Pickup
             </Text>
             {activeStep === 2 && (
               <View className="mt-1">
-                <Text className="text-gray-500 text-xs">
-                  Please collect your food from the restaurant counter.
+                <Text className="text-emerald-700 text-xs font-body-medium">
+                  Please collect your food from the counter.
                 </Text>
-                {orderData?.logisticsType?.toLowerCase() === "pickup" && (
-                  <TouchableOpacity className="mt-2.5 border border-gray-200 rounded-xl py-2 px-4 items-center bg-white shadow-sm self-start">
-                    <Text className="font-body-semibold text-xs text-gray-900">I'm here at the counter</Text>
-                  </TouchableOpacity>
-                )}
               </View>
             )}
           </View>
@@ -329,20 +318,20 @@ export default function OrderDetailsScreen() {
             } z-10`}
           />
           <View>
-            <Text className={`font-heading text-base ${activeStep === 3 ? "text-gray-900" : "text-gray-400"}`}>
+            <Text className={`font-heading text-sm ${activeStep === 3 ? "text-gray-900 font-bold" : "text-gray-400"}`}>
               Order Completed
             </Text>
             {activeStep === 3 && (
-              <View className="mt-2">
+              <View className="mt-1.5">
                 <Text className="text-gray-500 text-xs">
                   Hope you enjoyed your Dine Five meal!
                 </Text>
                 <TouchableOpacity
                   onPress={() => setRateModalVisible(true)}
-                  className="mt-2.5 border border-yellow-400 bg-yellow-50 rounded-xl py-2 px-4 flex-row items-center justify-center shadow-sm self-start"
+                  className="mt-2 border border-yellow-400 bg-yellow-50 rounded-xl py-1.5 px-3 flex-row items-center justify-center shadow-sm self-start"
                 >
-                  <Ionicons name="star" size={14} color="#FFC107" />
-                  <Text className="font-body-semibold text-[#332701] ml-1.5 text-xs">
+                  <Ionicons name="star" size={13} color="#FFC107" />
+                  <Text className="font-body-semibold text-[#332701] ml-1 text-xs">
                     {existingReviewId ? "Edit Review" : "Rate the food!"}
                   </Text>
                 </TouchableOpacity>
@@ -354,53 +343,28 @@ export default function OrderDetailsScreen() {
     );
   };
 
-  const getHeaderTitle = () => {
-    if (orderData?.isMultiVendor) {
-      return "Multi-Vendor Feast";
-    }
-    return orderData?.providerId?.restaurantName || orderData?.restaurantName || "Restaurant Order";
-  };
-
-  const getHeaderSubtitle = () => {
-    if (orderData?.isMultiVendor) {
-      return `${orderData?.restaurantCount || 0} Restaurants · ${orderData?.itemCount || 0} Items`;
-    }
-    return orderData?.items?.length ? `${orderData.items.length} Items` : "";
-  };
-
-  const renderHeaderProfile = () => {
-    if (orderData?.isMultiVendor) {
-      return (
-        <View className="w-12 h-12 bg-amber-50 rounded-full items-center justify-center border border-amber-100">
-          <Ionicons name="fast-food" size={22} color="#D97706" />
-        </View>
-      );
-    }
-    const pic = orderData?.providerId?.restaurantPic || orderData?.restaurants?.[0]?.restaurantImage || orderData?.restaurantImage;
-    return (
-      <View className="w-12 h-12 bg-gray-50 border border-gray-100 rounded-full items-center justify-center overflow-hidden">
-        {pic ? (
-          <Image
-            source={{ uri: pic }}
-            className="w-full h-full"
-            resizeMode="cover"
-          />
-        ) : (
-          <Ionicons name="restaurant" size={20} color="#FFC107" />
-        )}
-      </View>
-    );
-  };
-
   const getGroups = () => {
     if (orderData?.restaurantGroups && orderData.restaurantGroups.length > 0) {
       return orderData.restaurantGroups;
+    }
+    if (orderData?.subOrders && orderData.subOrders.length > 0) {
+      return orderData.subOrders.map((so: any) => ({
+        restaurantName: so.provider?.restaurantName || so.restaurantName || orderData.restaurantName || "Dine Five Restaurant",
+        restaurantAddress: so.provider?.restaurantAddress || so.restaurantAddress || pickupAddress,
+        restaurantImage: so.provider?.restaurantImage || so.provider?.restaurantPic || orderData.restaurantImage,
+        phoneNumber: so.provider?.phoneNumber || so.phoneNumber,
+        status: so.status || orderData.status,
+        items: so.items || [],
+        subtotal: so.subtotal,
+        total: so.vendorAmount || so.total,
+      }));
     }
     if (orderData) {
       return [{
         restaurantName: orderData.providerId?.restaurantName || orderData.restaurantName || "Dine Five Restaurant",
         restaurantAddress: orderData.providerId?.restaurantAddress || orderData.restaurantAddress || pickupAddress,
         restaurantImage: orderData.restaurantImage || orderData.providerId?.restaurantPic || orderData.restaurants?.[0]?.restaurantImage,
+        phoneNumber: orderData.providerId?.phoneNumber || orderData.phoneNumber,
         status: orderData.status,
         items: orderData.items || [],
         subtotal: orderData.subtotal,
@@ -422,6 +386,74 @@ export default function OrderDetailsScreen() {
 
   const groups = getGroups();
 
+  const displayOrderId =
+    orderData?.orderId ||
+    orderData?._id ||
+    (params.orderId as string) ||
+    (params._id as string) ||
+    "";
+
+  const getHeaderTitle = () => {
+    if (groups.length > 1) {
+      const names = groups.map((g: any) => g.restaurantName).filter(Boolean);
+      return names.join(" & ");
+    }
+    return (
+      orderData?.providerId?.restaurantName ||
+      orderData?.restaurantName ||
+      groups[0]?.restaurantName ||
+      "Restaurant Order"
+    );
+  };
+
+  const getHeaderSubtitle = () => {
+    const totalItems =
+      orderData?.itemCount ||
+      orderData?.items?.length ||
+      groups.reduce((acc: number, g: any) => acc + (g.items?.length || 0), 0);
+    return `${totalItems} ${totalItems === 1 ? "Item" : "Items"}`;
+  };
+
+  const renderHeaderProfile = () => {
+    if (groups.length > 1) {
+      return (
+        <View className="flex-row items-center my-0.5">
+          {groups.slice(0, 3).map((group: any, idx: number) => {
+            const pic = group.restaurantImage || group.provider?.restaurantPic;
+            return (
+              <View
+                key={idx}
+                className="w-10 h-10 bg-white border-2 border-white rounded-full items-center justify-center overflow-hidden shadow-sm"
+                style={{ marginLeft: idx > 0 ? -12 : 0, zIndex: 10 - idx }}
+              >
+                {pic ? (
+                  <Image source={{ uri: pic }} className="w-full h-full" resizeMode="cover" />
+                ) : (
+                  <Ionicons name="restaurant" size={16} color="#FFC107" />
+                )}
+              </View>
+            );
+          })}
+        </View>
+      );
+    }
+    const pic =
+      groups[0]?.restaurantImage ||
+      orderData?.providerId?.restaurantPic ||
+      orderData?.restaurants?.[0]?.restaurantImage ||
+      orderData?.restaurantImage;
+
+    return (
+      <View className="w-11 h-11 bg-gray-50 border border-gray-100 rounded-full items-center justify-center overflow-hidden shadow-sm">
+        {pic ? (
+          <Image source={{ uri: pic }} className="w-full h-full" resizeMode="cover" />
+        ) : (
+          <Ionicons name="restaurant" size={20} color="#FFC107" />
+        )}
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-[#FDFBF7]">
       <StatusBar style="dark" />
@@ -438,24 +470,37 @@ export default function OrderDetailsScreen() {
       </View>
 
       <ScrollView className="flex-1 px-4" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
-        {/* Restaurant Header Card & Cancel Button */}
-        <View className="flex-row items-center justify-between mb-6 bg-white p-4 rounded-3xl border border-gray-50 shadow-sm">
+        {/* Restaurant Header Card & Order ID & Cancel Button */}
+        <View className="flex-row items-center justify-between mb-5 bg-white p-4 rounded-3xl border border-gray-100 shadow-sm">
           <View className="flex-row items-center gap-3 flex-1 mr-2">
             {renderHeaderProfile()}
             <View className="flex-1">
-              <Text className="text-base font-heading text-gray-950" numberOfLines={1}>
+              <Text className="text-base font-heading text-gray-950" numberOfLines={2}>
                 {getHeaderTitle()}
               </Text>
-              <Text className="text-gray-400 text-xs mt-0.5">
-                {getHeaderSubtitle()}
-              </Text>
+              
+              {/* Order ID & Item count badge */}
+              <View className="flex-row items-center gap-1.5 mt-1 flex-wrap">
+                {displayOrderId ? (
+                  <View className="bg-amber-100/80 px-2 py-0.5 rounded-md flex-row items-center">
+                    <Ionicons name="receipt-outline" size={10} color="#92400E" />
+                    <Text className="text-[10px] font-body-bold text-amber-900 ml-1">
+                      {displayOrderId}
+                    </Text>
+                  </View>
+                ) : null}
+                <Text className="text-gray-300 text-xs">•</Text>
+                <Text className="text-gray-400 text-xs font-body-medium">
+                  {getHeaderSubtitle()}
+                </Text>
+              </View>
             </View>
           </View>
 
           {isCancelable && (
             <TouchableOpacity
               onPress={handleCancelPress}
-              className="bg-rose-50 border border-rose-100 px-4 py-2.5 rounded-xl active:bg-rose-100"
+              className="bg-rose-50 border border-rose-100 px-3.5 py-2 rounded-xl active:bg-rose-100 self-start mt-0.5"
             >
               <Text className="text-rose-600 font-body-semibold text-xs">
                 Cancel
@@ -464,13 +509,10 @@ export default function OrderDetailsScreen() {
           )}
         </View>
 
-        {/* Timeline Card */}
-        <View className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 mb-6">
-          {getTimeline()}
-        </View>
-
-        {/* Items Grouped by Restaurant */}
-        <Text className="text-[10px] text-gray-400 font-body-semibold uppercase tracking-wider mb-3 px-1">Items Grouped by Restaurant</Text>
+        {/* Items & Status Tracking Grouped by Restaurant */}
+        <Text className="text-[10px] text-gray-400 font-body-semibold uppercase tracking-wider mb-3 px-1">
+          {groups.length > 1 ? "Restaurants & Order Trackers" : "Restaurant & Order Status"}
+        </Text>
         {groups.map((group: any, index: number) => {
           const phone =
             group.phoneNumber ||
@@ -482,8 +524,11 @@ export default function OrderDetailsScreen() {
             )?.phoneNumber ||
             orderData?.phoneNumber;
 
+          const groupStatus = group.status || currentOrderStatus;
+
           return (
-            <View key={group.subOrderId || index} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 mb-4">
+            <View key={group.subOrderId || index} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 mb-5">
+              {/* Restaurant Header */}
               <View className="flex-row items-center justify-between pb-3 border-b border-gray-50 mb-3">
                 <View className="flex-row items-center flex-1 mr-2">
                   <View className="w-9 h-9 rounded-full bg-gray-50 border border-gray-100 overflow-hidden items-center justify-center mr-2.5">
@@ -519,48 +564,60 @@ export default function OrderDetailsScreen() {
                   </View>
                 </View>
               
-              <View className={`px-2 py-0.5 rounded-full border ${getStatusBadgeStyle(group.status || currentOrderStatus).container}`}>
-                <Text className={`text-[9px] font-body-semibold uppercase ${getStatusBadgeStyle(group.status || currentOrderStatus).text}`}>
-                  {formatStatus(group.status || currentOrderStatus)}
+                <View className={`px-2 py-0.5 rounded-full border ${getStatusBadgeStyle(groupStatus).container}`}>
+                  <Text className={`text-[9px] font-body-semibold uppercase ${getStatusBadgeStyle(groupStatus).text}`}>
+                    {formatStatus(groupStatus)}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Individual Restaurant Order Tracking Timeline */}
+              <View className="bg-amber-50/40 rounded-2xl p-3.5 border border-amber-100/60 mb-4">
+                <Text className="text-[10px] text-amber-800 font-body-bold uppercase tracking-wider mb-1">
+                  Status Tracker · {group.restaurantName}
                 </Text>
+                {getTimeline(groupStatus)}
+              </View>
+
+              {/* Items List */}
+              <Text className="text-[10px] text-gray-400 font-body-semibold uppercase tracking-wider mb-2.5">
+                Ordered Items ({group.items?.length || 0})
+              </Text>
+              <View className="space-y-3">
+                {group.items?.map((item: any, idx: number) => {
+                  const imageUri = item?.image || item?.food?.image || "";
+                  return (
+                    <View key={item._id || idx} className="flex-row items-center justify-between">
+                      <View className="flex-row items-center flex-1 mr-3">
+                        <View className="w-11 h-11 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden mr-2.5">
+                          {imageUri ? (
+                            <Image source={{ uri: imageUri }} className="w-full h-full" resizeMode="cover" />
+                          ) : (
+                            <View className="w-full h-full bg-amber-50 items-center justify-center">
+                              <Ionicons name="fast-food-outline" size={16} color="#FFC107" />
+                            </View>
+                          )}
+                        </View>
+                        <View className="flex-1">
+                          <Text className="text-xs font-body-semibold text-gray-800" numberOfLines={1}>
+                            {item.title || item.food?.title || "Item"}
+                          </Text>
+                          <Text className="text-[10px] text-gray-400 font-body-semibold mt-0.5">
+                            x{item.quantity} · ${item.unitPrice || item.price || 5.99}
+                          </Text>
+                        </View>
+                      </View>
+                      
+                      <Text className="text-xs font-body-semibold text-gray-900">
+                        ${(item.lineTotal || (item.quantity * (item.unitPrice || item.price || 5.99))).toFixed(2)}
+                      </Text>
+                    </View>
+                  );
+                })}
               </View>
             </View>
-
-            <View className="space-y-3">
-              {group.items?.map((item: any, idx: number) => {
-                const imageUri = item?.image || item?.food?.image || "";
-                return (
-                  <View key={item._id || idx} className="flex-row items-center justify-between">
-                    <View className="flex-row items-center flex-1 mr-3">
-                      <View className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden mr-2.5">
-                        {imageUri ? (
-                          <Image source={{ uri: imageUri }} className="w-full h-full" resizeMode="cover" />
-                        ) : (
-                          <View className="w-full h-full bg-amber-50 items-center justify-center">
-                            <Ionicons name="fast-food-outline" size={18} color="#FFC107" />
-                          </View>
-                        )}
-                      </View>
-                      <View className="flex-1">
-                        <Text className="text-xs font-body-semibold text-gray-800" numberOfLines={1}>
-                          {item.title || item.food?.title || "Item"}
-                        </Text>
-                        <Text className="text-[10px] text-gray-400 font-body-semibold mt-0.5">
-                          x{item.quantity} · ${item.unitPrice || item.price || 5.99}
-                        </Text>
-                      </View>
-                    </View>
-                    
-                    <Text className="text-xs font-body-semibold text-gray-900">
-                      ${(item.lineTotal || (item.quantity * (item.unitPrice || item.price || 5.99))).toFixed(2)}
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
-          </View>
-        );
-      })}
+          );
+        })}
 
         {/* Pickup & Payment details */}
         <View className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 mb-6">

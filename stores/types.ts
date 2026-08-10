@@ -137,6 +137,17 @@ export interface ReviewActions {
   fetchReviewsByFoodId: (foodId: string) => Promise<any>;
   fetchReviewByOrderId: (orderId: string) => Promise<any>;
   createReview: (reviewData: any) => Promise<any>;
+  submitReview: (
+    orderId: string,
+    foodId: string,
+    rating: number,
+    comment: string
+  ) => Promise<any>;
+  updateReview: (
+    reviewId: string,
+    rating: number,
+    comment?: string
+  ) => Promise<any>;
   fetchFavorites: () => Promise<any>;
   addFavorite: (foodId: string) => Promise<any>;
   removeFavorite: (foodId: string) => Promise<any>;
