@@ -144,6 +144,12 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
           confirmRes.data?.order?._id ||
           paymentIntentId;
 
+        const totalToPayVal =
+          taxBreakdown?.totalToPay ??
+          taxBreakdown?.totalAmount ??
+          confirmRes.data?.order?.totalPrice ??
+          ((taxBreakdown?.stateTax ?? 0) + (taxBreakdown?.cityTax ?? 0) + (taxBreakdown?.platformFee ?? 0));
+
         router.replace({
           pathname: "/screens/cart/order-success",
           params: {
@@ -151,7 +157,8 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
             type: "free-meal",
             mealName: foodTitle,
             restaurantName,
-            totalTax: String(taxBreakdown?.totalTax ?? confirmRes.data?.order?.totalPrice ?? 0),
+            amount: String(typeof totalToPayVal === "number" ? totalToPayVal.toFixed(2) : totalToPayVal),
+            totalTax: String(typeof totalToPayVal === "number" ? totalToPayVal.toFixed(2) : totalToPayVal),
           },
         });
       } else {
@@ -173,6 +180,11 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
           orderRes.data?.order?._id ||
           "FREE-MEAL-ORDER";
 
+        const totalToPayVal =
+          taxBreakdown?.totalToPay ??
+          taxBreakdown?.totalAmount ??
+          ((taxBreakdown?.stateTax ?? 0) + (taxBreakdown?.cityTax ?? 0) + (taxBreakdown?.platformFee ?? 0));
+
         router.replace({
           pathname: "/screens/cart/order-success",
           params: {
@@ -180,7 +192,8 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
             type: "free-meal",
             mealName: foodTitle,
             restaurantName,
-            totalTax: String(taxBreakdown?.totalTax ?? 0),
+            amount: String(typeof totalToPayVal === "number" ? totalToPayVal.toFixed(2) : totalToPayVal),
+            totalTax: String(typeof totalToPayVal === "number" ? totalToPayVal.toFixed(2) : totalToPayVal),
           },
         });
       }

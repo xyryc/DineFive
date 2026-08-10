@@ -12,13 +12,23 @@ export default function OrderSuccessScreen() {
     const router = useRouter();
     const params = useLocalSearchParams();
 
-    // Get values from params
-    const amountPaid = params.amount ? `$${params.amount}` : '$32.12';
+    const rawPaidVal =
+        getSearchParam(params.amount as string | string[]) ||
+        getSearchParam(params.totalTax as string | string[]);
+
+    const numPaid = Number(rawPaidVal);
+    const amountPaid =
+        rawPaidVal && !isNaN(numPaid) && numPaid > 0
+            ? `$${numPaid.toFixed(2)}`
+            : params.amount
+            ? `$${params.amount}`
+            : 'Free ($0.00)';
+
     const isFreeMealSuccess = getSearchParam(params.type as string | string[]) === 'free-meal';
     const isDonationSuccess = getSearchParam(params.type as string | string[]) === 'donation';
     const freeMealName = getSearchParam(params.mealName as string | string[]) || 'Free Meal';
     const freeRestaurantName = getSearchParam(params.restaurantName as string | string[]) || 'Restaurant';
-    const freeTaxPaid = getSearchParam(params.totalTax as string | string[]);
+    const freeTaxPaid = rawPaidVal;
     
     const tokensCreated = Math.max(
         1,
@@ -109,10 +119,10 @@ export default function OrderSuccessScreen() {
                             <View className="flex-row justify-between items-center mt-3">
                                 <View className="flex-row items-center">
                                     <Ionicons name="card-outline" size={20} color="#666" style={{ marginRight: 8 }} />
-                                    <Text className="text-gray-500 font-body text-base">Tax Paid</Text>
+                                    <Text className="text-gray-500 font-body text-base">Total Paid</Text>
                                 </View>
                                 <Text className="text-emerald-600 font-body-semibold text-base">
-                                    {freeTaxPaid && Number(freeTaxPaid) > 0 ? `$${Number(freeTaxPaid).toFixed(2)}` : 'Free ($0.00)'}
+                                    {amountPaid}
                                 </Text>
                             </View>
                         </>
