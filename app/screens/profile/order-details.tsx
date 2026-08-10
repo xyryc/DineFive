@@ -90,22 +90,32 @@ export default function OrderDetailsScreen() {
 
   const currentOrderStatus = orderData?.status || currentState || "pending";
 
-  const isCancelable = [
-    "pending",
-    "preparing",
-    "ready",
-    "ready_for_pickup",
-  ].includes(currentOrderStatus.toLowerCase());
-
-  const handleCancelPress = () => {
-    if (isCancelable) {
-      const targetId = (params.orderId as string) || (params._id as string);
-      router.push({
-        pathname: "/screens/profile/cancel-reason",
-        params: { orderId: targetId },
-      });
-    }
+  const isGroupCancelable = (status: string) => {
+    return [
+      "pending",
+      "pending_split",
+      "preparing",
+      "ready",
+      "ready_for_pickup",
+    ].includes((status || "").toLowerCase());
   };
+
+  const handleCancelGroupPress = (group: any) => {
+    const targetId =
+      group._id ||
+      group.id ||
+      group.subOrderId ||
+      orderData?._id ||
+      (params._id as string) ||
+      (params.orderId as string);
+
+    router.push({
+      pathname: "/screens/profile/cancel-reason",
+      params: { orderId: targetId },
+    });
+  };
+
+
 
   const handleReviewSubmit = async () => {
     if (rating === 0) {
@@ -345,10 +355,26 @@ export default function OrderDetailsScreen() {
 
   const getGroups = () => {
     if (orderData?.restaurantGroups && orderData.restaurantGroups.length > 0) {
-      return orderData.restaurantGroups;
+      return orderData.restaurantGroups.map((rg: any) => {
+        const matchingSub = orderData.subOrders?.find(
+          (so: any) =>
+            so.subOrderId === rg.subOrderId ||
+            so.providerId === rg.providerId ||
+            so.providerId?._id === rg.providerId
+        );
+        return {
+          ...rg,
+          _id: matchingSub?._id || rg._id || rg.subOrderId,
+          id: matchingSub?._id || rg._id || rg.subOrderId,
+          subOrderId: rg.subOrderId || matchingSub?.subOrderId || matchingSub?._id,
+        };
+      });
     }
     if (orderData?.subOrders && orderData.subOrders.length > 0) {
       return orderData.subOrders.map((so: any) => ({
+        _id: so._id,
+        id: so._id,
+        subOrderId: so.subOrderId || so._id,
         restaurantName: so.provider?.restaurantName || so.restaurantName || orderData.restaurantName || "Dine Five Restaurant",
         restaurantAddress: so.provider?.restaurantAddress || so.restaurantAddress || pickupAddress,
         restaurantImage: so.provider?.restaurantImage || so.provider?.restaurantPic || orderData.restaurantImage,
@@ -361,6 +387,9 @@ export default function OrderDetailsScreen() {
     }
     if (orderData) {
       return [{
+        _id: orderData._id || orderData.orderId,
+        id: orderData._id || orderData.orderId,
+        subOrderId: orderData.orderId,
         restaurantName: orderData.providerId?.restaurantName || orderData.restaurantName || "Dine Five Restaurant",
         restaurantAddress: orderData.providerId?.restaurantAddress || orderData.restaurantAddress || pickupAddress,
         restaurantImage: orderData.restaurantImage || orderData.providerId?.restaurantPic || orderData.restaurants?.[0]?.restaurantImage,
@@ -470,9 +499,9 @@ export default function OrderDetailsScreen() {
       </View>
 
       <ScrollView className="flex-1 px-4" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
-        {/* Restaurant Header Card & Order ID & Cancel Button */}
+        {/* Restaurant Header Card & Order ID */}
         <View className="flex-row items-center justify-between mb-5 bg-white p-4 rounded-3xl border border-gray-100 shadow-sm">
-          <View className="flex-row items-center gap-3 flex-1 mr-2">
+          <View className="flex-row items-center gap-3 flex-1">
             {renderHeaderProfile()}
             <View className="flex-1">
               <Text className="text-base font-heading text-gray-950" numberOfLines={2}>
@@ -496,17 +525,6 @@ export default function OrderDetailsScreen() {
               </View>
             </View>
           </View>
-
-          {isCancelable && (
-            <TouchableOpacity
-              onPress={handleCancelPress}
-              className="bg-rose-50 border border-rose-100 px-3.5 py-2 rounded-xl active:bg-rose-100 self-start mt-0.5"
-            >
-              <Text className="text-rose-600 font-body-semibold text-xs">
-                Cancel
-              </Text>
-            </TouchableOpacity>
-          )}
         </View>
 
         {/* Items & Status Tracking Grouped by Restaurant */}
@@ -542,9 +560,22 @@ export default function OrderDetailsScreen() {
                     <Text className="text-xs font-heading text-gray-900" numberOfLines={1}>
                       {group.restaurantName}
                     </Text>
-                    <Text className="text-[10px] text-gray-400 font-body-medium mt-0.5" numberOfLines={1}>
-                      {group.restaurantAddress}
-                    </Text>
+
+                    {/* Sub Order ID Badge & Address */}
+                    <View className="flex-row items-center gap-1.5 mt-0.5 flex-wrap">
+                      {(group.subOrderId || group._id) && (
+                        <View className="bg-amber-50 border border-amber-200/80 px-1.5 py-0.5 rounded-md flex-row items-center">
+                          <Ionicons name="receipt-outline" size={9} color="#B45309" />
+                          <Text className="text-[9px] font-body-bold text-amber-800 ml-1">
+                            {group.subOrderId || group._id}
+                          </Text>
+                        </View>
+                      )}
+                      <Text className="text-[10px] text-gray-400 font-body-medium" numberOfLines={1}>
+                        {group.restaurantAddress}
+                      </Text>
+                    </View>
+
                     {phone ? (
                       <View className="flex-row items-center gap-1 mt-1">
                         <Ionicons name="call-outline" size={10} color="#9CA3AF" />
@@ -564,18 +595,37 @@ export default function OrderDetailsScreen() {
                   </View>
                 </View>
               
-                <View className={`px-2 py-0.5 rounded-full border ${getStatusBadgeStyle(groupStatus).container}`}>
-                  <Text className={`text-[9px] font-body-semibold uppercase ${getStatusBadgeStyle(groupStatus).text}`}>
-                    {formatStatus(groupStatus)}
-                  </Text>
+                <View className="flex-row items-center gap-1.5">
+                  <View className={`px-2 py-0.5 rounded-full border ${getStatusBadgeStyle(groupStatus).container}`}>
+                    <Text className={`text-[9px] font-body-semibold uppercase ${getStatusBadgeStyle(groupStatus).text}`}>
+                      {formatStatus(groupStatus)}
+                    </Text>
+                  </View>
+                  {isGroupCancelable(groupStatus) && (
+                    <TouchableOpacity
+                      onPress={() => handleCancelGroupPress(group)}
+                      className="bg-rose-50 border border-rose-100 px-2.5 py-0.5 rounded-full active:bg-rose-100"
+                    >
+                      <Text className="text-rose-600 font-body-semibold text-[9px] uppercase">
+                        Cancel
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
 
               {/* Individual Restaurant Order Tracking Timeline */}
               <View className="bg-amber-50/40 rounded-2xl p-3.5 border border-amber-100/60 mb-4">
-                <Text className="text-[10px] text-amber-800 font-body-bold uppercase tracking-wider mb-1">
-                  Status Tracker · {group.restaurantName}
-                </Text>
+                <View className="flex-row items-center justify-between mb-1.5 gap-2">
+                  <Text className="text-[10px] text-amber-800 font-body-bold uppercase tracking-wider">
+                    Status Tracker
+                  </Text>
+                  {(group.subOrderId || group._id) && (
+                    <Text className="text-[9px] font-body-bold text-amber-900/80 shrink-0" numberOfLines={1}>
+                      ID: {group.subOrderId || group._id}
+                    </Text>
+                  )}
+                </View>
                 {getTimeline(groupStatus)}
               </View>
 

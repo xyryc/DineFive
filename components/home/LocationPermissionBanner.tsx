@@ -67,7 +67,7 @@ export function LocationPermissionBanner({ onEnableGPS, onManualAddress }: Props
             <TextInput
               value={manualInput}
               onChangeText={setManualInput}
-              placeholder="e.g. New York, Dhaka, 94043..."
+              placeholder="e.g. New York, California, 94043..."
               placeholderTextColor="#9CA3AF"
               className="flex-1 text-sm text-gray-800 py-1"
             />

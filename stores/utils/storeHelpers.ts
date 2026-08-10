@@ -5,14 +5,13 @@ export const STORAGE_KEYS = {
 };
 
 export const translateApiMessage = (code: string) => {
+  if (!code) return "An unexpected error occurred. Please try again.";
   const messages: { [key: string]: string } = {
     VALIDATION_ERROR: "Please check your input and try again.",
     INVALID_CREDENTIALS: "Invalid email or password.",
     USER_NOT_FOUND: "No account found with this email.",
-    INTERNAL_SERVER_ERROR: "Something went wrong on our end.",
-    UNKNOWN_ERROR: "An unexpected error occurred. Please try again.",
   };
-  return messages[code] || messages.UNKNOWN_ERROR;
+  return messages[code] || code;
 };
 
 export const isObject = (value: unknown): value is Record<string, any> =>

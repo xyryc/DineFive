@@ -135,13 +135,17 @@ export const AuthComponents = ({
         role: "CUSTOMER",
       });
       console.log("Signup result:", result);
-      if (result) {
+      if (result && result.success !== false) {
         router.push({
           pathname: "/(auth)/verify-otp",
           params: { email: signupEmail },
         });
       } else {
-        Alert.alert("Error", "Signup failed. Please try again.");
+        const errorMsg =
+          result?.message ||
+          (useStore.getState() as any).error ||
+          "Signup failed. Please try again.";
+        Alert.alert("Error", errorMsg);
       }
     } catch (error: any) {
       console.log("Signup error:", error);

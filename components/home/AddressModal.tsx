@@ -59,7 +59,7 @@ export default function AddressModal({ visible, onClose, onConfirm }: Props) {
             <TextInput
               value={address}
               onChangeText={setAddress}
-              placeholder="e.g. New York, Dhaka..."
+              placeholder="e.g. New York, California..."
               placeholderTextColor="#9CA3AF"
               className="flex-1 text-sm text-gray-800 py-1"
               autoFocus

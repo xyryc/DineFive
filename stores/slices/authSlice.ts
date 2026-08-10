@@ -103,7 +103,9 @@ export const createAuthSlice = (set: any, get: () => RootStore): AuthSlice => ({
       console.log("Signup result:", JSON.stringify(result, null, 2));
 
       if (!response.ok) {
-        throw new Error(result.message || "Signup failed");
+        throw new Error(
+          result.message || result.error?.message || "Signup failed"
+        );
       }
 
       const userData = result.data?.user || result.user;
@@ -131,7 +133,7 @@ export const createAuthSlice = (set: any, get: () => RootStore): AuthSlice => ({
       const parsedMessage = translateApiMessage(error.message);
       console.log("Signup error:", parsedMessage);
       set({ error: parsedMessage, isLoading: false });
-      return null;
+      return { success: false, message: parsedMessage };
     }
   },
 
