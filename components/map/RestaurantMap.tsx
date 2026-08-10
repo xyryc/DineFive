@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import MapView, { Marker, PROVIDER_DEFAULT, Region } from "react-native-maps";
 import { Restaurant, useRestaurantStore } from "../../stores/useRestaurantStore";
-import { RestaurantCard } from "./RestaurantCard";
+import RestaurantCard from "./RestaurantCard";
 
 const RADIUS_OPTIONS = [
   { label: "50", value: 50 },

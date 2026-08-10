@@ -33,6 +33,7 @@ interface RestaurantState {
   locationLoading: boolean;
   locationPermissionGranted: boolean | null;
   restaurants: Restaurant[];
+  freeMeals: Restaurant[];
   homeRestaurants: Restaurant[];
   restaurantsLoading: boolean;
   restaurantsError: string | null;
@@ -74,6 +75,7 @@ export const useRestaurantStore = create<RestaurantState>((set, get) => ({
   locationLoading: true,
   locationPermissionGranted: null,
   restaurants: [],
+  freeMeals: [],
   homeRestaurants: [],
   restaurantsLoading: false,
   restaurantsError: null,
@@ -180,17 +182,12 @@ export const useRestaurantStore = create<RestaurantState>((set, get) => ({
   fetchNearbyRestaurants: async (params: NearbyParams) => {
     const requestSeq = get().restaurantRequestSeq + 1;
 
-    const currentMode = get().activeFeedMode;
-    // Only switch to 'all' if we are not already in 'free' mode
-    // or if this is an explicit request to show 'all'
-    const nextMode = currentMode === "free" ? "free" : "all";
-
     set({
       restaurantsLoading: true,
       restaurantsError: null,
-      activeFeedMode: nextMode,
+      activeFeedMode: "all",
       restaurantRequestSeq: requestSeq,
-      availableTokenCount: nextMode === "all" ? 0 : get().availableTokenCount,
+      availableTokenCount: 0,
     });
 
     try {
@@ -205,10 +202,7 @@ export const useRestaurantStore = create<RestaurantState>((set, get) => ({
       });
 
       const currentState = get();
-      if (
-        currentState.restaurantRequestSeq !== requestSeq ||
-        currentState.activeFeedMode !== nextMode
-      ) {
+      if (currentState.restaurantRequestSeq !== requestSeq) {
         return;
       }
 
@@ -218,18 +212,12 @@ export const useRestaurantStore = create<RestaurantState>((set, get) => ({
       });
     } catch (err: any) {
       const currentState = get();
-      if (
-        currentState.restaurantRequestSeq === requestSeq &&
-        currentState.activeFeedMode === nextMode
-      ) {
+      if (currentState.restaurantRequestSeq === requestSeq) {
         set({ restaurantsError: err.message ?? "Failed to load restaurants" });
       }
     } finally {
       const currentState = get();
-      if (
-        currentState.restaurantRequestSeq === requestSeq &&
-        currentState.activeFeedMode === nextMode
-      ) {
+      if (currentState.restaurantRequestSeq === requestSeq) {
         set({ restaurantsLoading: false });
       }
     }
@@ -254,36 +242,27 @@ export const useRestaurantStore = create<RestaurantState>((set, get) => ({
         longitude: location?.longitude ?? FALLBACK_LOCATION.longitude,
         radius: radiusMeters,
       });
-      const restaurants = response.data ?? [];
-      const total = response.pagination?.total ?? restaurants.length;
+      const mealsList = response.data ?? [];
+      const total = response.pagination?.total ?? mealsList.length;
 
       const currentState = get();
-      if (
-        currentState.restaurantRequestSeq !== requestSeq ||
-        currentState.activeFeedMode !== "free"
-      ) {
+      if (currentState.restaurantRequestSeq !== requestSeq) {
         return;
       }
 
       set({
-        restaurants,
+        freeMeals: mealsList,
         total,
         availableTokenCount: response.availableTokenCount ?? 0,
       });
     } catch (err: any) {
       const currentState = get();
-      if (
-        currentState.restaurantRequestSeq === requestSeq &&
-        currentState.activeFeedMode === "free"
-      ) {
+      if (currentState.restaurantRequestSeq === requestSeq) {
         set({ restaurantsError: err.message ?? "Failed to load free meals" });
       }
     } finally {
       const currentState = get();
-      if (
-        currentState.restaurantRequestSeq === requestSeq &&
-        currentState.activeFeedMode === "free"
-      ) {
+      if (currentState.restaurantRequestSeq === requestSeq) {
         set({ restaurantsLoading: false });
       }
     }

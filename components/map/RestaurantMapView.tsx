@@ -23,6 +23,7 @@ import MapMarkerItem from "./MapMarkerItem";
 import MapSearchBar from "./MapSearchBar";
 import MealFilterBar from "./MealFilterBar";
 import RestaurantCard from "./RestaurantCard";
+import FoodCard from "./FoodCard";
 import SkeletonCard from "./SkeletonCard";
 import {
   buildRestaurantSearchHaystack,
@@ -51,6 +52,7 @@ export default function RestaurantMapView({
     locationLoading,
     locationPermissionGranted,
     restaurants,
+    freeMeals,
     restaurantsLoading,
     restaurantsError,
     selectedRestaurant,
@@ -189,10 +191,10 @@ export default function RestaurantMapView({
     fetchNearbyRestaurants,
   ]);
 
-  const allRestaurants = useMemo(
-    () => (Array.isArray(restaurants) ? restaurants : []),
-    [restaurants],
-  );
+  const allRestaurants = useMemo(() => {
+    const list = mealFilter === "free" ? freeMeals : restaurants;
+    return Array.isArray(list) ? list : [];
+  }, [mealFilter, freeMeals, restaurants]);
 
   const filteredRestaurants = useMemo(() => {
     const query = normalizeRestaurantSearchQuery(debouncedSearchText);
@@ -597,16 +599,25 @@ export default function RestaurantMapView({
               offset: CARD_SNAP_INTERVAL * index + 12,
               index,
             })}
-            renderItem={({ item, index }) => (
-              <RestaurantCard
-                item={item}
-                index={index}
-                activeCardIndex={activeCardIndex}
-                selectedRestaurantId={selectedRestaurant?.id}
-                isFreeMode={mealFilter === "free"}
-                onPress={() => openRestaurantDetail(item)}
-              />
-            )}
+            renderItem={({ item, index }) =>
+              mealFilter === "free" ? (
+                <FoodCard
+                  item={item}
+                  index={index}
+                  activeCardIndex={activeCardIndex}
+                  selectedRestaurantId={selectedRestaurant?.id}
+                  onPress={() => openRestaurantDetail(item)}
+                />
+              ) : (
+                <RestaurantCard
+                  item={item}
+                  index={index}
+                  activeCardIndex={activeCardIndex}
+                  selectedRestaurantId={selectedRestaurant?.id}
+                  onPress={() => openRestaurantDetail(item)}
+                />
+              )
+            }
           />
         )}
       </View>

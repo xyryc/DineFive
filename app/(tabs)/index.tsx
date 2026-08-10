@@ -13,7 +13,7 @@ import { useStore } from "@/stores/stores";
 import { type Restaurant, useRestaurantStore } from "@/stores/useRestaurantStore";
 import { getUserAvatarUri } from "@/utils/userAvatar";
 import * as Location from "expo-location";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
 import {
@@ -225,6 +225,16 @@ export default function HomeScreen() {
       .catch(() => { if (active) setLocationLabel("Current Location"); });
     return () => { active = false; };
   }, [location]);
+
+  // Refresh nearby restaurants whenever Home tab gains focus
+  useFocusEffect(
+    React.useCallback(() => {
+      const loc = useRestaurantStore.getState().location ?? location;
+      if (loc) {
+        loadNearby(loc);
+      }
+    }, [loadNearby, location])
+  );
 
   // Fetch nearby on location change (debounced)
   React.useEffect(() => {

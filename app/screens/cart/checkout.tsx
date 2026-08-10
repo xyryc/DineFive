@@ -68,6 +68,8 @@ function CheckoutContent() {
 
   const {
     fetchCart,
+    clearCart,
+    createOrder,
     createPaymentIntent,
     fetchDonationBreakdown,
     createDonationPaymentIntent,
