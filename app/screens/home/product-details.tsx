@@ -729,7 +729,7 @@ function ProductDetailsInner() {
                 product.id
               }
               foodId={product.foodId}
-              foodTitle={product.title}
+              foodTitle={product.name}
               restaurantName={
                 product.restaurantName || product.providerName || "Restaurant"
               }

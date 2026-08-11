@@ -38,7 +38,9 @@ interface FreeMealTaxCheckoutModalProps {
   taxBreakdown: TaxBreakdownData | null;
 }
 
-export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> = ({
+export const FreeMealTaxCheckoutModal: React.FC<
+  FreeMealTaxCheckoutModalProps
+> = ({
   visible,
   onClose,
   tokenId,
@@ -51,10 +53,14 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
-  const { createFreeMealPaymentIntent, confirmFreeMealPayment, placeFreeOrder } =
-    useRestaurantStore();
+  const {
+    createFreeMealPaymentIntent,
+    confirmFreeMealPayment,
+    placeFreeOrder,
+  } = useRestaurantStore();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [termsAgreed, setTermsAgreed] = useState(false);
 
   const formatMoney = (amount?: number) => {
     if (typeof amount !== "number" || isNaN(amount)) return "$0.00";
@@ -63,6 +69,13 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
 
   const handlePayTaxAndOrder = async () => {
     if (isLoading) return;
+    if (!termsAgreed) {
+      Alert.alert(
+        "Agreement Required",
+        "Please agree to the disclaimer before proceeding. You must acknowledge that you will pay the applicable state tax, city tax, and platform fee to claim your free meal.",
+      );
+      return;
+    }
     if (!tokenId || !providerId || !foodId) {
       Alert.alert("Error", "Missing order information. Please try again.");
       return;
@@ -80,15 +93,12 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
 
       if (!intentRes || !intentRes.success) {
         throw new Error(
-          intentRes?.message || "Failed to create tax payment intent."
+          intentRes?.message || "Failed to create tax payment intent.",
         );
       }
 
-      const {
-        clientSecret,
-        paymentIntentId,
-        requiresStripePayment,
-      } = intentRes.data || {};
+      const { clientSecret, paymentIntentId, requiresStripePayment } =
+        intentRes.data || {};
 
       const hasClientSecret = Boolean(clientSecret && paymentIntentId);
       const isStripeRequired =
@@ -110,7 +120,10 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
         });
 
         if (initError) {
-          Alert.alert("Payment Error", initError.message || "Failed to initialize payment.");
+          Alert.alert(
+            "Payment Error",
+            initError.message || "Failed to initialize payment.",
+          );
           setIsLoading(false);
           return;
         }
@@ -121,7 +134,10 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
           if (presentError.code === "Canceled") {
             Alert.alert("Cancelled", "Tax payment was cancelled.");
           } else {
-            Alert.alert("Payment Failed", presentError.message || "Tax payment failed.");
+            Alert.alert(
+              "Payment Failed",
+              presentError.message || "Tax payment failed.",
+            );
           }
           setIsLoading(false);
           return;
@@ -133,7 +149,7 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
           Alert.alert(
             "Order Error",
             confirmRes?.message ||
-              "Tax payment received, but order creation failed. Please contact support."
+              "Tax payment received, but order creation failed. Please contact support.",
           );
           setIsLoading(false);
           return;
@@ -148,7 +164,9 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
           taxBreakdown?.totalToPay ??
           taxBreakdown?.totalAmount ??
           confirmRes.data?.order?.totalPrice ??
-          ((taxBreakdown?.stateTax ?? 0) + (taxBreakdown?.cityTax ?? 0) + (taxBreakdown?.platformFee ?? 0));
+          (taxBreakdown?.stateTax ?? 0) +
+            (taxBreakdown?.cityTax ?? 0) +
+            (taxBreakdown?.platformFee ?? 0);
 
         router.replace({
           pathname: "/screens/cart/order-success",
@@ -157,8 +175,16 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
             type: "free-meal",
             mealName: foodTitle,
             restaurantName,
-            amount: String(typeof totalToPayVal === "number" ? totalToPayVal.toFixed(2) : totalToPayVal),
-            totalTax: String(typeof totalToPayVal === "number" ? totalToPayVal.toFixed(2) : totalToPayVal),
+            amount: String(
+              typeof totalToPayVal === "number"
+                ? totalToPayVal.toFixed(2)
+                : totalToPayVal,
+            ),
+            totalTax: String(
+              typeof totalToPayVal === "number"
+                ? totalToPayVal.toFixed(2)
+                : totalToPayVal,
+            ),
           },
         });
       } else {
@@ -183,7 +209,9 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
         const totalToPayVal =
           taxBreakdown?.totalToPay ??
           taxBreakdown?.totalAmount ??
-          ((taxBreakdown?.stateTax ?? 0) + (taxBreakdown?.cityTax ?? 0) + (taxBreakdown?.platformFee ?? 0));
+          (taxBreakdown?.stateTax ?? 0) +
+            (taxBreakdown?.cityTax ?? 0) +
+            (taxBreakdown?.platformFee ?? 0);
 
         router.replace({
           pathname: "/screens/cart/order-success",
@@ -192,8 +220,16 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
             type: "free-meal",
             mealName: foodTitle,
             restaurantName,
-            amount: String(typeof totalToPayVal === "number" ? totalToPayVal.toFixed(2) : totalToPayVal),
-            totalTax: String(typeof totalToPayVal === "number" ? totalToPayVal.toFixed(2) : totalToPayVal),
+            amount: String(
+              typeof totalToPayVal === "number"
+                ? totalToPayVal.toFixed(2)
+                : totalToPayVal,
+            ),
+            totalTax: String(
+              typeof totalToPayVal === "number"
+                ? totalToPayVal.toFixed(2)
+                : totalToPayVal,
+            ),
           },
         });
       }
@@ -201,7 +237,7 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
       console.error("[FreeMealTaxCheckoutModal] Error:", err);
       Alert.alert(
         "Checkout Error",
-        err.message || "An unexpected error occurred during checkout."
+        err.message || "An unexpected error occurred during checkout.",
       );
     } finally {
       setIsLoading(false);
@@ -292,7 +328,9 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
                   {taxBreakdown?.stateTaxRate && taxBreakdown.stateTaxRate > 0
                     ? ` (${(taxBreakdown.stateTaxRate > 1 ? taxBreakdown.stateTaxRate : taxBreakdown.stateTaxRate * 100).toFixed((taxBreakdown.stateTaxRate * 100) % 1 === 0 ? 0 : 1)}%)`
                     : ""}
-                  {taxBreakdown?.providerState ? ` - ${taxBreakdown.providerState}` : ""}
+                  {taxBreakdown?.providerState
+                    ? ` - ${taxBreakdown.providerState}`
+                    : ""}
                 </Text>
                 <Text className="text-sm font-body text-gray-900">
                   {formatMoney(stateTax)}
@@ -307,7 +345,9 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
                   {taxBreakdown?.cityTaxRate && taxBreakdown.cityTaxRate > 0
                     ? ` (${(taxBreakdown.cityTaxRate > 1 ? taxBreakdown.cityTaxRate : taxBreakdown.cityTaxRate * 100).toFixed((taxBreakdown.cityTaxRate * 100) % 1 === 0 ? 0 : 1)}%)`
                     : ""}
-                  {taxBreakdown?.providerCity ? ` - ${taxBreakdown.providerCity}` : ""}
+                  {taxBreakdown?.providerCity
+                    ? ` - ${taxBreakdown.providerCity}`
+                    : ""}
                 </Text>
                 <Text className="text-sm font-body text-gray-900">
                   {formatMoney(cityTax)}
@@ -331,7 +371,9 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
                 Total to Pay
               </Text>
               <Text className="text-xl font-heading text-amber-600">
-                {totalToPay > 0 && totalToPay < 0.5 ? "$0.00 (Waived)" : formatMoney(totalToPay)}
+                {totalToPay > 0 && totalToPay < 0.5
+                  ? "$0.00 (Waived)"
+                  : formatMoney(totalToPay)}
               </Text>
             </View>
 
@@ -339,33 +381,86 @@ export const FreeMealTaxCheckoutModal: React.FC<FreeMealTaxCheckoutModalProps> =
               <View className="bg-emerald-50 border border-emerald-200/80 rounded-xl p-2.5 mt-2 flex-row items-center gap-2">
                 <Ionicons name="sparkles" size={16} color="#059669" />
                 <Text className="text-xs font-body-semibold text-emerald-800 flex-1">
-                  Amount ({formatMoney(totalToPay)}) is under Stripe's $0.50 minimum and has been waived!
+                  Amount ({formatMoney(totalToPay)}) is under Stripe's $0.50
+                  minimum and has been waived!
                 </Text>
               </View>
             )}
           </View>
 
+          {/* Disclaimer */}
+          <TouchableOpacity
+            onPress={() => setTermsAgreed((prev) => !prev)}
+            activeOpacity={0.8}
+            className="flex-row items-start mb-5 gap-3"
+          >
+            <View
+              className={`w-5 h-5 rounded-md border-2 mt-0.5 flex-shrink-0 justify-center items-center ${
+                termsAgreed
+                  ? "bg-amber-500 border-amber-500"
+                  : "bg-white border-gray-300"
+              }`}
+            >
+              {termsAgreed && (
+                <Ionicons name="checkmark" size={12} color="#fff" />
+              )}
+            </View>
+            <Text className="text-xs font-body text-gray-600 flex-1 leading-5">
+              I understand that to claim this{" "}
+              <Text className="font-body-semibold text-gray-800">
+                free meal
+              </Text>
+              , I am required to pay any applicable{" "}
+              <Text className="font-body-semibold text-amber-700">
+                state tax
+              </Text>
+              ,{" "}
+              <Text className="font-body-semibold text-amber-700">
+                city tax
+              </Text>
+              , and{" "}
+              <Text className="font-body-semibold text-amber-700">
+                platform fee
+              </Text>{" "}
+              as shown in the breakdown above. The meal itself is covered by my
+              donated token.
+            </Text>
+          </TouchableOpacity>
+
           {/* CTA Buttons */}
           <TouchableOpacity
             onPress={handlePayTaxAndOrder}
-            disabled={isLoading}
+            disabled={isLoading || !termsAgreed}
             className={`py-4 rounded-2xl flex-row justify-center items-center shadow-md ${
-              isLoading ? "bg-amber-400" : "bg-[#F5C518]"
+              isLoading
+                ? "bg-amber-400"
+                : !termsAgreed
+                  ? "bg-gray-200"
+                  : "bg-[#F5C518]"
             }`}
           >
             {isLoading ? (
               <ActivityIndicator size="small" color="#000" className="mr-2" />
             ) : (
-              <Ionicons name="card-outline" size={20} color="#000" className="mr-2" />
+              <Ionicons
+                name="card-outline"
+                size={20}
+                color="#000"
+                className="mr-2"
+              />
             )}
-            <Text className="text-base font-heading text-gray-950">
+            <Text
+              className={`text-base font-heading ${
+                !termsAgreed && !isLoading ? "text-gray-400" : "text-gray-950"
+              }`}
+            >
               {isLoading
                 ? "Processing Order..."
                 : totalToPay >= 0.5
-                ? `Pay ${formatMoney(totalToPay)} & Place Order`
-                : totalToPay > 0
-                ? "Place Free Order (Tax Waived)"
-                : "Place Free Order"}
+                  ? `Pay ${formatMoney(totalToPay)} & Place Order`
+                  : totalToPay > 0
+                    ? "Place Free Order (Tax Waived)"
+                    : "Place Free Order"}
             </Text>
           </TouchableOpacity>
         </View>
