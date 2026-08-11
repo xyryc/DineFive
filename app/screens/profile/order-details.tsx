@@ -91,13 +91,8 @@ export default function OrderDetailsScreen() {
   const currentOrderStatus = orderData?.status || currentState || "pending";
 
   const isGroupCancelable = (status: string) => {
-    return [
-      "pending",
-      "pending_split",
-      "preparing",
-      "ready",
-      "ready_for_pickup",
-    ].includes((status || "").toLowerCase());
+    const s = (status || "").toLowerCase();
+    return s === "pending" || s === "pending_split";
   };
 
   const handleCancelGroupPress = (group: any) => {
@@ -601,16 +596,28 @@ export default function OrderDetailsScreen() {
                       {formatStatus(groupStatus)}
                     </Text>
                   </View>
-                  {isGroupCancelable(groupStatus) && (
-                    <TouchableOpacity
-                      onPress={() => handleCancelGroupPress(group)}
-                      className="bg-rose-50 border border-rose-100 px-2.5 py-0.5 rounded-full active:bg-rose-100"
-                    >
-                      <Text className="text-rose-600 font-body-semibold text-[9px] uppercase">
-                        Cancel
-                      </Text>
-                    </TouchableOpacity>
-                  )}
+                  {(() => {
+                    const canCancel = isGroupCancelable(groupStatus);
+                    return (
+                      <TouchableOpacity
+                        onPress={() => handleCancelGroupPress(group)}
+                        disabled={!canCancel}
+                        className={`px-2.5 py-0.5 rounded-full border ${
+                          canCancel
+                            ? "bg-rose-50 border-rose-100 active:bg-rose-100"
+                            : "bg-gray-100 border-gray-200 opacity-60"
+                        }`}
+                      >
+                        <Text
+                          className={`font-body-semibold text-[9px] uppercase ${
+                            canCancel ? "text-rose-600" : "text-gray-400"
+                          }`}
+                        >
+                          Cancel
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })()}
                 </View>
               </View>
 
