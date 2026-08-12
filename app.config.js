@@ -14,6 +14,15 @@ module.exports = {
       usesAppleSignIn: true,
       googleServiceFile: "./GoogleService-Info.plist",
       infoPlist: {
+        CFBundleURLTypes: [
+          {
+            CFBundleURLSchemes: [
+              "dinefive",
+              "com.dinefive.app",
+              "com.googleusercontent.apps.649475005615-luq8tb9j49f2h79923ojhg4saptm708j",
+            ],
+          },
+        ],
         NSLocationWhenInUseUsageDescription:
           "Allow Dine Five to use your location to find nearby restaurants, calculate delivery distance, and autofill your address.",
         NSPhotoLibraryUsageDescription:

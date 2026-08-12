@@ -89,7 +89,7 @@ export interface AuthActions {
   updateAvatar: (imageUri: string) => Promise<any>;
   socialAuth: (data: any) => Promise<any>;
   googleLogin: (data: { idToken: string; requestedRole?: string }) => Promise<any>;
-  appleLogin: (data: { identityToken: string; fullName?: any; requestedRole?: string }) => Promise<any>;
+  appleLogin: (data: { idToken: string; fullName: string; requestedRole?: string }) => Promise<any>;
   deleteAccount: () => Promise<any>;
   requestWithAuth: (url: string, options?: RequestInit) => Promise<Response>;
 }

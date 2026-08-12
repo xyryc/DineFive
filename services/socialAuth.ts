@@ -3,7 +3,6 @@ import { Platform } from "react-native";
 type GoogleModule = typeof import("@react-native-google-signin/google-signin");
 
 let googleModulePromise: Promise<GoogleModule> | null = null;
-let isConfigured = false;
 
 const getGoogleModule = async () => {
 
@@ -25,6 +24,8 @@ const getGoogleModule = async () => {
 const ensureConfigured = async () => {
   const mod = await getGoogleModule();
   mod.GoogleSignin.configure({
+    iosClientId:
+      "649475005615-luq8tb9j49f2h79923ojhg4saptm708j.apps.googleusercontent.com",
     webClientId:
       "649475005615-p6qfnn9gpktjt9inlemivc3qllmqh2ag.apps.googleusercontent.com",
     offlineAccess: true,
@@ -111,4 +112,3 @@ export const signInWithTwitter = async () => {
 export const observeAuthState = (callback: (user: any) => void) => {
   return () => {};
 };
-

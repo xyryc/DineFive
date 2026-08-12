@@ -45,9 +45,31 @@ export default function AppleLogin() {
         throw new Error("No identity token received from Apple Sign In.");
       }
 
+      const tokenPayload = (() => {
+        try {
+          const encodedPayload = credential.identityToken!.split(".")[1];
+          const base64 = encodedPayload
+            .replace(/-/g, "+")
+            .replace(/_/g, "/")
+            .padEnd(Math.ceil(encodedPayload.length / 4) * 4, "=");
+          return JSON.parse(globalThis.atob(base64));
+        } catch {
+          return {};
+        }
+      })();
+      const email = credential.email || tokenPayload.email || "";
+      const fullName =
+        [
+          credential.fullName?.givenName,
+          credential.fullName?.middleName,
+          credential.fullName?.familyName,
+        ]
+          .filter(Boolean)
+          .join(" ") || email.split("@")[0] || "Apple User";
+
       const loginResult = await appleLogin({
-        identityToken: credential.identityToken,
-        fullName: credential.fullName,
+        idToken: credential.identityToken,
+        fullName,
       });
 
       if (loginResult) {

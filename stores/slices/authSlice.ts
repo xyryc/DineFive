@@ -561,7 +561,7 @@ export const createAuthSlice = (set: any, get: () => RootStore): AuthSlice => ({
     }
   },
 
-  appleLogin: async (data: { identityToken: string; fullName?: any; requestedRole?: string }) => {
+  appleLogin: async (data: { idToken: string; fullName: string; requestedRole?: string }) => {
     set({ isLoading: true, error: null });
     try {
       const response = await fetchWithLogging(
@@ -570,7 +570,7 @@ export const createAuthSlice = (set: any, get: () => RootStore): AuthSlice => ({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            identityToken: data.identityToken,
+            idToken: data.idToken,
             fullName: data.fullName,
             requestedRole: data.requestedRole || "CUSTOMER",
           }),
