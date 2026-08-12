@@ -7,6 +7,11 @@ module.exports = {
     icon: "./assets/images/app-icon.png",
     scheme: "dinefive",
     userInterfaceStyle: "automatic",
+    splash: {
+      image: "./assets/images/icon.png",
+      resizeMode: "contain",
+      backgroundColor: "#ffffff",
+    },
     ios: {
       bundleIdentifier: "com.dinefive.app",
       buildNumber: "7",
@@ -89,7 +94,7 @@ module.exports = {
           resizeMode: "contain",
           backgroundColor: "#ffffff",
           dark: {
-            backgroundColor: "#000000",
+            backgroundColor: "#ffffff",
           },
         },
       ],

@@ -5,7 +5,6 @@ import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Linking,
   ScrollView,
   StyleSheet,
@@ -25,8 +24,8 @@ interface AdminPublicProfile {
 
 const styles = StyleSheet.create({
   logo: {
-    width: 160,
-    height: 160,
+    width: 110,
+    height: 110,
   },
 });
 
@@ -68,10 +67,10 @@ export default function RoleSelectionScreen() {
   const rawContact = supportInfo?.contact;
   const rawWebsite = supportInfo?.website;
 
-  const phoneDisplay = loadingSupport ? "--" : rawPhone || "--";
-  const supportDisplay = loadingSupport ? "--" : rawSupport || "--";
-  const contactDisplay = loadingSupport ? "--" : rawContact || "--";
-  const websiteDisplay = loadingSupport ? "--" : rawWebsite || "--";
+  const phoneDisplay = loadingSupport ? "" : (rawPhone || "--");
+  const supportDisplay = loadingSupport ? "" : (rawSupport || "--");
+  const contactDisplay = loadingSupport ? "" : (rawContact || "--");
+  const websiteDisplay = loadingSupport ? "" : (rawWebsite || "--");
 
   const handleCall = () => {
     if (!rawPhone) return;
@@ -176,13 +175,6 @@ export default function RoleSelectionScreen() {
             <Text className="text-sm font-bold text-gray-900">
               Need Help & Support?
             </Text>
-            {loadingSupport && (
-              <ActivityIndicator
-                size="small"
-                color="#2563EB"
-                className="ml-1.5"
-              />
-            )}
           </View>
           <Text className="text-xs text-gray-500 leading-4 mb-3">
             Have questions or issues signing up to the restaurant portal? Reach
@@ -194,7 +186,7 @@ export default function RoleSelectionScreen() {
             <TouchableOpacity
               className="flex-row items-center justify-between bg-gray-50 py-2.5 px-3 rounded-xl border border-gray-100"
               activeOpacity={rawPhone ? 0.7 : 1}
-              disabled={!rawPhone}
+              disabled={!rawPhone || loadingSupport}
               onPress={handleCall}
             >
               <View className="flex-row items-center gap-x-2">
@@ -203,16 +195,24 @@ export default function RoleSelectionScreen() {
                   size={16}
                   color={rawPhone ? "#2563EB" : "#9CA3AF"}
                 />
-                <Text
-                  className={`text-xs font-semibold ${rawPhone ? "text-gray-800" : "text-gray-400"}`}
-                >
-                  {phoneDisplay}
-                </Text>
+                {loadingSupport ? (
+                  <View className="w-28 h-3.5 bg-gray-200 rounded animate-pulse" />
+                ) : (
+                  <Text
+                    className={`text-xs font-semibold ${rawPhone ? "text-gray-800" : "text-gray-400"}`}
+                  >
+                    {phoneDisplay}
+                  </Text>
+                )}
               </View>
-              {Boolean(rawPhone) && (
-                <Text className="text-[11px] font-bold text-blue-600">
-                  Call
-                </Text>
+              {loadingSupport ? (
+                <View className="w-8 h-3 bg-gray-200 rounded animate-pulse" />
+              ) : (
+                Boolean(rawPhone) && (
+                  <Text className="text-[11px] font-bold text-blue-600">
+                    Call
+                  </Text>
+                )
               )}
             </TouchableOpacity>
 
@@ -220,7 +220,7 @@ export default function RoleSelectionScreen() {
             <TouchableOpacity
               className="flex-row items-center justify-between bg-gray-50 py-2.5 px-3 rounded-xl border border-gray-100"
               activeOpacity={rawSupport ? 0.7 : 1}
-              disabled={!rawSupport}
+              disabled={!rawSupport || loadingSupport}
               onPress={() => handleSendEmail(rawSupport)}
             >
               <View className="flex-row items-center gap-x-2">
@@ -229,16 +229,24 @@ export default function RoleSelectionScreen() {
                   size={16}
                   color={rawSupport ? "#2563EB" : "#9CA3AF"}
                 />
-                <Text
-                  className={`text-xs font-semibold ${rawSupport ? "text-gray-800" : "text-gray-400"}`}
-                >
-                  {supportDisplay}
-                </Text>
+                {loadingSupport ? (
+                  <View className="w-36 h-3.5 bg-gray-200 rounded animate-pulse" />
+                ) : (
+                  <Text
+                    className={`text-xs font-semibold ${rawSupport ? "text-gray-800" : "text-gray-400"}`}
+                  >
+                    {supportDisplay}
+                  </Text>
+                )}
               </View>
-              {Boolean(rawSupport) && (
-                <Text className="text-[11px] font-bold text-blue-600">
-                  Email
-                </Text>
+              {loadingSupport ? (
+                <View className="w-8 h-3 bg-gray-200 rounded animate-pulse" />
+              ) : (
+                Boolean(rawSupport) && (
+                  <Text className="text-[11px] font-bold text-blue-600">
+                    Email
+                  </Text>
+                )
               )}
             </TouchableOpacity>
 
@@ -246,7 +254,7 @@ export default function RoleSelectionScreen() {
             <TouchableOpacity
               className="flex-row items-center justify-between bg-gray-50 py-2.5 px-3 rounded-xl border border-gray-100"
               activeOpacity={rawContact ? 0.7 : 1}
-              disabled={!rawContact}
+              disabled={!rawContact || loadingSupport}
               onPress={() => handleSendEmail(rawContact)}
             >
               <View className="flex-row items-center gap-x-2">
@@ -255,16 +263,24 @@ export default function RoleSelectionScreen() {
                   size={16}
                   color={rawContact ? "#2563EB" : "#9CA3AF"}
                 />
-                <Text
-                  className={`text-xs font-semibold ${rawContact ? "text-gray-800" : "text-gray-400"}`}
-                >
-                  {contactDisplay}
-                </Text>
+                {loadingSupport ? (
+                  <View className="w-32 h-3.5 bg-gray-200 rounded animate-pulse" />
+                ) : (
+                  <Text
+                    className={`text-xs font-semibold ${rawContact ? "text-gray-800" : "text-gray-400"}`}
+                  >
+                    {contactDisplay}
+                  </Text>
+                )}
               </View>
-              {Boolean(rawContact) && (
-                <Text className="text-[11px] font-bold text-blue-600">
-                  Email
-                </Text>
+              {loadingSupport ? (
+                <View className="w-8 h-3 bg-gray-200 rounded animate-pulse" />
+              ) : (
+                Boolean(rawContact) && (
+                  <Text className="text-[11px] font-bold text-blue-600">
+                    Email
+                  </Text>
+                )
               )}
             </TouchableOpacity>
 
@@ -272,7 +288,7 @@ export default function RoleSelectionScreen() {
             <TouchableOpacity
               className="flex-row items-center justify-between bg-gray-50 py-2.5 px-3 rounded-xl border border-gray-100"
               activeOpacity={rawWebsite ? 0.7 : 1}
-              disabled={!rawWebsite}
+              disabled={!rawWebsite || loadingSupport}
               onPress={handleWebsite}
             >
               <View className="flex-row items-center gap-x-2">
@@ -281,16 +297,24 @@ export default function RoleSelectionScreen() {
                   size={16}
                   color={rawWebsite ? "#2563EB" : "#9CA3AF"}
                 />
-                <Text
-                  className={`text-xs font-semibold ${rawWebsite ? "text-gray-800" : "text-gray-400"}`}
-                >
-                  {websiteDisplay}
-                </Text>
+                {loadingSupport ? (
+                  <View className="w-28 h-3.5 bg-gray-200 rounded animate-pulse" />
+                ) : (
+                  <Text
+                    className={`text-xs font-semibold ${rawWebsite ? "text-gray-800" : "text-gray-400"}`}
+                  >
+                    {websiteDisplay}
+                  </Text>
+                )}
               </View>
-              {Boolean(rawWebsite) && (
-                <Text className="text-[11px] font-bold text-blue-600">
-                  Visit
-                </Text>
+              {loadingSupport ? (
+                <View className="w-8 h-3 bg-gray-200 rounded animate-pulse" />
+              ) : (
+                Boolean(rawWebsite) && (
+                  <Text className="text-[11px] font-bold text-blue-600">
+                    Visit
+                  </Text>
+                )
               )}
             </TouchableOpacity>
           </View>

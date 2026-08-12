@@ -57,10 +57,10 @@ function RootLayout() {
   }, [initializeAuth]);
 
   useEffect(() => {
-    if (isInitialized) {
+    if (isInitialized && fontsLoaded) {
       SplashScreen.hideAsync().catch(() => {});
     }
-  }, [isInitialized]);
+  }, [isInitialized, fontsLoaded]);
 
   useEffect(() => {
     const group = segments[0] as string;
@@ -69,12 +69,11 @@ function RootLayout() {
     const inOnboarding = group === "onboarding";
     const inTabsGroup = group === "(tabs)";
     const inScreensGroup = group === "screens";
-    const inSplashScreen = group === "splash-screen";
     const isPendingVerification = Boolean(
       accessToken && user && user.isVerified === false,
     );
 
-    if (!isInitialized || inSplashScreen) return;
+    if (!isInitialized || !fontsLoaded) return;
 
     if (isPendingVerification) {
       if (inTabsGroup || inScreensGroup || inOnboarding) {
@@ -95,28 +94,12 @@ function RootLayout() {
         router.replace("/(tabs)");
       }
     }
-  }, [accessToken, isInitialized, router, segments, user]);
+  }, [accessToken, fontsLoaded, isInitialized, router, segments, user]);
 
   useNotificationSync();
 
   if (!isInitialized || !fontsLoaded) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: "#FFFFFF",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <StatusBar style="dark" />
-        <Image
-          source={require("@/assets/images/icon.png")}
-          contentFit="contain"
-          style={{ width: 320, height: 320 }}
-        />
-      </View>
-    );
+    return null;
   }
 
   return (
@@ -124,7 +107,6 @@ function RootLayout() {
       <StatusBar style="auto" />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="splash-screen" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
