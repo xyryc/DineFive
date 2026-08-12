@@ -7,7 +7,6 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Image,
   RefreshControl,
   ScrollView,
@@ -16,6 +15,46 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+function OrderCardSkeleton() {
+  return (
+    <View className="bg-white p-5 rounded-3xl mb-4 border border-gray-100 shadow-sm animate-pulse">
+      {/* Header section skeleton */}
+      <View className="flex-row justify-between items-start mb-3">
+        <View className="flex-1 mr-2">
+          <View className="w-36 h-4 bg-gray-200 rounded mb-2" />
+          <View className="flex-row items-center gap-2">
+            <View className="w-24 h-3 bg-gray-200 rounded" />
+            <View className="w-16 h-3 bg-gray-200 rounded" />
+          </View>
+        </View>
+        <View className="w-20 h-6 bg-gray-200 rounded-full" />
+      </View>
+
+      {/* Items content section skeleton */}
+      <View className="flex-row items-center py-3 border-t border-b border-gray-50 mb-4">
+        <View className="w-16 h-16 bg-gray-200 rounded-xl mr-3" />
+        <View className="flex-1 justify-center">
+          <View className="w-20 h-3 bg-gray-200 rounded mb-2" />
+          <View className="w-48 h-3.5 bg-gray-200 rounded mb-2" />
+          <View className="flex-row items-center gap-2">
+            <View className="w-16 h-5 bg-gray-200 rounded-md" />
+            <View className="w-16 h-5 bg-gray-200 rounded-md" />
+          </View>
+        </View>
+      </View>
+
+      {/* Action buttons and pricing skeleton */}
+      <View className="flex-row items-center justify-between">
+        <View>
+          <View className="w-14 h-3 bg-gray-200 rounded mb-1" />
+          <View className="w-16 h-5 bg-gray-200 rounded" />
+        </View>
+        <View className="w-20 h-9 bg-gray-200 rounded-xl" />
+      </View>
+    </View>
+  );
+}
 
 interface OrderCardProps {
   order: any;
@@ -771,11 +810,10 @@ export default function MyOrdersScreen() {
         }
       >
         {isLoading && !refreshing && ordersToShow.length === 0 ? (
-          <View className="flex-1 items-center justify-center pt-32">
-            <ActivityIndicator size="large" color="#FFC107" />
-            <Text className="text-gray-500 mt-4 font-body-medium">
-              Loading your orders...
-            </Text>
+          <View className="pt-2">
+            <OrderCardSkeleton />
+            <OrderCardSkeleton />
+            <OrderCardSkeleton />
           </View>
         ) : ordersToShow.length === 0 ? (
           <View className="flex-1 justify-center">
