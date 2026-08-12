@@ -664,8 +664,16 @@ export const createAuthSlice = (set: any, get: () => RootStore): AuthSlice => ({
             const data = await res.json();
             if (!res.ok) throw new Error("Session expired");
 
-            const newAccess = data.accessToken || data.data?.accessToken;
-            const newRefresh = data.refreshToken || data.data?.refreshToken;
+            const newAccess =
+              data.accessToken ||
+              data.data?.accessToken ||
+              data.data?.session?.accessToken ||
+              data.session?.accessToken;
+            const newRefresh =
+              data.refreshToken ||
+              data.data?.refreshToken ||
+              data.data?.session?.refreshToken ||
+              data.session?.refreshToken;
 
             set({ accessToken: newAccess });
             if (newRefresh) set({ refreshToken: newRefresh });
@@ -706,8 +714,16 @@ export const createAuthSlice = (set: any, get: () => RootStore): AuthSlice => ({
             const data = await res.json();
             if (!res.ok) throw new Error("Session expired");
 
-            const newAccess = data.accessToken || data.data?.accessToken;
-            const newRefresh = data.refreshToken || data.data?.refreshToken;
+            const newAccess =
+              data.accessToken ||
+              data.data?.accessToken ||
+              data.data?.session?.accessToken ||
+              data.session?.accessToken;
+            const newRefresh =
+              data.refreshToken ||
+              data.data?.refreshToken ||
+              data.data?.session?.refreshToken ||
+              data.session?.refreshToken;
 
             set({ accessToken: newAccess });
             if (newRefresh) set({ refreshToken: newRefresh });
