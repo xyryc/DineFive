@@ -2,13 +2,14 @@ import { useStore } from "@/stores/stores";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   ActivityIndicator,
   Alert,
   Image,
   Linking,
   Modal,
+  RefreshControl,
   ScrollView,
   Text,
   TextInput,
@@ -24,6 +25,7 @@ export default function OrderDetailsScreen() {
   const [existingReviewId, setExistingReviewId] = useState<string | null>(null);
   const [orderData, setOrderData] = useState<any>(null);
   const [orderLoading, setOrderLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const currentState = (params.state as string) || "pending";
   const pickupAddress =
@@ -36,15 +38,29 @@ export default function OrderDetailsScreen() {
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState("");
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    const orderId = (params.orderId as string) || (params._id as string);
+    if (orderId) {
+      console.log(`🔄 [OrderDetailsScreen] Refreshing orderId: ${orderId}`);
+      const result = await fetchOrderById(orderId);
+      if (result) {
+        setOrderData(result);
+      }
+    }
+    setRefreshing(false);
+  }, [params.orderId, params._id, fetchOrderById]);
+
   useEffect(() => {
     const loadOrder = async () => {
       const orderId = (params.orderId as string) || (params._id as string);
+      console.log("📦 [OrderDetailsScreen] Mounted with params:", JSON.stringify(params, null, 2));
       if (orderId) {
+        console.log(`🔍 [OrderDetailsScreen] Fetching orderId: ${orderId}`);
         const result = await fetchOrderById(orderId);
         if (result) {
+          console.log("📥 [OrderDetailsScreen] Raw Order Data:", JSON.stringify(result, null, 2));
           setOrderData(result);
-          console.log("Order items:", result.items);
-          console.log("Subtotal:", result.subtotal);
         }
       }
       setOrderLoading(false);
@@ -211,17 +227,18 @@ export default function OrderDetailsScreen() {
 
   const getStepIndex = (status: string) => {
     const s = (status || "").toLowerCase();
-    if (["pending", "pending_split"].includes(s)) return 0;
-    if (s === "preparing") return 1;
-    if (["ready", "ready_for_pickup"].includes(s)) return 2;
+    if (["pending", "pending_split", "created"].includes(s)) return 0;
+    if (["accepted", "accepted_by_restaurant", "preparing", "in_progress", "kitchen"].includes(s)) return 1;
+    if (["ready", "ready_for_pickup", "ready_for_delivery"].includes(s)) return 2;
     if (["picked_up", "delivered", "completed"].includes(s)) return 3;
     return 0;
   };
 
   const getStatusBadgeStyle = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch ((status || "").toLowerCase()) {
       case "pending":
       case "pending_split":
+      case "created":
         return {
           container: "bg-amber-50 border-amber-100",
           text: "text-amber-700",
@@ -238,7 +255,10 @@ export default function OrderDetailsScreen() {
           container: "bg-emerald-50 border-emerald-100",
           text: "text-emerald-700",
         };
+      case "accepted":
+      case "accepted_by_restaurant":
       case "preparing":
+      case "in_progress":
       case "ready_for_pickup":
       case "ready":
         return {
@@ -349,6 +369,11 @@ export default function OrderDetailsScreen() {
   };
 
   const getGroups = () => {
+    const isMulti = Boolean(
+      orderData?.isMultiVendor ||
+        (orderData?.subOrders && orderData.subOrders.length > 1),
+    );
+
     if (orderData?.restaurantGroups && orderData.restaurantGroups.length > 0) {
       return orderData.restaurantGroups.map((rg: any) => {
         const matchingSub = orderData.subOrders?.find(
@@ -357,8 +382,14 @@ export default function OrderDetailsScreen() {
             so.providerId === rg.providerId ||
             so.providerId?._id === rg.providerId
         );
+
+        const groupStatus = isMulti
+          ? (matchingSub?.status || rg.status || orderData.status || currentState)
+          : (orderData.status || rg.status || currentState);
+
         return {
           ...rg,
+          status: groupStatus,
           _id: matchingSub?._id || rg._id || rg.subOrderId,
           id: matchingSub?._id || rg._id || rg.subOrderId,
           subOrderId: rg.subOrderId || matchingSub?.subOrderId || matchingSub?._id,
@@ -374,7 +405,9 @@ export default function OrderDetailsScreen() {
         restaurantAddress: so.provider?.restaurantAddress || so.restaurantAddress || pickupAddress,
         restaurantImage: so.provider?.restaurantImage || so.provider?.restaurantPic || orderData.restaurantImage,
         phoneNumber: so.provider?.phoneNumber || so.phoneNumber,
-        status: so.status || orderData.status,
+        status: isMulti
+          ? (so.status || orderData.status || currentState)
+          : (orderData.status || so.status || currentState),
         items: so.items || [],
         subtotal: so.subtotal,
         total: so.vendorAmount || so.total,
@@ -389,7 +422,7 @@ export default function OrderDetailsScreen() {
         restaurantAddress: orderData.providerId?.restaurantAddress || orderData.restaurantAddress || pickupAddress,
         restaurantImage: orderData.restaurantImage || orderData.providerId?.restaurantPic || orderData.restaurants?.[0]?.restaurantImage,
         phoneNumber: orderData.providerId?.phoneNumber || orderData.phoneNumber,
-        status: orderData.status,
+        status: orderData.status || currentState,
         items: orderData.items || [],
         subtotal: orderData.subtotal,
         total: orderData.totalPrice || orderData.displayTotal,
@@ -493,7 +526,19 @@ export default function OrderDetailsScreen() {
         <Text className="text-xl font-heading text-gray-900">Order Details</Text>
       </View>
 
-      <ScrollView className="flex-1 px-4" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView
+        className="flex-1 px-4"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#FFC107"]}
+            tintColor="#FFC107"
+          />
+        }
+      >
         {/* Restaurant Header Card & Order ID */}
         <View className="flex-row items-center justify-between mb-5 bg-white p-4 rounded-3xl border border-gray-100 shadow-sm">
           <View className="flex-row items-center gap-3 flex-1">

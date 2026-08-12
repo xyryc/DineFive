@@ -90,6 +90,11 @@ export const createOrderSlice = (set: any, get: () => RootStore): OrderSlice => 
       );
 
       const result = await response.json();
+      console.log(
+        `📥 [GET /api/v1/orders/${orderId}] Raw API Response:`,
+        JSON.stringify(result, null, 2),
+      );
+
       if (!response.ok) {
         throw new Error(result.message || "Failed to fetch order details");
       }
