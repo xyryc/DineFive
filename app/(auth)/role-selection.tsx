@@ -3,8 +3,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Linking,
   ScrollView,
   StyleSheet,
@@ -13,56 +14,126 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { API_BASE_URL, fetchWithLogging } from "@/utils/api";
+
+interface AdminPublicProfile {
+  phone?: string;
+  contact?: string;
+  Support?: string;
+  website?: string;
+}
+
+const styles = StyleSheet.create({
+  logo: {
+    width: 160,
+    height: 160,
+  },
+});
 
 export default function RoleSelectionScreen() {
   const router = useRouter();
 
+  const [supportInfo, setSupportInfo] = useState<AdminPublicProfile | null>(
+    null,
+  );
+  const [loadingSupport, setLoadingSupport] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchSupportProfile = async () => {
+      try {
+        setLoadingSupport(true);
+        const res = await fetchWithLogging(
+          `${API_BASE_URL}/api/v1/admin-public/profile`,
+        );
+        const json = await res.json();
+        if (json?.success && json?.data && isMounted) {
+          setSupportInfo(json.data);
+        }
+      } catch (err) {
+        console.log("Failed to fetch admin public profile:", err);
+      } finally {
+        if (isMounted) setLoadingSupport(false);
+      }
+    };
+
+    fetchSupportProfile();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const rawPhone = supportInfo?.phone;
+  const rawSupport = supportInfo?.Support;
+  const rawContact = supportInfo?.contact;
+  const rawWebsite = supportInfo?.website;
+
+  const phoneDisplay = loadingSupport ? "--" : rawPhone || "--";
+  const supportDisplay = loadingSupport ? "--" : rawSupport || "--";
+  const contactDisplay = loadingSupport ? "--" : rawContact || "--";
+  const websiteDisplay = loadingSupport ? "--" : rawWebsite || "--";
+
   const handleCall = () => {
-    Linking.openURL("tel:+18582804156").catch(() => {});
+    if (!rawPhone) return;
+    const cleanedPhone = rawPhone.replace(/[^+\d]/g, "");
+    if (cleanedPhone) {
+      Linking.openURL(`tel:${cleanedPhone}`).catch(() => {});
+    }
   };
 
-  const handleEmail = () => {
-    Linking.openURL("mailto:support@dinefive.com").catch(() => {});
+  const handleSendEmail = (email?: string) => {
+    if (!email) return;
+    Linking.openURL(`mailto:${email}`).catch(() => {});
   };
 
   const handleWebsite = () => {
-    Linking.openURL("https://dinefive.com").catch(() => {});
+    if (!rawWebsite) return;
+    const fullUrl = rawWebsite.startsWith("http")
+      ? rawWebsite
+      : `https://${rawWebsite}`;
+    Linking.openURL(fullUrl).catch(() => {});
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView className="flex-1 bg-white">
       <StatusBar style="dark" />
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerClassName="flex-grow px-5 py-4"
         showsVerticalScrollIndicator={false}
       >
         {/* Header Branding */}
-        <View style={styles.header}>
+        <View className="items-center mt-1 mb-5">
           <Image
             source={require("@/assets/images/logo.jpg")}
             contentFit="contain"
             style={styles.logo}
           />
-          <Text style={styles.headerTitle}>Welcome to Dine Five</Text>
-          <Text style={styles.headerSubtitle}>
+          <Text className="text-2xl font-bold text-gray-900 mt-1 text-center">
+            Welcome to Dine Five
+          </Text>
+          <Text className="text-xs text-gray-500 text-center mt-1">
             Select your account type to get started
           </Text>
         </View>
 
         {/* Role Cards Container */}
-        <View style={styles.cardsContainer}>
+        <View className="gap-y-4">
           {/* Card 1: Customer */}
-          <View style={styles.roleCard}>
-            <View style={styles.cardHeader}>
-              <View style={styles.iconBadgeAmber}>
+          <View className="bg-[#FAF9F6] rounded-3xl border border-gray-200 p-4 shadow-sm">
+            <View className="flex-row items-center mb-2.5">
+              <View className="w-11 h-11 rounded-xl bg-amber-100 items-center justify-center mr-3">
                 <Ionicons name="person-outline" size={24} color="#D97706" />
               </View>
-              <View style={styles.cardHeaderText}>
-                <Text style={styles.cardTitle}>Customer / Diner</Text>
-                <Text style={styles.cardBadgeText}>Customer Account</Text>
+              <View className="flex-1">
+                <Text className="text-base font-bold text-gray-900">
+                  Customer / Diner
+                </Text>
+                <Text className="text-[11px] font-semibold text-amber-600 mt-0.5">
+                  Customer Account
+                </Text>
               </View>
             </View>
-            <Text style={styles.cardDescription}>
+            <Text className="text-xs text-gray-600 leading-4 mb-3.5">
               Browse $5.99 fresh meals from top local spots, order for pickup &
               support meal donations.
             </Text>
@@ -73,17 +144,21 @@ export default function RoleSelectionScreen() {
           </View>
 
           {/* Card 2: Restaurant Owner */}
-          <View style={styles.roleCard}>
-            <View style={styles.cardHeader}>
-              <View style={styles.iconBadgeOrange}>
+          <View className="bg-[#FAF9F6] rounded-3xl border border-gray-200 p-4 shadow-sm">
+            <View className="flex-row items-center mb-2.5">
+              <View className="w-11 h-11 rounded-xl bg-orange-100 items-center justify-center mr-3">
                 <Ionicons name="restaurant-outline" size={24} color="#EA580C" />
               </View>
-              <View style={styles.cardHeaderText}>
-                <Text style={styles.cardTitle}>Restaurant Owner</Text>
-                <Text style={styles.cardBadgeTextOrange}>Partner Portal</Text>
+              <View className="flex-1">
+                <Text className="text-base font-bold text-gray-900">
+                  Restaurant Owner
+                </Text>
+                <Text className="text-[11px] font-semibold text-orange-600 mt-0.5">
+                  Partner Portal
+                </Text>
               </View>
             </View>
-            <Text style={styles.cardDescription}>
+            <Text className="text-xs text-gray-600 leading-4 mb-3.5">
               Fill off-peak hours, boost margin & generate extra revenue with
               zero menu changes.
             </Text>
@@ -95,225 +170,137 @@ export default function RoleSelectionScreen() {
         </View>
 
         {/* Support & Contact Section */}
-        <View style={styles.supportCard}>
-          <View style={styles.supportHeader}>
+        <View className="mt-5 bg-white rounded-3xl border border-gray-200 p-4 shadow-sm">
+          <View className="flex-row items-center gap-x-2 mb-1">
             <Ionicons name="help-buoy-outline" size={20} color="#2563EB" />
-            <Text style={styles.supportTitle}>Need Help & Support?</Text>
+            <Text className="text-sm font-bold text-gray-900">
+              Need Help & Support?
+            </Text>
+            {loadingSupport && (
+              <ActivityIndicator
+                size="small"
+                color="#2563EB"
+                className="ml-1.5"
+              />
+            )}
           </View>
-          <Text style={styles.supportSubtitle}>
+          <Text className="text-xs text-gray-500 leading-4 mb-3">
             Have questions or issues signing up to the restaurant portal? Reach
             out directly:
           </Text>
 
-          <View style={styles.contactList}>
-            {/* Call */}
+          <View className="gap-y-2">
+            {/* Phone */}
             <TouchableOpacity
-              style={styles.contactItem}
-              activeOpacity={0.7}
+              className="flex-row items-center justify-between bg-gray-50 py-2.5 px-3 rounded-xl border border-gray-100"
+              activeOpacity={rawPhone ? 0.7 : 1}
+              disabled={!rawPhone}
               onPress={handleCall}
             >
-              <View style={styles.contactLeft}>
-                <Ionicons name="call-outline" size={16} color="#2563EB" />
-                <Text style={styles.contactText}>+1 (858) 280-4156</Text>
+              <View className="flex-row items-center gap-x-2">
+                <Ionicons
+                  name="call-outline"
+                  size={16}
+                  color={rawPhone ? "#2563EB" : "#9CA3AF"}
+                />
+                <Text
+                  className={`text-xs font-semibold ${rawPhone ? "text-gray-800" : "text-gray-400"}`}
+                >
+                  {phoneDisplay}
+                </Text>
               </View>
-              <Text style={styles.actionText}>Call</Text>
+              {Boolean(rawPhone) && (
+                <Text className="text-[11px] font-bold text-blue-600">
+                  Call
+                </Text>
+              )}
             </TouchableOpacity>
 
-            {/* Email */}
+            {/* Support Email */}
             <TouchableOpacity
-              style={styles.contactItem}
-              activeOpacity={0.7}
-              onPress={handleEmail}
+              className="flex-row items-center justify-between bg-gray-50 py-2.5 px-3 rounded-xl border border-gray-100"
+              activeOpacity={rawSupport ? 0.7 : 1}
+              disabled={!rawSupport}
+              onPress={() => handleSendEmail(rawSupport)}
             >
-              <View style={styles.contactLeft}>
-                <Ionicons name="mail-outline" size={16} color="#2563EB" />
-                <Text style={styles.contactText}>support@dinefive.com</Text>
+              <View className="flex-row items-center gap-x-2">
+                <Ionicons
+                  name="mail-outline"
+                  size={16}
+                  color={rawSupport ? "#2563EB" : "#9CA3AF"}
+                />
+                <Text
+                  className={`text-xs font-semibold ${rawSupport ? "text-gray-800" : "text-gray-400"}`}
+                >
+                  {supportDisplay}
+                </Text>
               </View>
-              <Text style={styles.actionText}>Email</Text>
+              {Boolean(rawSupport) && (
+                <Text className="text-[11px] font-bold text-blue-600">
+                  Email
+                </Text>
+              )}
+            </TouchableOpacity>
+
+            {/* Contact Email */}
+            <TouchableOpacity
+              className="flex-row items-center justify-between bg-gray-50 py-2.5 px-3 rounded-xl border border-gray-100"
+              activeOpacity={rawContact ? 0.7 : 1}
+              disabled={!rawContact}
+              onPress={() => handleSendEmail(rawContact)}
+            >
+              <View className="flex-row items-center gap-x-2">
+                <Ionicons
+                  name="mail-unread-outline"
+                  size={16}
+                  color={rawContact ? "#2563EB" : "#9CA3AF"}
+                />
+                <Text
+                  className={`text-xs font-semibold ${rawContact ? "text-gray-800" : "text-gray-400"}`}
+                >
+                  {contactDisplay}
+                </Text>
+              </View>
+              {Boolean(rawContact) && (
+                <Text className="text-[11px] font-bold text-blue-600">
+                  Email
+                </Text>
+              )}
             </TouchableOpacity>
 
             {/* Website */}
             <TouchableOpacity
-              style={styles.contactItem}
-              activeOpacity={0.7}
+              className="flex-row items-center justify-between bg-gray-50 py-2.5 px-3 rounded-xl border border-gray-100"
+              activeOpacity={rawWebsite ? 0.7 : 1}
+              disabled={!rawWebsite}
               onPress={handleWebsite}
             >
-              <View style={styles.contactLeft}>
-                <Ionicons name="globe-outline" size={16} color="#2563EB" />
-                <Text style={styles.contactText}>https://dinefive.com</Text>
+              <View className="flex-row items-center gap-x-2">
+                <Ionicons
+                  name="globe-outline"
+                  size={16}
+                  color={rawWebsite ? "#2563EB" : "#9CA3AF"}
+                />
+                <Text
+                  className={`text-xs font-semibold ${rawWebsite ? "text-gray-800" : "text-gray-400"}`}
+                >
+                  {websiteDisplay}
+                </Text>
               </View>
-              <Text style={styles.actionText}>Visit</Text>
+              {Boolean(rawWebsite) && (
+                <Text className="text-[11px] font-bold text-blue-600">
+                  Visit
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Footer */}
-        <Text style={styles.footerText}>© 2026 DineFive LLC</Text>
+        <Text className="text-[11px] text-gray-400 text-center mt-5 mb-2">
+          © 2026 DineFive LLC
+        </Text>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  header: {
-    alignItems: "center",
-    marginTop: 4,
-    marginBottom: 20,
-  },
-  logo: {
-    width: 110,
-    height: 110,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#111827",
-    marginTop: 4,
-    textAlign: "center",
-  },
-  headerSubtitle: {
-    fontSize: 13,
-    color: "#6B7280",
-    textAlign: "center",
-    marginTop: 4,
-  },
-  cardsContainer: {
-    rowGap: 16,
-  },
-  roleCard: {
-    backgroundColor: "#FAF9F6",
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    padding: 18,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  iconBadgeAmber: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: "#FEF3C7",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  iconBadgeOrange: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: "#FFEDD5",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  cardHeaderText: {
-    flex: 1,
-  },
-  cardTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: "#111827",
-  },
-  cardBadgeText: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#D97706",
-    marginTop: 1,
-  },
-  cardBadgeTextOrange: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#EA580C",
-    marginTop: 1,
-  },
-  cardDescription: {
-    fontSize: 13,
-    color: "#4B5563",
-    lineHeight: 18,
-    marginBottom: 14,
-  },
-  supportCard: {
-    marginTop: 22,
-    backgroundColor: "#FFF",
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  supportHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    columnGap: 8,
-    marginBottom: 4,
-  },
-  supportTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#111827",
-  },
-  supportSubtitle: {
-    fontSize: 12,
-    color: "#6B7280",
-    lineHeight: 16,
-    marginBottom: 12,
-  },
-  contactList: {
-    rowGap: 8,
-  },
-  contactItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#F9FAFB",
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#F3F4F6",
-  },
-  contactLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    columnGap: 8,
-  },
-  contactText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#1F2937",
-  },
-  actionText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#2563EB",
-  },
-  footerText: {
-    fontSize: 11,
-    color: "#9CA3AF",
-    textAlign: "center",
-    marginTop: 20,
-    marginBottom: 8,
-  },
-});

@@ -18,34 +18,34 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 const STEPS = [
   {
     id: "1",
-    image: require("@/assets/images/step-1.png"),
+    image: require("@/assets/images/1.jpg"),
     title: "Fresh Meals for Just $5.99",
     description:
-      "Beat the rising cost of dining out. Enjoy top-quality, freshly prepared meals from your favorite local spots for just $5.99—without the markup.",
+      "Beat the rising cost of dining out. Enjoy hot, freshly prepared cheesy pizzas and local favorites for just $5.99—without the markup.",
     buttonTitle: "Explore Meals",
   },
   {
     id: "2",
-    image: require("@/assets/images/step-2.png"),
-    title: "From Burgers to Asian Cuisine",
+    image: require("@/assets/images/2.jpg"),
+    title: "Fast & Convenient Pickup",
     description:
-      "Craving gourmet burgers, authentic Asian noodles, sushi, or tacos? Discover an extraordinary variety of fresh dishes crafted daily by local chefs.",
-    buttonTitle: "Discover Cuisines",
+      "No long waits or high delivery fees. Reserve your $5.99 meal on the app and pick it up hot & fresh right from your favorite local spots.",
+    buttonTitle: "See How It Works",
   },
   {
     id: "3",
-    image: require("@/assets/images/step-3.jpg"),
+    image: require("@/assets/images/3.jpg"),
     title: "Beer, Wine & Perfect Pairings",
     description:
-      "Complete your meal with ice-cold beer, fine wine, artisan drinks, and sweet desserts. Enjoy a full restaurant experience at unbeatable $5.99 value.",
+      "Complete your meal with ice-cold craft beers, fine wines, and artisan beverages. Elevate your dining experience at unbeatable value.",
     buttonTitle: "See Pairings",
   },
   {
     id: "4",
-    image: require("@/assets/images/step-4.jpg"),
-    title: "Freshly Made, Ready for Pickup",
+    image: require("@/assets/images/4.jpg"),
+    title: "Gourmet Dishes Made Daily",
     description:
-      "No cold leftovers or long waits. Reserve your favorite $5.99 meal, pick it up hot from top local spots, and enjoy fresh, high-quality dining anytime.",
+      "From artisan sandwiches & fresh garden salads to rich dinners, savor restaurant-quality cuisine prepared daily by expert local chefs.",
     buttonTitle: "Get Started",
   },
 ];
