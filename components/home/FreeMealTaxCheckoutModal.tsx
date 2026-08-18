@@ -298,7 +298,7 @@ export const FreeMealTaxCheckoutModal: React.FC<
             </Text>
             <View className="flex-row justify-between items-center pt-0.5">
               <Text className="text-xs font-body-semibold text-emerald-600">
-                🎁 1 Free Donated Meal Token Applied
+                🎁 1 Free Community Meal Token Applied
               </Text>
               <Text className="text-sm font-heading text-emerald-600 line-through">
                 {formatMoney(mealPrice)}
@@ -423,7 +423,7 @@ export const FreeMealTaxCheckoutModal: React.FC<
                 platform fee
               </Text>{" "}
               as shown in the breakdown above. The meal itself is covered by my
-              donated token.
+              community token.
             </Text>
           </TouchableOpacity>
 

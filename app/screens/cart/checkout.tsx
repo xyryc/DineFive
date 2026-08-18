@@ -507,7 +507,7 @@ function CheckoutContent() {
       <StatusBar style="dark" />
 
       {/* Header */}
-      <ScreenHeader title={isDonationCheckout ? "Donate Meals" : "Checkout"} className="border-b-0" />
+      <ScreenHeader title={isDonationCheckout ? "Gift a Meal" : "Checkout"} className="border-b-0" />
 
       {/* Stepper Progress bar */}
       <View className="bg-white px-6 pb-4 pt-1 border-b border-gray-100 flex-row items-center justify-between">
@@ -549,10 +549,10 @@ function CheckoutContent() {
               <View className="p-5 flex-row items-center justify-between">
                 <View className="flex-1 mr-4">
                   <Text className="text-white font-heading-semibold text-lg mb-1">
-                    Help Fight Hunger
+                    Gift a Meal
                   </Text>
                   <Text className="text-emerald-100 text-xs font-body-semibold leading-relaxed">
-                    Your donation goes directly toward preparing and serving fresh, warm meals to local community members in need.
+                    Purchase meal tokens that go into the Dine Five community pool. Others can redeem them for fresh $5.99 meals.
                   </Text>
                 </View>
                 <View className="w-12 h-12 bg-white/20 rounded-2xl items-center justify-center">
@@ -648,7 +648,7 @@ function CheckoutContent() {
                 <View className="flex-row justify-between items-center">
                   <View className="flex-row items-center gap-2">
                     <Ionicons name="gift-outline" size={16} color="#9CA3AF" />
-                    <Text className="text-sm font-body-medium text-gray-600">Donated Meals</Text>
+                    <Text className="text-sm font-body-medium text-gray-600">Community Meal Tokens</Text>
                   </View>
                   <Text className="text-sm font-body-semibold text-gray-800">{donationMealCount}</Text>
                 </View>
@@ -703,7 +703,7 @@ function CheckoutContent() {
                 </View>
 
                 <View className="flex-row justify-between items-center">
-                  <Text className="text-base font-heading text-gray-900">Total Donation</Text>
+                  <Text className="text-base font-heading text-gray-900">Total Amount</Text>
                   <Text className="text-xl font-heading text-[#E29E10]">{formatMoney(donationTotal)}</Text>
                 </View>
               </View>
@@ -800,7 +800,7 @@ function CheckoutContent() {
                     {isCheckoutLoading ? (
                       "Loading..."
                     ) : isDonationCheckout ? (
-                      "Donate Now"
+                      "Purchase Tokens"
                     ) : (
                       "Place Order"
                     )}

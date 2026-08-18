@@ -72,7 +72,7 @@ export default function OrderSuccessScreen() {
                     {isFreeMealSuccess
                         ? `Yay! Free meal order${'\n'}is confirmed.`
                         : isDonationSuccess
-                        ? `Thank you! Your donation${'\n'}is complete.`
+                        ? `Thank you! Your meal tokens${'\n'}have been added.`
                         : `Yay! Your order${'\n'}has been placed.`}
                 </Text>
 
@@ -80,7 +80,7 @@ export default function OrderSuccessScreen() {
                     {isFreeMealSuccess
                         ? `Show your order ID at ${freeRestaurantName}${'\n'}for pickup.`
                         : isDonationSuccess
-                        ? `${tokensCreated} ${donationMealLabel} can now help people in need.`
+                        ? `${tokensCreated} community meal token${tokensCreated > 1 ? 's' : ''} added to the community pool.`
                         : `Your order will be ready for pickup in the${'\n'}next 30 mins`}
                 </Text>
 
@@ -140,7 +140,7 @@ export default function OrderSuccessScreen() {
                                 <View className="flex-row justify-between items-start mt-4">
                                     <View className="flex-row items-center">
                                         <Ionicons name="receipt-outline" size={20} color="#666" style={{ marginRight: 8 }} />
-                                        <Text className="text-gray-500 font-body text-base">Donation ID</Text>
+                                        <Text className="text-gray-500 font-body text-base">Order ID</Text>
                                     </View>
                                     <Text className="text-gray-500 font-body text-xs text-right flex-1 ml-4" numberOfLines={2}>
                                         {orderIdParam}

@@ -2,7 +2,7 @@ module.exports = {
   expo: {
     name: "Dine Five",
     slug: "Dine-Five",
-    version: "1.0.6",
+    version: "1.0.7",
     orientation: "portrait",
     icon: "./assets/images/app-icon.png",
     scheme: "dinefive",
@@ -14,7 +14,7 @@ module.exports = {
     },
     ios: {
       bundleIdentifier: "com.dinefive.app",
-      buildNumber: "7",
+      buildNumber: "8",
       supportsTablet: true,
       usesAppleSignIn: true,
       googleServiceFile: "./GoogleService-Info.plist",
@@ -38,7 +38,7 @@ module.exports = {
     },
     android: {
       package: "com.dinefive.app",
-      versionCode: 7,
+      versionCode: 8,
       adaptiveIcon: {
         backgroundColor: "#E6F4FE",
         foregroundImage: "./assets/images/app-icon.png",

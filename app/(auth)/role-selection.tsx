@@ -134,7 +134,7 @@ export default function RoleSelectionScreen() {
             </View>
             <Text className="text-xs text-gray-600 leading-4 mb-3.5">
               Browse $5.99 fresh meals from top local spots, order for pickup &
-              support meal donations.
+              purchase community meal tokens.
             </Text>
             <GradientButton
               title="Continue as Customer"

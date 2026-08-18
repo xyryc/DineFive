@@ -229,12 +229,12 @@ const buildPdfHtml = (tokens: DonationToken[], summary: DonationSummary) => {
       <body>
         <div class="header">
           <div>
-            <h1>Donation Tokens Report</h1>
+            <h1>Meal Tokens Report</h1>
             <p>Generated on ${escapeHtml(formatDate(new Date().toISOString()))}</p>
           </div>
           <div class="brand">
             <div class="brand-name">Dine Five</div>
-            <p style="margin:0; font-size: 12px; color: var(--text-muted);">Thank you for your generosity</p>
+            <p style="margin:0; font-size: 12px; color: var(--text-muted);">Your community meal token history</p>
           </div>
         </div>
 
@@ -269,12 +269,12 @@ const buildPdfHtml = (tokens: DonationToken[], summary: DonationSummary) => {
             </tr>
           </thead>
           <tbody>
-            ${rows || '<tr><td colspan="10" style="text-align:center; padding: 20px; color: var(--text-muted);">No donation tokens found.</td></tr>'}
+            ${rows || '<tr><td colspan="10" style="text-align:center; padding: 20px; color: var(--text-muted);">No meal tokens found.</td></tr>'}
           </tbody>
         </table>
 
         <div class="footer">
-          This document is a generated report of your donation tokens on the Dine Five platform.<br>
+          This document is a generated report of your meal tokens on the Dine Five platform.<br>
           For any inquiries, please contact support@dinefive.com.
         </div>
       </body>
@@ -363,7 +363,7 @@ export default function DonationTokensScreen() {
       return;
     }
 
-    const fileName = `dine-five-donation-tokens-${new Date()
+    const fileName = `dine-five-meal-tokens-${new Date()
       .toISOString()
       .slice(0, 10)}.pdf`;
 
@@ -392,7 +392,7 @@ export default function DonationTokensScreen() {
         await Sharing.shareAsync(namedUri, {
           mimeType: "application/pdf",
           UTI: "com.adobe.pdf",
-          dialogTitle: "Download donation tokens PDF",
+          dialogTitle: "Download meal tokens PDF",
         });
         return;
       }
@@ -417,7 +417,7 @@ export default function DonationTokensScreen() {
         >
           <Ionicons name="chevron-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text className="text-xl font-heading text-gray-900">Donation Tokens</Text>
+        <Text className="text-xl font-heading text-gray-900">Meal Tokens</Text>
         <TouchableOpacity
           onPress={handleDownload}
           disabled={tokens.length === 0 || isDownloading}
@@ -436,7 +436,7 @@ export default function DonationTokensScreen() {
       {isLoading ? (
         <View className="flex-1 items-center justify-center px-6">
           <ActivityIndicator size="large" color="#111827" />
-          <Text className="mt-4 text-gray-500">Loading donation tokens...</Text>
+          <Text className="mt-4 text-gray-500">Loading meal tokens...</Text>
         </View>
       ) : (
         <ScrollView
@@ -484,10 +484,10 @@ export default function DonationTokensScreen() {
                 <Ionicons name="gift-outline" size={26} color="#92400E" />
               </View>
               <Text className="text-lg font-heading text-gray-900">
-                No donation tokens yet
+                No meal tokens yet
               </Text>
               <Text className="mt-2 text-center text-gray-500">
-                Your donated meal tokens will appear here.
+                Meal tokens you purchase will appear here. Gift meals to the community pool for others to redeem.
               </Text>
               <TouchableOpacity
                 onPress={() =>
@@ -498,7 +498,7 @@ export default function DonationTokensScreen() {
                 }
                 className="mt-6 rounded-lg bg-yellow-400 px-6 py-3"
               >
-                <Text className="font-body-bold text-gray-900">Donate a meal</Text>
+                <Text className="font-body-bold text-gray-900">Gift a Meal</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -563,7 +563,7 @@ export default function DonationTokensScreen() {
                       </View>
                       <View className="mb-3 border-t border-gray-100 pt-3">
                         <Text className="text-xs font-body-semibold uppercase text-gray-500">
-                          Donation Order
+                          Order Reference
                         </Text>
                         <Text selectable className="mt-1 text-xs text-gray-700">
                           {token.donationOrderId || "Not available"}

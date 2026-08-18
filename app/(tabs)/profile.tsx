@@ -82,11 +82,11 @@ export default function ProfileScreen() {
       ],
     },
     {
-      title: "Payments & Donations",
+      title: "Payments & Meal Tokens",
       items: [
         {
           id: "donate",
-          title: "Donation Tokens",
+          title: "Community Meal Tokens",
           icon: "gift-outline",
           color: "#26A69A",
           bgColor: "#E0F2F1",
@@ -94,7 +94,7 @@ export default function ProfileScreen() {
         },
         {
           id: "donate-action",
-          title: "Donate a Meal",
+          title: "Gift a Meal",
           icon: "heart-outline",
           color: "#EC407A",
           bgColor: "#FCE4EC",

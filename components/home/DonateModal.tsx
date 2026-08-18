@@ -65,12 +65,12 @@ export const DonateModal = ({ visible, onClose, onConfirm }: DonateModalProps) =
 
             {/* Title */}
             <Text className="text-xl font-heading text-[#1F2937] mb-2">
-              Donate a meal
+              Gift a Meal
             </Text>
 
             {/* Description */}
             <Text className="text-base font-body text-gray-500 leading-5 mb-5">
-              Your donation helps provide meals to people in need. Select how many meals you want to donate.
+              Purchase meal tokens that are added to the community pool for others to redeem at $5.99. Select how many meals to add.
             </Text>
 
             {/* Meal Count Selection */}

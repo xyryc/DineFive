@@ -49,7 +49,7 @@ export const DonateCard = () => {
         style={{ flexShrink: 0 }}
       >
         <Text className="text-[#1F2937] text-[11px] font-body-semibold tracking-tight" numberOfLines={1}>
-          DONATE A MEAL
+          GIFT A MEAL
         </Text>
       </TouchableOpacity>
 
