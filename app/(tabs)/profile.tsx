@@ -1,5 +1,6 @@
 import { useStore } from "@/stores/stores";
 import { getUserAvatarUri } from "@/utils/userAvatar";
+import { requireAuth } from "@/utils/authGuard";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -11,8 +12,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { DonateModal } from "@/components/home/DonateModal";
 
 export default function ProfileScreen() {
-  const { user, fetchProfile, logout } = useStore() as any;
+  const { user, accessToken, fetchProfile, logout, setGuestMode } = useStore() as any;
   const router = useRouter();
+  const isLoggedIn = Boolean(accessToken && user);
 
   const avatarUri = getUserAvatarUri(user);
   const avatarSource = avatarUri ? { uri: avatarUri } : require("@/assets/images/user-icon.jpg");
@@ -20,6 +22,7 @@ export default function ProfileScreen() {
   const [modalVisible, setModalVisible] = React.useState(false);
 
   const handleConfirm = (mealCount: number) => {
+    if (!requireAuth("gift a meal")) return;
     setModalVisible(false);
     router.push({
       pathname: "/screens/cart/checkout",
@@ -31,8 +34,10 @@ export default function ProfileScreen() {
   };
 
   useEffect(() => {
-    fetchProfile?.();
-  }, [fetchProfile]);
+    if (isLoggedIn) {
+      fetchProfile?.();
+    }
+  }, [fetchProfile, isLoggedIn]);
 
   const handleLogout = () => {
     Alert.alert(
@@ -49,6 +54,11 @@ export default function ProfileScreen() {
         },
       ]
     );
+  };
+
+  const handleLoginRedirect = () => {
+    setGuestMode(false);
+    router.push("/(auth)/login");
   };
 
   const menuSections = [
@@ -98,7 +108,10 @@ export default function ProfileScreen() {
           icon: "heart-outline",
           color: "#EC407A",
           bgColor: "#FCE4EC",
-          action: () => setModalVisible(true),
+          action: () => {
+            if (!requireAuth("gift a meal")) return;
+            setModalVisible(true);
+          },
         },
         {
           id: "cart",
@@ -178,11 +191,21 @@ export default function ProfileScreen() {
             </View>
             <View className="items-center">
               <Text numberOfLines={1} className="text-xl font-heading text-gray-900 leading-6 text-center">
-                {user?.name || user?.fullName || "User"}
+                {isLoggedIn ? (user?.name || user?.fullName || "User") : "Guest User"}
               </Text>
               <Text numberOfLines={1} className="text-sm font-body text-gray-400 mt-1 leading-4 text-center">
-                {user?.email || "No email provided"}
+                {isLoggedIn ? (user?.email || "No email provided") : "Sign in to access your full profile"}
               </Text>
+              {!isLoggedIn && (
+                <TouchableOpacity
+                  onPress={handleLoginRedirect}
+                  className="mt-3 bg-yellow-400 px-5 py-2 rounded-full"
+                >
+                  <Text className="text-xs font-heading text-gray-900">
+                    Sign In / Register
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </View>
@@ -202,6 +225,10 @@ export default function ProfileScreen() {
                       if (item.action) {
                         item.action();
                       } else if (item.route) {
+                        // Allow navigation to cart without auth; other profile screens require auth
+                        if (item.id !== "cart" && !requireAuth(`view ${item.title.toLowerCase()}`)) {
+                          return;
+                        }
                         router.push(item.route as any);
                       }
                     }}
@@ -228,18 +255,31 @@ export default function ProfileScreen() {
             </View>
           ))}
 
-          {/* Logout Section */}
+          {/* Auth CTA Section */}
           <View className="pt-4">
-            <TouchableOpacity
-              onPress={handleLogout}
-              activeOpacity={0.8}
-              className="flex-row items-center justify-center gap-2 bg-[#FFF5F5] border border-[#FED7D7] py-4 rounded-2xl shadow-sm"
-            >
-              <Ionicons name="log-out-outline" size={20} color="#E53E3E" />
-              <Text className="text-[#E53E3E] font-body-semibold text-base">
-                Log Out
-              </Text>
-            </TouchableOpacity>
+            {isLoggedIn ? (
+              <TouchableOpacity
+                onPress={handleLogout}
+                activeOpacity={0.8}
+                className="flex-row items-center justify-center gap-2 bg-[#FFF5F5] border border-[#FED7D7] py-4 rounded-2xl shadow-sm"
+              >
+                <Ionicons name="log-out-outline" size={20} color="#E53E3E" />
+                <Text className="text-[#E53E3E] font-body-semibold text-base">
+                  Log Out
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={handleLoginRedirect}
+                activeOpacity={0.8}
+                className="flex-row items-center justify-center gap-2 bg-yellow-400 py-4 rounded-2xl shadow-sm"
+              >
+                <Ionicons name="log-in-outline" size={20} color="#111827" />
+                <Text className="text-gray-900 font-heading text-base">
+                  Sign In / Register
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </ScrollView>

@@ -86,12 +86,12 @@ const OnboardingScreen = () => {
         animated: true,
       });
     } else {
-      router.replace("/(auth)/role-selection");
+      router.replace("/(auth)/login");
     }
   };
 
   const handleSkip = () => {
-    router.replace("/(auth)/role-selection");
+    router.replace("/(auth)/login");
   };
 
   return (

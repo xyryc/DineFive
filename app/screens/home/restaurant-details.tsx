@@ -1,4 +1,5 @@
 import { useStore } from "@/stores/stores";
+import { requireAuth } from "@/utils/authGuard";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { API_BASE_URL } from "@/utils/api";
@@ -517,6 +518,8 @@ function RestaurantDetailScreenInner() {
 
   const handleAdd = React.useCallback(
     (item: MenuItemType) => {
+      if (!requireAuth("add items to cart")) return;
+
       if (isFreeFlow) {
         if (!currentTokenId) {
           Alert.alert(

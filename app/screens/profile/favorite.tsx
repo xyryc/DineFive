@@ -1,5 +1,6 @@
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { useStore } from "@/stores/stores";
+import { requireAuth } from "@/utils/authGuard";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -96,6 +97,7 @@ export default function FavoriteScreen() {
     };
 
     const handleAddToCart = async (food: any) => {
+        if (!requireAuth("add items to bag")) return;
         if (isAddingToCart) return;
         setIsAddingToCart(food.foodId);
         try {

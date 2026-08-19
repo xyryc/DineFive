@@ -20,6 +20,7 @@ import { useRestaurantStore } from "@/stores/useRestaurantStore";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { FreeMealTaxCheckoutModal } from "@/components/home/FreeMealTaxCheckoutModal";
+import { requireAuth } from "@/utils/authGuard";
 
 const firstParam = (value: string | string[] | undefined): string =>
   Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
@@ -214,6 +215,7 @@ function ProductDetailsInner() {
   }, [favorites.length, fetchFavorites]);
 
   const handleToggleFavorite = async () => {
+    if (!requireAuth("save favorites")) return;
     console.log("Toggling favorite for foodId:", product.foodId);
     if (isFav) {
       await removeFavorite(product.foodId);
@@ -223,6 +225,7 @@ function ProductDetailsInner() {
   };
 
   const handleClaimMeal = async () => {
+    if (!requireAuth("claim free meals")) return;
     if (isClaimingMeal) return;
 
     setIsClaimingMeal(true);
@@ -283,6 +286,7 @@ function ProductDetailsInner() {
   }, [isFreeMeal, params.providerId, product.providerId, product.id, getFreeMealTaxBreakdown]);
 
   const handlePlaceFreeOrder = () => {
+    if (!requireAuth("place an order")) return;
     if (!currentTokenId) {
       Alert.alert("Error", "Please claim your meal token first.");
       return;
@@ -291,6 +295,9 @@ function ProductDetailsInner() {
   };
 
   const handleAddToCart = () => {
+    // Gate: unauthenticated & guest users must log in to add items to cart
+    if (!requireAuth("add items to cart")) return;
+
     // ── 0ms OPTIMISTIC UPDATE ──────────────────────────────────────────────
     // Instantly reflect success state in 0ms without navigation or blocking UI
     setIsAddedToCartSuccess(true);

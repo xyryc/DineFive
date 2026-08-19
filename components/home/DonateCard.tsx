@@ -2,10 +2,16 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import { DonateModal } from "./DonateModal";
+import { requireAuth } from "@/utils/authGuard";
 
 export const DonateCard = () => {
   const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
+
+  const handleOpenModal = () => {
+    if (!requireAuth("gift a meal")) return;
+    setModalVisible(true);
+  };
 
   const handleConfirm = (mealCount: number) => {
     setModalVisible(false);
@@ -43,7 +49,7 @@ export const DonateCard = () => {
 
       {/* Action Button */}
       <TouchableOpacity
-        onPress={() => setModalVisible(true)}
+        onPress={handleOpenModal}
         activeOpacity={0.7}
         className="bg-[#F8F9FF] border border-[#D1D5DB] px-3.5 py-2 rounded-xl shadow-sm shrink-0"
         style={{ flexShrink: 0 }}

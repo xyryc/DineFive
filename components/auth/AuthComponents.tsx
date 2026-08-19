@@ -378,6 +378,19 @@ export const AuthComponents = ({
 
       <GoogleLogin />
       <AppleLogin />
+
+      <TouchableOpacity
+        onPress={() => {
+          useStore.getState().setGuestMode(true);
+          router.replace("/(tabs)");
+        }}
+        className="mt-4 py-3.5 items-center justify-center rounded-2xl bg-gray-50 border border-gray-200"
+        activeOpacity={0.7}
+      >
+        <Text className="text-sm font-body-semibold text-gray-600">
+          Continue as Guest
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 };

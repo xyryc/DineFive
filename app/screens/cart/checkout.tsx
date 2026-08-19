@@ -1,4 +1,5 @@
 import { DonateModal } from "@/components/home/DonateModal";
+import { requireAuth } from "@/utils/authGuard";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { useStore } from "@/stores/stores";
 import { Ionicons } from "@expo/vector-icons";
@@ -349,6 +350,8 @@ function CheckoutContent() {
   };
 
   const handlePlaceOrder = async () => {
+    if (!requireAuth("complete your order")) return;
+
     if (isDonationCheckout) {
       await handleDonationPayment();
       return;

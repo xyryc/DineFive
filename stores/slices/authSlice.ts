@@ -23,6 +23,11 @@ export const createAuthSlice = (set: any, get: () => RootStore): AuthSlice => ({
   error: null,
   isInitialized: false,
   resetToken: null,
+  isGuest: false,
+
+  setGuestMode: (value: boolean) => {
+    set({ isGuest: value });
+  },
 
   persistAuthData: async (user: any, accessToken: any, refreshToken: any) => {
     try {
@@ -203,6 +208,7 @@ export const createAuthSlice = (set: any, get: () => RootStore): AuthSlice => ({
         user: null,
         accessToken: null,
         refreshToken: null,
+        isGuest: false,
       });
 
       return true as any;

@@ -62,6 +62,8 @@ function RootLayout() {
     }
   }, [isInitialized, fontsLoaded]);
 
+  const isGuest = useStore((state: any) => state.isGuest);
+
   useEffect(() => {
     const group = segments[0] as string;
 
@@ -85,16 +87,16 @@ function RootLayout() {
       return;
     }
 
-    if (!accessToken) {
+    if (!accessToken && !isGuest) {
       if (inTabsGroup || inScreensGroup) {
         router.replace("/(auth)/login");
       }
     } else {
-      if (inAuthGroup || inOnboarding) {
+      if (!isGuest && (inAuthGroup || inOnboarding)) {
         router.replace("/(tabs)");
       }
     }
-  }, [accessToken, fontsLoaded, isInitialized, router, segments, user]);
+  }, [accessToken, fontsLoaded, isGuest, isInitialized, router, segments, user]);
 
   useNotificationSync();
 

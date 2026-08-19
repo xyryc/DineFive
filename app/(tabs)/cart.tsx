@@ -1,6 +1,7 @@
 import { EmptyState } from "@/components/common/EmptyState";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { useStore } from "@/stores/stores";
+import { requireAuth } from "@/utils/authGuard";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -709,7 +710,10 @@ export default function CartScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => router.push("/screens/cart/checkout")}
+            onPress={() => {
+              if (!requireAuth("proceed to checkout")) return;
+              router.push("/screens/cart/checkout");
+            }}
             activeOpacity={0.8}
             disabled={isSyncing}
             style={{ opacity: isSyncing ? 0.6 : 1 }}
