@@ -1,5 +1,12 @@
 import React from "react";
-import { Image, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  Image,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { formatRadius, RADIUS_STEPS } from "./utils/mapHelpers";
 
@@ -52,7 +59,10 @@ export default function MapSearchBar({
 
           <View className="w-[1px] h-5 bg-gray-200 mx-2" />
 
-          <TouchableOpacity onPress={onPickerPress} className="flex-row items-center">
+          <TouchableOpacity
+            onPress={onPickerPress}
+            className="flex-row items-center"
+          >
             <Ionicons name="location-sharp" size={18} color="#9CA3AF" />
             <Text
               className="ml-1 text-[14px] text-[#9CA3AF] font-body-medium max-w-[120px]"
@@ -78,7 +88,9 @@ export default function MapSearchBar({
               key={radius}
               onPress={() => onRadiusPress(radius)}
               className={`px-3 py-1.5 rounded-full border ${
-                active ? "bg-[#FFC107] border-[#FFC107]" : "bg-white border-gray-200"
+                active
+                  ? "bg-[#FFC107] border-[#FFC107]"
+                  : "bg-white border-gray-200"
               }`}
             >
               <Text
@@ -86,7 +98,7 @@ export default function MapSearchBar({
                   active ? "text-gray-900" : "text-gray-500"
                 }`}
               >
-                {formatRadius(radius)}
+                {formatRadius(radius)}{" "}
               </Text>
             </TouchableOpacity>
           );

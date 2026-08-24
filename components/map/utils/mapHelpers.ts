@@ -15,13 +15,13 @@ export const normalizeRestaurantSearchQuery = (query: string): string =>
 // ─── Formatting ────────────────────────────────────────────────────────────
 export const formatRestaurantDistance = (distanceKm: number): string => {
   if (!Number.isFinite(distanceKm) || distanceKm <= 0) return "0 m";
-  if (distanceKm < 1) return `${Math.round(distanceKm * 1000)} m`;
-  return `${distanceKm.toFixed(1)} km`;
+  if (distanceKm < 1) return `${Math.round(distanceKm * 1000)} yd`;
+  return `${distanceKm.toFixed(1)} mi`;
 };
 
 export const formatRadius = (meters: number): string => {
-  if (meters < 1000) return `${Math.round(meters)}m`;
-  return `${(meters / 1000).toFixed(1)}km`;
+  if (meters < 1000) return `${Math.round(meters)} yd`;
+  return `${(meters / 1000).toFixed(1)} mi`;
 };
 
 // ─── Numbers ───────────────────────────────────────────────────────────────
@@ -38,11 +38,15 @@ export const toNumber = (value: unknown, fallback = 0): number => {
 export const getRestaurantCoords = (restaurant: Restaurant | null) => {
   if (!restaurant) return null;
   const lat = toNumber(
-    restaurant.location?.lat ?? (restaurant as any).latitude ?? (restaurant as any).lat,
+    restaurant.location?.lat ??
+      (restaurant as any).latitude ??
+      (restaurant as any).lat,
     NaN,
   );
   const lng = toNumber(
-    restaurant.location?.lng ?? (restaurant as any).longitude ?? (restaurant as any).lng,
+    restaurant.location?.lng ??
+      (restaurant as any).longitude ??
+      (restaurant as any).lng,
     NaN,
   );
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
@@ -57,7 +61,9 @@ export const getRestaurantImage = (restaurant: Restaurant): string =>
   "https://images.unsplash.com/photo-1528207776546-365bb710ee93?w=500";
 
 // ─── Search ────────────────────────────────────────────────────────────────
-export const buildRestaurantSearchHaystack = (restaurant: Restaurant): string => {
+export const buildRestaurantSearchHaystack = (
+  restaurant: Restaurant,
+): string => {
   const parts = [
     restaurant.restaurantName,
     restaurant.restaurantAddress,
