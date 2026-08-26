@@ -38,7 +38,7 @@ module.exports = {
     },
     android: {
       package: "com.dinefive.app",
-      versionCode: 10,
+      versionCode: 11,
       adaptiveIcon: {
         backgroundColor: "#E6F4FE",
         foregroundImage: "./assets/images/app-icon.png",
