@@ -774,51 +774,14 @@ export default function OrderDetailsScreen() {
 
             {orderData?.cityTax > 0 && (
               <View className="flex-row justify-between items-center">
-                <Text className="text-xs text-gray-500 font-body-semibold">
-                  {(() => {
-                    const explicitRate = orderData?.cityTaxRate ?? orderData?.items?.[0]?.cityTaxRate;
-                    const numRate = Number(explicitRate);
-                    let pctStr = "";
-                    if (Number.isFinite(numRate) && numRate > 0) {
-                      const pct = numRate < 1 ? numRate * 100 : numRate;
-                      const rounded = Number(pct.toFixed(2));
-                      pctStr = `${rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toString()}%`;
-                    } else if (orderData?.subtotal > 0 && orderData?.cityTax > 0) {
-                      const calcPct = (orderData.cityTax / orderData.subtotal) * 100;
-                      if (Number.isFinite(calcPct) && calcPct > 0) {
-                        const rounded = Number(calcPct.toFixed(2));
-                        pctStr = `${rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toString()}%`;
-                      }
-                    }
-                    return pctStr ? `City Tax (${pctStr})` : "City Tax";
-                  })()}
-                </Text>
+                <Text className="text-xs text-gray-500 font-body-semibold">City Tax</Text>
                 <Text className="text-xs font-body-semibold text-gray-800">${orderData.cityTax.toFixed(2)}</Text>
               </View>
             )}
 
             {(orderData?.stateTax > 0 || orderData?.stateTaxAmount > 0) && (
               <View className="flex-row justify-between items-center">
-                <Text className="text-xs text-gray-500 font-body-semibold">
-                  {(() => {
-                    const explicitRate = orderData?.stateTaxRate ?? orderData?.items?.[0]?.stateTaxRate;
-                    const numRate = Number(explicitRate);
-                    let pctStr = "";
-                    if (Number.isFinite(numRate) && numRate > 0) {
-                      const pct = numRate < 1 ? numRate * 100 : numRate;
-                      const rounded = Number(pct.toFixed(2));
-                      pctStr = `${rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toString()}%`;
-                    } else if (orderData?.subtotal > 0 && (orderData?.stateTax > 0 || orderData?.stateTaxAmount > 0)) {
-                      const taxAmt = orderData?.stateTax || orderData?.stateTaxAmount || 0;
-                      const calcPct = (taxAmt / orderData.subtotal) * 100;
-                      if (Number.isFinite(calcPct) && calcPct > 0) {
-                        const rounded = Number(calcPct.toFixed(2));
-                        pctStr = `${rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toString()}%`;
-                      }
-                    }
-                    return pctStr ? `State Tax (${pctStr})` : "State Tax";
-                  })()}
-                </Text>
+                <Text className="text-xs text-gray-500 font-body-semibold">State Tax</Text>
                 <Text className="text-xs font-body-semibold text-gray-800">
                   ${(orderData?.stateTax || orderData?.stateTaxAmount || 0).toFixed(2)}
                 </Text>

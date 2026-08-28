@@ -603,7 +603,7 @@ export default function CartScreen() {
             {stateTaxAmount > 0 && (
               <View className="flex-row justify-between items-center">
                 <Text className="text-sm font-body-medium text-gray-500">
-                  {formatTaxLabel("State Tax", cartMeta?.stateTaxRate, stateTaxAmount, subtotal)}
+                  State Tax
                 </Text>
                 {loading ? (
                   <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
@@ -618,7 +618,7 @@ export default function CartScreen() {
             {cityTax > 0 && (
               <View className="flex-row justify-between items-center">
                 <Text className="text-sm font-body-medium text-gray-500">
-                  {formatTaxLabel("City Tax", cartMeta?.cityTaxRate, cityTax, subtotal)}
+                  City Tax
                 </Text>
                 {loading ? (
                   <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
