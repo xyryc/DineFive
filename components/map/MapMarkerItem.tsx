@@ -71,9 +71,13 @@ export default function MapMarkerItem({ restaurant, isSelected, onPress }: Props
                 paddingVertical: 1,
                 borderRadius: 999,
                 marginLeft: 6,
+                flexShrink: 0,
               }}
             >
-              <Text style={{ fontSize: 9, fontWeight: "800", color: "#111827" }}>
+              <Text
+                numberOfLines={1}
+                style={{ fontSize: 9, fontWeight: "800", color: "#111827", flexShrink: 0 }}
+              >
                 {distanceLabel}
               </Text>
             </View>

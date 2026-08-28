@@ -97,7 +97,7 @@ const CUISINE_FILTERS = [
   { label: "Italian", value: "Italian" },
 ];
 
-const RADIUS_STEPS = [100, 200, 500, 1000, 2000, 5000];
+const RADIUS_STEPS = [300, 500, 1000, 2000, 5000, 10000];
 
 const toNumber = (value: unknown, fallback = 0): number => {
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -124,13 +124,18 @@ const getRestaurantCoords = (restaurant: Restaurant | null) => {
 };
 
 const formatRadius = (meters: number): string => {
-  if (meters < 1000) return `${meters}m`;
-  return `${(meters / 1000).toFixed(1)}km`;
+  const m = Number(meters);
+  if (!Number.isFinite(m) || m <= 0) return "0 miles";
+  const miles = m / 1000;
+  const formatted = miles % 1 === 0 ? miles.toFixed(0) : miles.toFixed(1);
+  return `${formatted} miles`;
 };
 
 const formatDistance = (km: number): string => {
-  if (km < 1) return `${Math.round(km * 1000)}m`;
-  return `${km.toFixed(1)}km`;
+  const dist = Number(km);
+  if (!Number.isFinite(dist) || dist <= 0) return "0 miles";
+  const formatted = dist % 1 === 0 ? dist.toFixed(0) : dist.toFixed(1);
+  return `${formatted} miles`;
 };
 
 // ── Main component ─────────────────────────────────────────────────────────────

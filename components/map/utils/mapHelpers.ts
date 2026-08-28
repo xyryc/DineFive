@@ -14,14 +14,18 @@ export const normalizeRestaurantSearchQuery = (query: string): string =>
 
 // ─── Formatting ────────────────────────────────────────────────────────────
 export const formatRestaurantDistance = (distanceKm: number): string => {
-  if (!Number.isFinite(distanceKm) || distanceKm <= 0) return "0 m";
-  if (distanceKm < 1) return `${Math.round(distanceKm * 1000)} yd`;
-  return `${distanceKm.toFixed(1)} mi`;
+  const dist = Number(distanceKm);
+  if (!Number.isFinite(dist) || dist <= 0) return "0\u00A0miles";
+  const formatted = dist % 1 === 0 ? dist.toFixed(0) : dist.toFixed(1);
+  return `${formatted}\u00A0miles`;
 };
 
 export const formatRadius = (meters: number): string => {
-  if (meters < 1000) return `${Math.round(meters)} yd`;
-  return `${(meters / 1000).toFixed(1)} mi`;
+  const m = Number(meters);
+  if (!Number.isFinite(m) || m <= 0) return "0\u00A0miles";
+  const miles = m / 1000;
+  const formatted = miles % 1 === 0 ? miles.toFixed(0) : miles.toFixed(1);
+  return `${formatted}\u00A0miles`;
 };
 
 // ─── Numbers ───────────────────────────────────────────────────────────────
@@ -85,4 +89,4 @@ export const { width: SCREEN_WIDTH } = Dimensions.get("window");
 export const CARD_WIDTH = SCREEN_WIDTH * 0.82;
 export const CARD_GAP = 12;
 export const CARD_SNAP_INTERVAL = CARD_WIDTH + CARD_GAP;
-export const RADIUS_STEPS = [100, 200, 500, 1000, 2000, 5000, 10000];
+export const RADIUS_STEPS = [300, 500, 1000, 2000, 5000, 10000];

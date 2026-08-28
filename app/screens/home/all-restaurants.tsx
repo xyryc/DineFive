@@ -26,8 +26,8 @@ type Restaurant = any;
 const formatDistance = (distanceKm?: any) => {
   const dist = Number(distanceKm);
   if (!Number.isFinite(dist)) return "";
-  if (dist < 1) return `${Math.max(1, Math.round(dist * 1000))} m`;
-  return `${dist.toFixed(1)} mi`;
+  const formatted = dist % 1 === 0 ? dist.toFixed(0) : dist.toFixed(1);
+  return `${formatted} miles`;
 };
 
 const getCityAreaLabel = (restaurant: Restaurant): string => {

@@ -116,9 +116,9 @@ export default function FoodCard({
 
           {/* Row 3: Distance + Claim CTA */}
           <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">
+            <View className="flex-row items-center bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100 shrink-0">
               <Ionicons name="navigate-outline" size={12} color="#059669" />
-              <Text className="text-[11px] font-body-bold text-gray-800 ml-1">
+              <Text className="text-[11px] font-body-bold text-gray-800 ml-1" numberOfLines={1}>
                 {formatRestaurantDistance(item.distance)}
               </Text>
             </View>

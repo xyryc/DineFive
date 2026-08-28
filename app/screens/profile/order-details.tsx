@@ -780,12 +780,14 @@ export default function OrderDetailsScreen() {
                     const numRate = Number(explicitRate);
                     let pctStr = "";
                     if (Number.isFinite(numRate) && numRate > 0) {
-                      const pct = numRate > 1 ? numRate : numRate * 100;
-                      pctStr = `${pct % 1 === 0 ? pct.toFixed(0) : pct.toFixed(1)}%`;
-                    } else if (orderData?.subtotal > 0) {
+                      const pct = numRate < 1 ? numRate * 100 : numRate;
+                      const rounded = Number(pct.toFixed(2));
+                      pctStr = `${rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toString()}%`;
+                    } else if (orderData?.subtotal > 0 && orderData?.cityTax > 0) {
                       const calcPct = (orderData.cityTax / orderData.subtotal) * 100;
                       if (Number.isFinite(calcPct) && calcPct > 0) {
-                        pctStr = `${calcPct % 1 === 0 ? calcPct.toFixed(0) : calcPct.toFixed(1)}%`;
+                        const rounded = Number(calcPct.toFixed(2));
+                        pctStr = `${rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toString()}%`;
                       }
                     }
                     return pctStr ? `City Tax (${pctStr})` : "City Tax";
@@ -799,17 +801,19 @@ export default function OrderDetailsScreen() {
               <View className="flex-row justify-between items-center">
                 <Text className="text-xs text-gray-500 font-body-semibold">
                   {(() => {
-                    const taxAmt = orderData?.stateTax || orderData?.stateTaxAmount || 0;
                     const explicitRate = orderData?.stateTaxRate ?? orderData?.items?.[0]?.stateTaxRate;
                     const numRate = Number(explicitRate);
                     let pctStr = "";
                     if (Number.isFinite(numRate) && numRate > 0) {
-                      const pct = numRate > 1 ? numRate : numRate * 100;
-                      pctStr = `${pct % 1 === 0 ? pct.toFixed(0) : pct.toFixed(1)}%`;
-                    } else if (orderData?.subtotal > 0 && taxAmt > 0) {
+                      const pct = numRate < 1 ? numRate * 100 : numRate;
+                      const rounded = Number(pct.toFixed(2));
+                      pctStr = `${rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toString()}%`;
+                    } else if (orderData?.subtotal > 0 && (orderData?.stateTax > 0 || orderData?.stateTaxAmount > 0)) {
+                      const taxAmt = orderData?.stateTax || orderData?.stateTaxAmount || 0;
                       const calcPct = (taxAmt / orderData.subtotal) * 100;
                       if (Number.isFinite(calcPct) && calcPct > 0) {
-                        pctStr = `${calcPct % 1 === 0 ? calcPct.toFixed(0) : calcPct.toFixed(1)}%`;
+                        const rounded = Number(calcPct.toFixed(2));
+                        pctStr = `${rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toString()}%`;
                       }
                     }
                     return pctStr ? `State Tax (${pctStr})` : "State Tax";

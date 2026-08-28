@@ -50,8 +50,9 @@ const formatTaxLabel = (
 ) => {
   const numRate = Number(rate);
   if (Number.isFinite(numRate) && numRate > 0) {
-    const pct = numRate > 1 ? numRate : numRate * 100;
-    const formatted = pct % 1 === 0 ? pct.toFixed(0) : pct.toFixed(1);
+    const pct = numRate < 1 ? numRate * 100 : numRate;
+    const rounded = Number(pct.toFixed(2));
+    const formatted = rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toString();
     return `${baseLabel} (${formatted}%)`;
   }
   if (
@@ -62,8 +63,8 @@ const formatTaxLabel = (
   ) {
     const calcPct = (taxAmount / subtotal) * 100;
     if (Number.isFinite(calcPct) && calcPct > 0) {
-      const formatted =
-        calcPct % 1 === 0 ? calcPct.toFixed(0) : calcPct.toFixed(1);
+      const rounded = Number(calcPct.toFixed(2));
+      const formatted = rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toString();
       return `${baseLabel} (${formatted}%)`;
     }
   }

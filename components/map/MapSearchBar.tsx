@@ -87,18 +87,21 @@ export default function MapSearchBar({
             <TouchableOpacity
               key={radius}
               onPress={() => onRadiusPress(radius)}
-              className={`px-3 py-1.5 rounded-full border ${
+              className={`px-3.5 py-1.5 rounded-full border ${
                 active
                   ? "bg-[#FFC107] border-[#FFC107]"
                   : "bg-white border-gray-200"
               }`}
+              style={{ flexShrink: 0 }}
             >
               <Text
+                numberOfLines={1}
                 className={`text-xs font-body-semibold ${
                   active ? "text-gray-900" : "text-gray-500"
                 }`}
+                style={{ flexShrink: 0 }}
               >
-                {formatRadius(radius)}{" "}
+                {formatRadius(radius)}
               </Text>
             </TouchableOpacity>
           );

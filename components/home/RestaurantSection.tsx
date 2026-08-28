@@ -9,8 +9,8 @@ import { useRouter } from "expo-router";
 const formatDistance = (distanceKm?: number | string) => {
   const dist = Number(distanceKm);
   if (!Number.isFinite(dist)) return "";
-  if (dist < 1) return `${Math.max(1, Math.round(dist * 1000))} m`;
-  return `${dist.toFixed(1)} mi`;
+  const formatted = dist % 1 === 0 ? dist.toFixed(0) : dist.toFixed(1);
+  return `${formatted}\u00A0miles`;
 };
 
 const getCityAreaLabel = (restaurant: Restaurant): string => {

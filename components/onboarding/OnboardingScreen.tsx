@@ -26,7 +26,7 @@ const STEPS = [
   },
   {
     id: "2",
-    image: require("@/assets/images/2.jpg"),
+    image: require("@/assets/images/2_replaced.jpg"),
     title: "Fast & Convenient Pickup",
     description:
       "No long waits or high delivery fees. Reserve your $5.99 meal on the app and pick it up hot & fresh right from your favorite local spots.",
@@ -66,7 +66,7 @@ const OnboardingScreen = () => {
       useNativeDriver: false,
       listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
         const slideIndex = Math.round(
-          event.nativeEvent.contentOffset.x / width
+          event.nativeEvent.contentOffset.x / width,
         );
         if (
           slideIndex !== activeIndex &&
@@ -76,7 +76,7 @@ const OnboardingScreen = () => {
           setActiveIndex(slideIndex);
         }
       },
-    }
+    },
   );
 
   const handleNext = () => {
@@ -117,7 +117,10 @@ const OnboardingScreen = () => {
             index,
           })}
           renderItem={({ item }) => (
-            <View style={{ width, height: topSectionHeight }} className="flex-1 bg-black">
+            <View
+              style={{ width, height: topSectionHeight }}
+              className="flex-1 bg-black"
+            >
               <ImageBackground
                 source={item.image}
                 resizeMode="cover"
@@ -197,11 +200,7 @@ const OnboardingScreen = () => {
             });
 
             const translateY = scrollX.interpolate({
-              inputRange: [
-                (idx - 1) * width,
-                idx * width,
-                (idx + 1) * width,
-              ],
+              inputRange: [(idx - 1) * width, idx * width, (idx + 1) * width],
               outputRange: [6, 0, -6],
               extrapolate: "clamp",
             });

@@ -343,7 +343,7 @@ export const FreeMealTaxCheckoutModal: React.FC<
                 <Text className="text-sm font-body text-gray-600">
                   City Tax
                   {taxBreakdown?.cityTaxRate && taxBreakdown.cityTaxRate > 0
-                    ? ` (${(taxBreakdown.cityTaxRate > 1 ? taxBreakdown.cityTaxRate : taxBreakdown.cityTaxRate * 100).toFixed((taxBreakdown.cityTaxRate * 100) % 1 === 0 ? 0 : 1)}%)`
+                    ? ` (${parseFloat(((taxBreakdown.cityTaxRate < 1 ? taxBreakdown.cityTaxRate * 100 : taxBreakdown.cityTaxRate)).toFixed(2)).toString()}%)`
                     : ""}
                   {taxBreakdown?.providerCity
                     ? ` - ${taxBreakdown.providerCity}`
