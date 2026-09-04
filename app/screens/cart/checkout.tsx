@@ -721,13 +721,35 @@ function CheckoutContent() {
                   )}
                 </View>
 
-                {(platformFee + totalTaxes) > 0 && (
+                {stateTaxAmount > 0 && (
                   <View className="flex-row justify-between items-center">
-                    <Text className="text-sm font-body-medium text-gray-600">Fees & Taxes</Text>
+                    <Text className="text-sm font-body-medium text-gray-600">State Tax</Text>
                     {isCheckoutLoading ? (
                       <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
                     ) : (
-                      <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(platformFee + totalTaxes)}</Text>
+                      <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(stateTaxAmount)}</Text>
+                    )}
+                  </View>
+                )}
+
+                {cityTax > 0 && (
+                  <View className="flex-row justify-between items-center">
+                    <Text className="text-sm font-body-medium text-gray-600">City Tax</Text>
+                    {isCheckoutLoading ? (
+                      <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
+                    ) : (
+                      <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(cityTax)}</Text>
+                    )}
+                  </View>
+                )}
+
+                {platformFee > 0 && (
+                  <View className="flex-row justify-between items-center">
+                    <Text className="text-sm font-body-medium text-gray-600">Platform Fee</Text>
+                    {isCheckoutLoading ? (
+                      <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
+                    ) : (
+                      <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(platformFee)}</Text>
                     )}
                   </View>
                 )}
