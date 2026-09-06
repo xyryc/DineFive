@@ -376,7 +376,7 @@ export const createAuthSlice = (set: any, get: () => RootStore): AuthSlice => ({
     }
   },
 
-  resetPassword: async (data: { newPassword: string; confirmPassword: string }) => {
+  resetPassword: async (data: { newPassword: string; confirmPassword?: string }) => {
     set({ isLoading: true, error: null });
     try {
       const { resetToken } = get() as any;

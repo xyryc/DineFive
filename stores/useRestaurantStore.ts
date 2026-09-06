@@ -4,6 +4,7 @@ import type { NearbyParams, Restaurant } from "@/services/restaurantService";
 import { restaurantService } from "@/services/restaurantService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useStore } from "./stores";
+import type { ParsedAddress } from "@/utils/geocoding";
 
 export type { NearbyParams, Restaurant } from "@/services/restaurantService";
 
@@ -30,6 +31,7 @@ const syncUserLocation = async (lat: number, lng: number) => {
 
 interface RestaurantState {
   location: { latitude: number; longitude: number } | null;
+  locationAddressLabel: string | null;
   locationLoading: boolean;
   locationPermissionGranted: boolean | null;
   restaurants: Restaurant[];
@@ -46,6 +48,9 @@ interface RestaurantState {
   availableTokenCount: number;
   fetchLocation: (forceGPS?: boolean) => Promise<void>;
   setLocationManually: (address: string) => Promise<any>;
+  setLocationAddressLabel: (label: string | null) => void;
+  setLocationWithLabel: (coords: { latitude: number; longitude: number }, label?: string | null, syncToProfile?: boolean) => Promise<void>;
+  setSelectedParsedLocation: (parsed: ParsedAddress, syncToProfile?: boolean) => Promise<void>;
   fetchNearbyRestaurants: (params: NearbyParams) => Promise<void>;
   fetchFreeMeals: (params: { page?: number; limit?: number; search?: string }) => Promise<void>;
   setActiveFeedMode: (mode: FeedMode) => void;
@@ -72,6 +77,7 @@ interface RestaurantState {
 
 export const useRestaurantStore = create<RestaurantState>((set, get) => ({
   location: null,
+  locationAddressLabel: null,
   locationLoading: true,
   locationPermissionGranted: null,
   restaurants: [],
@@ -87,6 +93,49 @@ export const useRestaurantStore = create<RestaurantState>((set, get) => ({
   radiusMeters: 5000,
   availableTokenCount: 0,
 
+  setLocationAddressLabel: (label: string | null) => {
+    set({ locationAddressLabel: label });
+  },
+
+  setLocationWithLabel: async (coords: { latitude: number; longitude: number }, label?: string | null, syncToProfile: boolean = false) => {
+    set({
+      location: coords,
+      locationAddressLabel: label ?? null,
+      locationPermissionGranted: true,
+      locationLoading: false,
+    });
+    try {
+      await AsyncStorage.setItem("DINE_FIVE_USER_LOCATION", JSON.stringify(coords));
+    } catch (e) {
+      console.warn("Failed to persist user location:", e);
+    }
+    if (syncToProfile) {
+      syncUserLocation(coords.latitude, coords.longitude);
+    }
+  },
+
+  setSelectedParsedLocation: async (parsed: ParsedAddress, syncToProfile: boolean = false) => {
+    const coords = {
+      latitude: parsed.lat,
+      longitude: parsed.lng,
+    };
+    const label = parsed.street || parsed.displayName || [parsed.city, parsed.state].filter(Boolean).join(", ");
+    set({
+      location: coords,
+      locationAddressLabel: label,
+      locationPermissionGranted: true,
+      locationLoading: false,
+    });
+    try {
+      await AsyncStorage.setItem("DINE_FIVE_USER_LOCATION", JSON.stringify(coords));
+    } catch (e) {
+      console.warn("Failed to persist user location:", e);
+    }
+    if (syncToProfile) {
+      syncUserLocation(coords.latitude, coords.longitude);
+    }
+  },
+
   setLocationManually: async (address: string) => {
     try {
       const results = await Location.geocodeAsync(address);
@@ -97,12 +146,11 @@ export const useRestaurantStore = create<RestaurantState>((set, get) => ({
         };
         set({
           location: newLoc,
+          locationAddressLabel: address,
           locationPermissionGranted: true,
           locationLoading: false,
         });
         await AsyncStorage.setItem("DINE_FIVE_USER_LOCATION", JSON.stringify(newLoc));
-        // Sync to backend user profile if logged in
-        syncUserLocation(newLoc.latitude, newLoc.longitude);
         return { success: true, location: newLoc };
       }
       return { success: false, error: "Address not found" };
@@ -114,8 +162,24 @@ export const useRestaurantStore = create<RestaurantState>((set, get) => ({
   fetchLocation: async (forceGPS = false) => {
     set({ locationLoading: true });
     try {
-      // Try to load cached location first if not forced
       if (!forceGPS) {
+        // 1. Prioritize Saved Profile Address if logged-in user has valid coordinates
+        const user = useStore.getState().user;
+        if (user && typeof user.lat === "number" && typeof user.lng === "number" && !isNaN(user.lat) && !isNaN(user.lng) && (user.lat !== 0 || user.lng !== 0)) {
+          const profileCoords = { latitude: user.lat, longitude: user.lng };
+          const profileLabel = user.address || [user.city, user.state].filter(Boolean).join(", ");
+          set({
+            location: profileCoords,
+            locationAddressLabel: profileLabel || null,
+            locationPermissionGranted: true,
+            locationLoading: false,
+          });
+          console.log("📍 [fetchLocation] Initialized active location from saved user profile:", profileCoords);
+          await AsyncStorage.setItem("DINE_FIVE_USER_LOCATION", JSON.stringify(profileCoords));
+          return;
+        }
+
+        // 2. Try to load cached location first if not forced
         const savedLoc = await AsyncStorage.getItem("DINE_FIVE_USER_LOCATION");
         if (savedLoc) {
           const parsed = JSON.parse(savedLoc);
@@ -126,14 +190,12 @@ export const useRestaurantStore = create<RestaurantState>((set, get) => ({
               locationLoading: false,
             });
             console.log("Loaded cached location from AsyncStorage:", parsed);
-            // Sync cached location to profile
-            syncUserLocation(parsed.latitude, parsed.longitude);
             return;
           }
         }
       }
 
-      // Fallback to GPS
+      // 3. Fallback to GPS
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         set({ location: null, locationPermissionGranted: false, locationLoading: false });
@@ -153,7 +215,6 @@ export const useRestaurantStore = create<RestaurantState>((set, get) => ({
           locationLoading: false,
         });
         await AsyncStorage.setItem("DINE_FIVE_USER_LOCATION", JSON.stringify(coords));
-        syncUserLocation(coords.latitude, coords.longitude);
       }
 
       const current = await Location.getCurrentPositionAsync({
@@ -166,9 +227,9 @@ export const useRestaurantStore = create<RestaurantState>((set, get) => ({
       };
       set({
         location: coords,
+        locationLoading: false,
       });
       await AsyncStorage.setItem("DINE_FIVE_USER_LOCATION", JSON.stringify(coords));
-      syncUserLocation(coords.latitude, coords.longitude);
     } catch (err) {
       console.log("Error in fetchLocation:", err);
       if (!get().location) {

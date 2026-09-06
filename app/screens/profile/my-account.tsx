@@ -5,10 +5,11 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -27,6 +28,14 @@ import PhoneInput, {
 } from "rn-international-phone-number";
 
 import * as Location from "expo-location";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRestaurantStore } from "@/stores/useRestaurantStore";
+import {
+  searchAddresses,
+  reverseGeocodeCoordinates,
+  type GeocodeSearchResult,
+  type ParsedAddress,
+} from "@/utils/geocoding";
 
 const uriToBlob = (uri: string): Promise<Blob> => {
   return new Promise((resolve, reject) => {
@@ -50,6 +59,12 @@ export default function MyAccountScreen() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  const [isAddressDropdownExpanded, setIsAddressDropdownExpanded] = useState(false);
+  const [addressSuggestions, setAddressSuggestions] = useState<GeocodeSearchResult[]>([]);
+  const [recentSearches, setRecentSearches] = useState<GeocodeSearchResult[]>([]);
+  const [isSearchingAddress, setIsSearchingAddress] = useState(false);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
   const [errors, setErrors] = useState<{
     name?: string;
@@ -104,7 +119,93 @@ export default function MyAccountScreen() {
 
   useEffect(() => {
     fetchProfile?.();
+    loadRecentSearches();
   }, [fetchProfile]);
+
+  const loadRecentSearches = async () => {
+    try {
+      const stored = await AsyncStorage.getItem("@dinefive_recent_locations");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setRecentSearches(parsed);
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to load recent locations:", e);
+    }
+  };
+
+  const saveRecentSearch = async (item: GeocodeSearchResult) => {
+    try {
+      const updated = [
+        item,
+        ...recentSearches.filter(
+          (r) =>
+            r.id !== item.id &&
+            !(
+              Math.abs(r.parsed.lat - item.parsed.lat) < 0.0001 &&
+              Math.abs(r.parsed.lng - item.parsed.lng) < 0.0001
+            )
+        ),
+      ].slice(0, 5);
+
+      setRecentSearches(updated);
+      await AsyncStorage.setItem("@dinefive_recent_locations", JSON.stringify(updated));
+    } catch (e) {
+      console.warn("Failed to save recent location:", e);
+    }
+  };
+
+  const clearRecentSearches = async () => {
+    try {
+      setRecentSearches([]);
+      await AsyncStorage.removeItem("@dinefive_recent_locations");
+    } catch (e) {
+      console.warn("Failed to clear recent locations:", e);
+    }
+  };
+
+  // Debounced search against OpenStreetMap Nominatim for profile address
+  useEffect(() => {
+    if (!isAddressDropdownExpanded) return;
+
+    const trimmed = formData.address.trim();
+    if (trimmed.length < 2) {
+      setAddressSuggestions([]);
+      setIsSearchingAddress(false);
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+      if (abortControllerRef.current) abortControllerRef.current.abort();
+      return;
+    }
+
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    if (abortControllerRef.current) abortControllerRef.current.abort();
+
+    setIsSearchingAddress(true);
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      try {
+        const items = await searchAddresses(trimmed, controller.signal);
+        setAddressSuggestions(items);
+      } catch (err: any) {
+        if (err.name !== "AbortError") {
+          console.warn("[my-account] Address search error:", err);
+          setAddressSuggestions([]);
+        }
+      } finally {
+        setIsSearchingAddress(false);
+      }
+    }, 350);
+
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+      if (abortControllerRef.current) abortControllerRef.current.abort();
+    };
+  }, [formData.address, isAddressDropdownExpanded]);
 
   useEffect(() => {
     setAvatarLoadFailed(false);
@@ -215,10 +316,32 @@ export default function MyAccountScreen() {
 
         setFormData((prev) => ({
           ...prev,
-          city,
-          state,
-          address: address || street,
+          city: city || prev.city,
+          state: state || prev.state,
+          address: address || street || prev.address,
+          lat: latitude,
+          lng: longitude,
         }));
+
+        setIsAddressDropdownExpanded(false);
+        Keyboard.dismiss();
+
+        const recentItem: GeocodeSearchResult = {
+          id: `gps_${latitude}_${longitude}`,
+          displayName: address || street || city || "Current Location",
+          secondaryText: [city, state].filter(Boolean).join(", "),
+          parsed: {
+            street: address || street,
+            city,
+            state,
+            zipCode: addr.postalCode || "",
+            country: addr.country || "United States",
+            lat: latitude,
+            lng: longitude,
+            displayName: [address || street, city, state].filter(Boolean).join(", "),
+          },
+        };
+        saveRecentSearch(recentItem);
 
         Alert.alert("Success", "Detected and filled your location details!");
       } else {
@@ -230,6 +353,27 @@ export default function MyAccountScreen() {
     } finally {
       setIsLocating(false);
     }
+  };
+
+  const handleSelectAddress = async (parsed: ParsedAddress) => {
+    setFormData((prev) => ({
+      ...prev,
+      city: parsed.city || prev.city,
+      state: parsed.state || prev.state,
+      address: parsed.street || parsed.displayName || prev.address,
+      lat: parsed.lat || prev.lat,
+      lng: parsed.lng || prev.lng,
+    }));
+    setIsAddressDropdownExpanded(false); // Collapse dropdown immediately!
+    Keyboard.dismiss();
+
+    const recentItem: GeocodeSearchResult = {
+      id: `${parsed.lat}_${parsed.lng}`,
+      displayName: parsed.street || parsed.city || parsed.displayName,
+      secondaryText: [parsed.city, parsed.state, parsed.zipCode].filter(Boolean).join(", "),
+      parsed,
+    };
+    await saveRecentSearch(recentItem);
   };
 
   const pickImage = async () => {
@@ -245,8 +389,17 @@ export default function MyAccountScreen() {
     }
   };
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/profile");
+    }
+  };
+
   const handleCancel = () => {
     setIsEditing(false);
+    setIsAddressDropdownExpanded(false);
     setSelectedImage(null);
     if (user) {
       let parsedCountry: ICountry | null = null;
@@ -307,6 +460,29 @@ export default function MyAccountScreen() {
 
     setIsLoading(true);
     try {
+      let finalLat = formData.lat !== null && formData.lat !== undefined ? Number(formData.lat) : null;
+      let finalLng = formData.lng !== null && formData.lng !== undefined ? Number(formData.lng) : null;
+      let finalCity = formData.city;
+      let finalState = formData.state;
+
+      // Auto-geocode address if user typed it manually without picking a suggestion
+      if (formData.address.trim() && (finalLat === null || finalLng === null)) {
+        try {
+          const query = [formData.address, formData.city, formData.state].filter(Boolean).join(", ");
+          const geocodeResults = await searchAddresses(query);
+          if (geocodeResults && geocodeResults.length > 0) {
+            const topResult = geocodeResults[0];
+            finalLat = topResult.parsed.lat;
+            finalLng = topResult.parsed.lng;
+            if (!finalCity && topResult.parsed.city) finalCity = topResult.parsed.city;
+            if (!finalState && topResult.parsed.state) finalState = topResult.parsed.state;
+            console.log("📍 [my-account] Auto-geocoded coordinates on save:", { finalLat, finalLng });
+          }
+        } catch (geocodeErr) {
+          console.warn("Auto-geocoding on save failed:", geocodeErr);
+        }
+      }
+
       const callingCode = selectedCountry
         ? selectedCountry.idd.root
         : "";
@@ -326,11 +502,11 @@ export default function MyAccountScreen() {
       };
 
       if (formData.bio.trim()) payload.bio = formData.bio;
-      if (formData.city.trim()) payload.city = formData.city;
-      if (formData.state.trim()) payload.state = formData.state;
+      if (finalCity?.trim()) payload.city = finalCity;
+      if (finalState?.trim()) payload.state = finalState;
       if (formData.address.trim()) payload.address = formData.address;
-      if (formData.lat !== null && formData.lat !== undefined) payload.lat = Number(formData.lat);
-      if (formData.lng !== null && formData.lng !== undefined) payload.lng = Number(formData.lng);
+      if (finalLat !== null && finalLat !== undefined) payload.lat = Number(finalLat);
+      if (finalLng !== null && finalLng !== undefined) payload.lng = Number(finalLng);
 
       let dataToUpdate: any;
       if (selectedImage) {
@@ -356,8 +532,49 @@ export default function MyAccountScreen() {
 
       if (result) {
         await fetchProfile?.();
+
+        // 🌟 Sync saved profile location globally across Home, Map, and Store!
+        if (finalLat !== null && finalLng !== null) {
+          const fullAddressLabel = formData.address || [finalCity, finalState].filter(Boolean).join(", ");
+          const parsedLocation: ParsedAddress = {
+            street: formData.address,
+            city: finalCity,
+            state: finalState,
+            zipCode: "",
+            country: "United States",
+            lat: finalLat,
+            lng: finalLng,
+            displayName: fullAddressLabel,
+          };
+
+          // 1. Update active location & label in useRestaurantStore
+          await useRestaurantStore.getState().setSelectedParsedLocation(parsedLocation, false);
+
+          // 2. Persist to AsyncStorage for cold app launches
+          await AsyncStorage.setItem("DINE_FIVE_USER_LOCATION", JSON.stringify({
+            latitude: finalLat,
+            longitude: finalLng,
+          }));
+
+          // 3. Save to recent searches
+          const recentItem: GeocodeSearchResult = {
+            id: `${finalLat}_${finalLng}`,
+            displayName: formData.address || finalCity || fullAddressLabel,
+            secondaryText: [finalCity, finalState].filter(Boolean).join(", "),
+            parsed: parsedLocation,
+          };
+          await saveRecentSearch(recentItem);
+
+          // 4. Immediately trigger nearby restaurant re-query for the new home location!
+          useRestaurantStore.getState().fetchNearbyRestaurants({
+            latitude: finalLat,
+            longitude: finalLng,
+          });
+        }
+
         Alert.alert("Success", "Profile updated successfully");
         setIsEditing(false);
+        setIsAddressDropdownExpanded(false);
         setSelectedImage(null);
       } else {
         const storeError = (useStore.getState() as any).error;
@@ -392,7 +609,7 @@ export default function MyAccountScreen() {
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={handleBack}
               activeOpacity={0.7}
               className="w-10 h-10 bg-white rounded-full items-center justify-center border border-gray-100 shadow-sm"
             >
@@ -435,7 +652,7 @@ export default function MyAccountScreen() {
           className="flex-1 px-6"
         >
           {/* Profile Card Section */}
-          <View className="items-center mt-4 mb-6 bg-white p-6 rounded-3xl border border-gray-100/50 shadow-sm relative">
+          <View className="items-center mt-4 mb-6 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm relative">
             <View className="relative">
               <View
                 className="w-28 h-28 rounded-full overflow-hidden border-4 border-white bg-white"
@@ -474,7 +691,7 @@ export default function MyAccountScreen() {
           </View>
 
           {/* Form Fields Card */}
-          <View className="bg-white p-6 rounded-3xl border border-gray-100/50 shadow-sm gap-y-5">
+          <View className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm gap-y-5">
             {/* Full Name */}
             <View className="gap-y-1.5">
               <Text className="text-[11px] font-body-semibold text-gray-400 uppercase tracking-widest ml-1">
@@ -489,7 +706,7 @@ export default function MyAccountScreen() {
                 style={{ height: 56 }}
               >
                 <Ionicons name="person-outline" size={18} color="#9CA3AF" style={{ marginRight: 10 }} />
-                  {isEditing ? (
+                {isEditing ? (
                   <TextInput
                     value={formData.name}
                     onChangeText={(t) => handleChange("name", t)}
@@ -616,24 +833,234 @@ export default function MyAccountScreen() {
               </View>
             </View>
 
-            {/* Locate Me Button */}
+            {/* Locate Me Quick Action */}
             {isEditing && (
               <TouchableOpacity
                 onPress={handleLocateMe}
                 disabled={isLocating}
                 activeOpacity={0.7}
-                className="flex-row items-center justify-center gap-x-2 py-3.5 rounded-2xl border border-dashed border-[#E29E10] bg-[#FFF8E7]/40"
+                className="flex-row items-center justify-center gap-x-2 py-3 rounded-2xl border border-dashed border-[#E29E10] bg-[#FFF8E7]"
               >
                 {isLocating ? (
                   <ActivityIndicator size="small" color="#E29E10" />
                 ) : (
-                  <Ionicons name="location" size={16} color="#E29E10" />
+                  <Ionicons name="navigate-outline" size={16} color="#E29E10" />
                 )}
-                <Text className="text-[#E29E10] font-body-bold text-sm">
-                  {isLocating ? "Detecting Location..." : "Locate Me"}
+                <Text className="text-[#E29E10] font-body-bold text-xs">
+                  {isLocating ? "Detecting GPS Location..." : "Auto-Fill Location with GPS"}
                 </Text>
               </TouchableOpacity>
             )}
+
+            {/* Street Address with Inline Expandable Autocomplete Dropdown */}
+            <View className="gap-y-1.5">
+              <Text className="text-[11px] font-body-semibold text-gray-400 uppercase tracking-widest ml-1">
+                Street Address
+              </Text>
+              <View
+                className={`rounded-2xl border ${
+                  isEditing
+                    ? isAddressDropdownExpanded
+                      ? "bg-white border-[#E29E10]"
+                      : "bg-white border-gray-200"
+                    : "bg-gray-50 border-transparent"
+                } overflow-hidden`}
+              >
+                {/* Address Input Row */}
+                <View className="flex-row items-center px-4" style={{ height: 56 }}>
+                  <Ionicons name="map-outline" size={18} color="#9CA3AF" style={{ marginRight: 10 }} />
+                  {isEditing ? (
+                    <TextInput
+                      value={formData.address}
+                      onChangeText={(t) => {
+                        handleChange("address", t);
+                        if (!isAddressDropdownExpanded) setIsAddressDropdownExpanded(true);
+                      }}
+                      onFocus={() => setIsAddressDropdownExpanded(true)}
+                      placeholder="Enter street address or city..."
+                      className="flex-1 text-base font-body-semibold text-gray-900 p-0"
+                      placeholderTextColor="#9CA3AF"
+                    />
+                  ) : (
+                    <Text className="flex-1 text-base font-body-semibold text-gray-800">
+                      {formData.address || "No address added yet"}
+                    </Text>
+                  )}
+
+                  {isEditing && (
+                    <View className="flex-row items-center gap-1">
+                      {formData.address.length > 0 && (
+                        <TouchableOpacity
+                          onPress={() => {
+                            handleChange("address", "");
+                            setAddressSuggestions([]);
+                          }}
+                          className="p-1"
+                        >
+                          <Ionicons name="close-circle" size={16} color="#9CA3AF" />
+                        </TouchableOpacity>
+                      )}
+
+                      <TouchableOpacity
+                        onPress={() => setIsAddressDropdownExpanded(!isAddressDropdownExpanded)}
+                        className="p-1"
+                      >
+                        <Ionicons
+                          name={isAddressDropdownExpanded ? "chevron-up" : "chevron-down"}
+                          size={16}
+                          color="#6B7280"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+
+                {/* ── Inline Expandable Suggestions Dropdown ── */}
+                {isEditing && isAddressDropdownExpanded && (
+                  <View className="border-t border-amber-100 bg-[#FCFBF8]">
+                    {/* Use Current GPS Shortcut */}
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={handleLocateMe}
+                      disabled={isLocating}
+                      className="flex-row items-center justify-between py-2.5 px-4 bg-[#FFFDF5] border-b border-amber-100"
+                    >
+                      <View className="flex-row items-center flex-1 mr-2">
+                        <View className="w-6 h-6 rounded-full bg-[#E29E10] items-center justify-center mr-2.5">
+                          {isLocating ? (
+                            <ActivityIndicator size="small" color="#FFFFFF" />
+                          ) : (
+                            <Ionicons name="navigate" size={12} color="#FFFFFF" />
+                          )}
+                        </View>
+                        <Text className="text-xs font-body-bold text-gray-900">
+                          {isLocating ? "Detecting GPS location..." : "Use Current GPS Location"}
+                        </Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={14} color="#D97706" />
+                    </TouchableOpacity>
+
+                    {/* Scrollable Suggestions / Recent Searches */}
+                    <ScrollView
+                      nestedScrollEnabled={true}
+                      keyboardShouldPersistTaps="handled"
+                      style={{ maxHeight: 220 }}
+                      showsVerticalScrollIndicator={true}
+                    >
+                      {formData.address.trim().length >= 2 ? (
+                        // Live Nominatim Suggestions
+                        <View>
+                          <View className="flex-row items-center justify-between px-4 py-1.5 bg-gray-50 border-b border-gray-100">
+                            <Text className="text-[10px] font-body-bold uppercase tracking-wider text-gray-400">
+                              Suggestions ({addressSuggestions.length})
+                            </Text>
+                            {isSearchingAddress && (
+                              <View className="flex-row items-center gap-1">
+                                <ActivityIndicator size="small" color="#E29E10" />
+                                <Text className="text-[10px] font-body text-gray-400">Searching...</Text>
+                              </View>
+                            )}
+                          </View>
+
+                          {addressSuggestions.length > 0 ? (
+                            addressSuggestions.map((item) => (
+                              <TouchableOpacity
+                                key={item.id}
+                                activeOpacity={0.7}
+                                onPress={() => handleSelectAddress(item.parsed)}
+                                className="flex-row items-center py-2.5 px-4 border-b border-gray-100 active:bg-amber-50"
+                              >
+                                <View className="w-6 h-6 rounded-full bg-amber-100 items-center justify-center mr-2.5">
+                                  <Ionicons name="location-sharp" size={13} color="#D97706" />
+                                </View>
+                                <View className="flex-1 pr-2">
+                                  <Text numberOfLines={1} className="text-xs font-body-bold text-gray-900">
+                                    {item.displayName}
+                                  </Text>
+                                  <Text numberOfLines={1} className="text-[11px] font-body text-gray-500">
+                                    {item.secondaryText}
+                                  </Text>
+                                </View>
+                                <Ionicons name="chevron-forward" size={13} color="#D1D5DB" />
+                              </TouchableOpacity>
+                            ))
+                          ) : !isSearchingAddress ? (
+                            <View className="py-4 px-4 items-center justify-center">
+                              <Text className="text-xs font-body-bold text-gray-700">No addresses found</Text>
+                              <Text className="text-[11px] font-body text-gray-400 mt-0.5 text-center">
+                                Try entering a street name, city, or 5-digit zip code.
+                              </Text>
+                            </View>
+                          ) : null}
+                        </View>
+                      ) : (
+                        // Recent Searches
+                        <View>
+                          {recentSearches.length > 0 ? (
+                            <>
+                              <View className="flex-row items-center justify-between px-4 py-1.5 bg-gray-50 border-b border-gray-100">
+                                <Text className="text-[10px] font-body-bold uppercase tracking-wider text-gray-400">
+                                  Recent Searches
+                                </Text>
+                                <TouchableOpacity onPress={clearRecentSearches} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                                  <Text className="text-[11px] font-body-bold text-amber-600">Clear</Text>
+                                </TouchableOpacity>
+                              </View>
+
+                              {recentSearches.map((item) => (
+                                <TouchableOpacity
+                                  key={item.id}
+                                  activeOpacity={0.7}
+                                  onPress={() => handleSelectAddress(item.parsed)}
+                                  className="flex-row items-center py-2 px-4 border-b border-gray-100 active:bg-gray-100"
+                                >
+                                  <View className="w-6 h-6 rounded-full bg-gray-100 items-center justify-center mr-2.5">
+                                    <Ionicons name="time-outline" size={13} color="#4B5563" />
+                                  </View>
+                                  <View className="flex-1 pr-2">
+                                    <Text numberOfLines={1} className="text-xs font-body-bold text-gray-900">
+                                      {item.displayName}
+                                    </Text>
+                                    <Text numberOfLines={1} className="text-[11px] font-body text-gray-500">
+                                      {item.secondaryText}
+                                    </Text>
+                                  </View>
+                                  <Ionicons name="arrow-forward" size={12} color="#9CA3AF" />
+                                </TouchableOpacity>
+                              ))}
+                            </>
+                          ) : (
+                            <View className="py-4 px-4 items-center justify-center">
+                              <Text className="text-xs font-body-bold text-gray-800">Auto-Complete Address</Text>
+                              <Text className="text-[11px] font-body text-gray-400 text-center mt-0.5">
+                                Type any US street, city, or zip code to see instant suggestions.
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      )}
+                    </ScrollView>
+
+                    {/* Quick Collapse Footer */}
+                    <TouchableOpacity
+                      onPress={() => {
+                        setIsAddressDropdownExpanded(false);
+                        Keyboard.dismiss();
+                      }}
+                      className="py-1.5 bg-gray-50 border-t border-gray-100 items-center justify-center flex-row gap-1"
+                    >
+                      <Text className="text-[10px] font-body-semibold text-gray-500">Close Suggestions</Text>
+                      <Ionicons name="chevron-up" size={12} color="#6B7280" />
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+              {isEditing && errors.address && (
+                <Text className="text-red-500 text-xs mt-1 ml-1 font-body-semibold">
+                  {errors.address}
+                </Text>
+              )}
+            </View>
 
             {/* City & State (Row Layout) */}
             <View className="flex-row gap-x-4">
@@ -703,41 +1130,6 @@ export default function MyAccountScreen() {
                   </Text>
                 )}
               </View>
-            </View>
-
-            {/* Address */}
-            <View className="gap-y-1.5">
-              <Text className="text-[11px] font-body-semibold text-gray-400 uppercase tracking-widest ml-1">
-                Street Address
-              </Text>
-              <View
-                className={`flex-row items-center px-4 rounded-2xl border ${
-                  isEditing
-                    ? "bg-white border-gray-200"
-                    : "bg-gray-50 border-transparent"
-                }`}
-                style={{ height: 56 }}
-              >
-                <Ionicons name="map-outline" size={18} color="#9CA3AF" style={{ marginRight: 10 }} />
-                {isEditing ? (
-                  <TextInput
-                    value={formData.address}
-                    onChangeText={(t) => handleChange("address", t)}
-                    placeholder="Enter street address"
-                    className="flex-1 text-base font-body-semibold text-gray-900 p-0"
-                    placeholderTextColor="#9CA3AF"
-                  />
-                ) : (
-                  <Text className="flex-1 text-base font-body-semibold text-gray-800">
-                    {formData.address || "No address added yet"}
-                  </Text>
-                )}
-              </View>
-              {isEditing && errors.address && (
-                <Text className="text-red-500 text-xs mt-1 ml-1 font-body-semibold">
-                  {errors.address}
-                </Text>
-              )}
             </View>
           </View>
         </ScrollView>

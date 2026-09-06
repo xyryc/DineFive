@@ -18,7 +18,8 @@ import {
   useRestaurantStore,
 } from "../../stores/useRestaurantStore";
 
-import AddressModal from "./AddressModal";
+import LocationSearchModal from "../location/LocationSearchModal";
+import type { ParsedAddress } from "@/utils/geocoding";
 import MapMarkerItem from "./MapMarkerItem";
 import MapSearchBar from "./MapSearchBar";
 import MealFilterBar from "./MealFilterBar";
@@ -49,6 +50,7 @@ export default function RestaurantMapView({
 
   const {
     location,
+    locationAddressLabel,
     locationLoading,
     locationPermissionGranted,
     restaurants,
@@ -65,6 +67,7 @@ export default function RestaurantMapView({
     setActiveFeedMode,
     setRadiusMeters,
     setLocationManually,
+    setSelectedParsedLocation,
   } = useRestaurantStore();
 
   const [activeCardIndex, setActiveCardIndex] = useState(0);
@@ -72,7 +75,8 @@ export default function RestaurantMapView({
   const [debouncedSearchText, setDebouncedSearchText] = useState("");
   const [mealFilter, setMealFilter] = useState<MealFilter>("all");
   const [isAddressModalVisible, setIsAddressModalVisible] = useState(false);
-  const [addressLabel, setAddressLabel] = useState("3067 Fifth Ave");
+  const [addressLabel, setAddressLabel] = useState(locationAddressLabel || "Current Location");
+  const lastAnimatedCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
 
   const userLat = location?.latitude ?? 23.780704;
   const userLng = location?.longitude ?? 90.407756;
@@ -80,6 +84,10 @@ export default function RestaurantMapView({
 
   // Reverse-geocode address label whenever location changes
   useEffect(() => {
+    if (locationAddressLabel) {
+      setAddressLabel(locationAddressLabel);
+      return;
+    }
     if (!location) return;
     let active = true;
     Location.reverseGeocodeAsync({
@@ -106,7 +114,7 @@ export default function RestaurantMapView({
     return () => {
       active = false;
     };
-  }, [location]);
+  }, [location, locationAddressLabel]);
 
   // Debounce search input
   useEffect(() => {
@@ -132,30 +140,36 @@ export default function RestaurantMapView({
     fetchLocation();
   }, [fetchLocation]);
 
-  // Auto-zoom map once on first location
+  // Smoothly re-center map camera when location changes or updates
   useEffect(() => {
-    if (
-      location &&
-      !locationLoading &&
-      !hasAutoZoomed.current &&
-      mapRef.current
-    ) {
-      const latitudeDelta = 0.003;
-      const longitudeDelta = 0.003;
-      // Shift map camera south by latitudeDelta * 0.25 so pins sit in upper region above cards
-      const latitudeOffset = latitudeDelta * 0.25;
-      mapRef.current.animateToRegion(
-        {
-          latitude: location.latitude - latitudeOffset,
-          longitude: location.longitude,
-          latitudeDelta,
-          longitudeDelta,
-        },
-        1000,
-      );
-      hasAutoZoomed.current = true;
+    if (location && !locationLoading && mapRef.current) {
+      const isDifferent =
+        !lastAnimatedCoordsRef.current ||
+        Math.abs(lastAnimatedCoordsRef.current.lat - location.latitude) > 0.0001 ||
+        Math.abs(lastAnimatedCoordsRef.current.lng - location.longitude) > 0.0001;
+
+      if (isDifferent) {
+        lastAnimatedCoordsRef.current = {
+          lat: location.latitude,
+          lng: location.longitude,
+        };
+        const latitudeDelta = 0.003;
+        const longitudeDelta = 0.003;
+        // Shift map camera south by latitudeDelta * 0.25 so pins sit in upper region above cards
+        const latitudeOffset = latitudeDelta * 0.25;
+        mapRef.current.animateToRegion(
+          {
+            latitude: location.latitude - latitudeOffset,
+            longitude: location.longitude,
+            latitudeDelta,
+            longitudeDelta,
+          },
+          800,
+        );
+        hasAutoZoomed.current = true;
+      }
     }
-  }, [location, locationLoading]);
+  }, [location?.latitude, location?.longitude, locationLoading]);
 
   // Fetch restaurants when relevant deps change
   useEffect(() => {
@@ -327,6 +341,25 @@ export default function RestaurantMapView({
     if (radius !== radiusMeters) {
       setRadiusMeters(radius);
       setSelectedRestaurant(null);
+    }
+  };
+
+  const handleSelectParsedAddress = async (parsed: ParsedAddress) => {
+    await setSelectedParsedLocation(parsed, false);
+    setAddressLabel(parsed.street || parsed.city || parsed.displayName);
+    if (mapRef.current) {
+      const latitudeDelta = 0.003;
+      const longitudeDelta = 0.003;
+      const latitudeOffset = latitudeDelta * 0.25;
+      mapRef.current.animateToRegion(
+        {
+          latitude: parsed.lat - latitudeOffset,
+          longitude: parsed.lng,
+          latitudeDelta,
+          longitudeDelta,
+        },
+        1000,
+      );
     }
   };
 
@@ -535,7 +568,7 @@ export default function RestaurantMapView({
         addressLabel={addressLabel}
         radiusMeters={radiusMeters}
         onAutoLocate={handleAutoLocate}
-        onPickerPress={() => setIsAddressModalVisible(true)}
+        onSelectParsedLocation={handleSelectParsedAddress}
         onRadiusPress={handleRadiusPress}
       />
 
@@ -622,11 +655,11 @@ export default function RestaurantMapView({
         )}
       </View>
 
-      {/* Location picker modal */}
-      <AddressModal
+      {/* Location picker modal with autocomplete */}
+      <LocationSearchModal
         visible={isAddressModalVisible}
         onClose={() => setIsAddressModalVisible(false)}
-        onConfirm={handleAddressModalConfirm}
+        onSelectAddress={handleSelectParsedAddress}
       />
     </View>
   );

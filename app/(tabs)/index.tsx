@@ -8,7 +8,7 @@ import {
   RestaurantSectionSkeleton,
   SectionErrorBoundary,
 } from "@/components/home/RestaurantSection";
-import AddressModal from "@/components/home/AddressModal";
+import LocationSearchModal from "@/components/location/LocationSearchModal";
 import { useStore } from "@/stores/stores";
 import { type Restaurant, useRestaurantStore } from "@/stores/useRestaurantStore";
 import { getUserAvatarUri } from "@/utils/userAvatar";
@@ -249,22 +249,8 @@ export default function HomeScreen() {
   }, [activeCategory, categories]);
 
   // ── Handlers ──
-  const handleAddressModalConfirm = async (address: string): Promise<boolean> => {
-    const res = await setLocationManually(address);
-    if (res?.success) {
-      setLocationLabel(address);
-      return true;
-    }
-    Alert.alert("Error", res?.error || "Could not resolve address. Please try again.");
-    return false;
-  };
-
   const handleLocationPress = () => {
-    Alert.alert("Update Location", "Choose how you want to set your address:", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Use GPS Location", onPress: () => fetchLocation(true) },
-      { text: "Enter Address Manually", onPress: () => setIsAddressModalVisible(true) },
-    ]);
+    setIsAddressModalVisible(true);
   };
 
   const openRestaurantDetail = React.useCallback(
@@ -372,10 +358,9 @@ export default function HomeScreen() {
           )}
         </ScrollView>
 
-        <AddressModal
+        <LocationSearchModal
           visible={isAddressModalVisible}
           onClose={() => setIsAddressModalVisible(false)}
-          onConfirm={handleAddressModalConfirm}
         />
       </View>
     </View>

@@ -1,9 +1,11 @@
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Dimensions,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -12,11 +14,13 @@ import {
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const BANNER_WIDTH = SCREEN_WIDTH - 32;
 
+const FALLBACK_IMAGE = require("@/assets/images/burger-wide.jpg");
+
 export type BannerItem = {
   title?: string;
   subtitle?: string;
   ctaText?: string;
-  image?: string;
+  image?: any;
 };
 
 type PromoBannerProps = {
@@ -26,9 +30,85 @@ type PromoBannerProps = {
 
 const DEFAULT_BANNER: BannerItem = {
   title: "Welcome to Dine Five!",
-  subtitle: "Discover restaurants near you",
-  ctaText: "Explore",
-  image: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=500",
+  image: FALLBACK_IMAGE,
+};
+
+const BannerSlide = ({
+  item,
+  onPress,
+}: {
+  item: BannerItem;
+  onPress: () => void;
+}) => {
+  const [hasError, setHasError] = useState(false);
+
+  const title = item?.title?.trim() || DEFAULT_BANNER.title;
+  const rawImage = item?.image;
+
+  const imageSource = React.useMemo(() => {
+    if (hasError || !rawImage) return FALLBACK_IMAGE;
+    if (typeof rawImage === "number") return rawImage;
+    if (typeof rawImage === "string") {
+      const trimmed = rawImage.trim();
+      if (!trimmed || trimmed === "null" || trimmed === "undefined") {
+        return FALLBACK_IMAGE;
+      }
+      if (
+        trimmed.startsWith("http://") ||
+        trimmed.startsWith("https://") ||
+        trimmed.startsWith("file://") ||
+        trimmed.startsWith("data:")
+      ) {
+        return { uri: trimmed };
+      }
+    }
+    return FALLBACK_IMAGE;
+  }, [rawImage, hasError]);
+
+  return (
+    <View style={{ width: BANNER_WIDTH, paddingHorizontal: 6 }}>
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={onPress}
+        className="rounded-3xl h-[190px] overflow-hidden p-5 relative shadow-md shadow-black/15 bg-gray-900"
+      >
+        {/* Full-Cover Background Image with Automatic Fallback */}
+        <Image
+          source={imageSource}
+          placeholder={FALLBACK_IMAGE}
+          placeholderContentFit="cover"
+          onError={() => setHasError(true)}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          transition={300}
+          cachePolicy="memory-disk"
+        />
+
+        {/* Subtle Multi-Stop Gradient Scrim for crisp legibility */}
+        <LinearGradient
+          colors={["rgba(0,0,0,0.78)", "rgba(0,0,0,0.40)", "rgba(0,0,0,0.05)"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0.8, y: 0.8 }}
+          style={StyleSheet.absoluteFill}
+        />
+
+        {/* Top-Left Promotional Text */}
+        <View className="z-10 items-start max-w-[85%]">
+          <Text
+            className="text-white text-[20px] font-heading leading-tight tracking-tight"
+            numberOfLines={3}
+            style={{
+              textShadowColor: "rgba(0, 0, 0, 0.6)",
+              textShadowOffset: { width: 0, height: 1 },
+              textShadowRadius: 4,
+            }}
+          >
+            {title}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
 };
 
 export const PromoBanner = ({ banners, deals }: PromoBannerProps) => {
@@ -62,7 +142,6 @@ export const PromoBanner = ({ banners, deals }: PromoBannerProps) => {
       }, 100);
       return () => clearTimeout(timer);
     } else {
-       
       setIsInitialized(true);
       setActiveIndex(0);
     }
@@ -79,7 +158,7 @@ export const PromoBanner = ({ banners, deals }: PromoBannerProps) => {
           animated: true,
         });
       }
-    }, 3000);
+    }, 3500);
 
     return () => clearInterval(interval);
   }, [activeIndex, list.length, isInitialized]);
@@ -119,66 +198,13 @@ export const PromoBanner = ({ banners, deals }: PromoBannerProps) => {
         bounces={false}
         contentContainerStyle={{ alignItems: "center" }}
       >
-        {extendedList.map((item, index) => {
-          const title = item?.title || DEFAULT_BANNER.title;
-          const subtitle = item?.subtitle || DEFAULT_BANNER.subtitle;
-          const ctaText = item?.ctaText || DEFAULT_BANNER.ctaText;
-          const image = item?.image || DEFAULT_BANNER.image;
-
-          return (
-            <View
-              key={`${index}-${title}`}
-              style={{ width: BANNER_WIDTH, paddingHorizontal: 6 }}
-            >
-              <View className="bg-[#F6D977] rounded-[28px] px-6 py-5 min-h-[125px] overflow-hidden flex-row gap-1 flex-1 shadow-sm">
-                <View className="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-white/20" />
-                <View className="absolute -left-4 -bottom-4 w-16 h-16 rounded-full bg-black/5" />
-                <View className="absolute right-1/4 bottom-0 w-12 h-12 rounded-full bg-white/10" />
-
-                <View className="flex-1 z-10 justify-center">
-                  <Text
-                    className="text-[#3A2E00] text-[20px] font-heading leading-tight tracking-tight"
-                    numberOfLines={2}
-                  >
-                    {title}
-                  </Text>
-                  <Text
-                    className="text-[#5D4A00] text-[13px] font-body-medium mt-1 mb-4 opacity-80"
-                    numberOfLines={2}
-                  >
-                    {subtitle}
-                  </Text>
-                  <TouchableOpacity
-                    activeOpacity={0.85}
-                    onPress={() => router.push("/screens/home/all-restaurants")}
-                    className="bg-[#222] px-5 py-2 rounded-xl self-start shadow-sm"
-                  >
-                    <Text className="text-white text-[12px] font-body-semibold">
-                      {ctaText}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-                <View className="w-[45%] items-center justify-center relative">
-                  <View className="absolute w-28 h-28 rounded-full bg-white/40 shadow-sm" />
-                  <Image
-                    source={{ uri: image }}
-                    style={{
-                      width: 140,
-                      height: 140,
-                      borderRadius: 24,
-                      marginRight: -10,
-                      transform: [{ rotate: "-4deg" }],
-                    }}
-                    contentFit="cover"
-                    transition={400}
-                    cachePolicy="memory-disk"
-                  />
-                </View>
-              </View>
-            </View>
-          );
-        })}
+        {extendedList.map((item, index) => (
+          <BannerSlide
+            key={`${index}-${item?.title || index}`}
+            item={item}
+            onPress={() => router.push("/screens/home/all-restaurants")}
+          />
+        ))}
       </ScrollView>
 
       {list.length > 1 && (
@@ -186,8 +212,8 @@ export const PromoBanner = ({ banners, deals }: PromoBannerProps) => {
           {list.map((_, i) => (
             <View
               key={i}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                i === activeIndex ? "w-6 bg-[#222]" : "w-2 bg-gray-300"
+              className={`h-2 rounded-full ${
+                i === activeIndex ? "w-6 bg-[#E4983A]" : "w-2 bg-gray-300"
               }`}
             />
           ))}

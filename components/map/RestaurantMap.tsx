@@ -292,9 +292,11 @@ export const RestaurantMap = () => {
       {/* ── Restaurant detail card ── */}
       {selectedRestaurant && (
         <RestaurantCard
-          restaurant={selectedRestaurant}
-          onClose={() => setSelectedRestaurant(null)}
-          onOrder={() => openRestaurantDetail(selectedRestaurant)}
+          item={selectedRestaurant}
+          index={0}
+          activeCardIndex={0}
+          selectedRestaurantId={selectedRestaurant.id}
+          onPress={() => openRestaurantDetail(selectedRestaurant)}
         />
       )}
     </View>

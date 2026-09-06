@@ -72,9 +72,11 @@ export interface AuthState {
   error: string | null;
   isInitialized: boolean;
   resetToken: string | null;
+  isGuest?: boolean;
 }
 
 export interface AuthActions {
+  setGuestMode: (value: boolean) => void;
   initializeAuth: () => Promise<{ user: UserProfile | null; accessToken: string | null }>;
   persistAuthData: (user: any, accessToken: any, refreshToken: any) => Promise<void>;
   signup: (data: any) => Promise<any>;
