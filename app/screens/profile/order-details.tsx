@@ -772,21 +772,17 @@ export default function OrderDetailsScreen() {
               <Text className="text-xs font-body-semibold text-gray-800">${orderData?.subtotal?.toFixed(2) || "0.00"}</Text>
             </View>
 
-            {orderData?.cityTax > 0 && (
-              <View className="flex-row justify-between items-center">
-                <Text className="text-xs text-gray-500 font-body-semibold">City Tax</Text>
-                <Text className="text-xs font-body-semibold text-gray-800">${orderData.cityTax.toFixed(2)}</Text>
-              </View>
-            )}
+            <View className="flex-row justify-between items-center">
+              <Text className="text-xs text-gray-500 font-body-semibold">State Tax</Text>
+              <Text className="text-xs font-body-semibold text-gray-800">
+                ${(orderData?.stateTax || orderData?.stateTaxAmount || 0).toFixed(2)}
+              </Text>
+            </View>
 
-            {(orderData?.stateTax > 0 || orderData?.stateTaxAmount > 0) && (
-              <View className="flex-row justify-between items-center">
-                <Text className="text-xs text-gray-500 font-body-semibold">State Tax</Text>
-                <Text className="text-xs font-body-semibold text-gray-800">
-                  ${(orderData?.stateTax || orderData?.stateTaxAmount || 0).toFixed(2)}
-                </Text>
-              </View>
-            )}
+            <View className="flex-row justify-between items-center">
+              <Text className="text-xs text-gray-500 font-body-semibold">City Tax</Text>
+              <Text className="text-xs font-body-semibold text-gray-800">${(orderData?.cityTax || 0).toFixed(2)}</Text>
+            </View>
 
             <View className="flex-row justify-between items-center">
               <Text className="text-xs text-gray-500 font-body-semibold">Platform Fee</Text>

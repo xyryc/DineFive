@@ -39,6 +39,34 @@ const pickString = (...values: unknown[]): string => {
 
 const formatMoney = (value: number) => `$${value.toFixed(2)}`;
 
+const formatTaxLabel = (
+  baseLabel: string,
+  rate?: number,
+  taxAmount?: number,
+  subtotal?: number,
+) => {
+  const numRate = Number(rate);
+  if (Number.isFinite(numRate) && numRate >= 0) {
+    const pct = numRate < 1 ? numRate * 100 : numRate;
+    const rounded = Number(pct.toFixed(2));
+    const formatted = rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toString();
+    return `${baseLabel} (${formatted}%)`;
+  }
+  if (
+    typeof taxAmount === "number" &&
+    typeof subtotal === "number" &&
+    subtotal > 0
+  ) {
+    const calcPct = (taxAmount / subtotal) * 100;
+    if (Number.isFinite(calcPct) && calcPct >= 0) {
+      const rounded = Number(calcPct.toFixed(2));
+      const formatted = rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toString();
+      return `${baseLabel} (${formatted}%)`;
+    }
+  }
+  return baseLabel;
+};
+
 const getSearchParam = (value?: string | string[]) =>
   Array.isArray(value) ? value[0] : value;
 
@@ -231,6 +259,8 @@ function CheckoutContent() {
   const platformFee = toNumber(cartRawData?.platformFee, 0);
   const cityTax = toNumber(cartRawData?.cityTax, 0);
   const stateTaxAmount = toNumber(cartRawData?.stateTaxAmount ?? cartRawData?.stateTax, 0);
+  const stateTaxRate = toNumber(cartRawData?.stateTaxRate ?? cartRawData?.restaurantGroups?.[0]?.stateTaxRate, 0);
+  const cityTaxRate = toNumber(cartRawData?.cityTaxRate ?? cartRawData?.restaurantGroups?.[0]?.cityTaxRate, 0);
   const countyTaxAmount = toNumber(cartRawData?.countyTaxAmount, 0);
   const effectiveTotal = toNumber(cartRawData?.total, cartSubtotal + platformFee + cityTax + stateTaxAmount + countyTaxAmount);
   const pickupAddress =
@@ -721,27 +751,27 @@ function CheckoutContent() {
                   )}
                 </View>
 
-                {stateTaxAmount > 0 && (
-                  <View className="flex-row justify-between items-center">
-                    <Text className="text-sm font-body-medium text-gray-600">State Tax</Text>
-                    {isCheckoutLoading ? (
-                      <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
-                    ) : (
-                      <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(stateTaxAmount)}</Text>
-                    )}
-                  </View>
-                )}
+                <View className="flex-row justify-between items-center">
+                  <Text className="text-sm font-body-medium text-gray-600">
+                    {formatTaxLabel("State Tax", stateTaxRate, stateTaxAmount, cartSubtotal)}
+                  </Text>
+                  {isCheckoutLoading ? (
+                    <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
+                  ) : (
+                    <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(stateTaxAmount)}</Text>
+                  )}
+                </View>
 
-                {cityTax > 0 && (
-                  <View className="flex-row justify-between items-center">
-                    <Text className="text-sm font-body-medium text-gray-600">City Tax</Text>
-                    {isCheckoutLoading ? (
-                      <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
-                    ) : (
-                      <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(cityTax)}</Text>
-                    )}
-                  </View>
-                )}
+                <View className="flex-row justify-between items-center">
+                  <Text className="text-sm font-body-medium text-gray-600">
+                    {formatTaxLabel("City Tax", cityTaxRate, cityTax, cartSubtotal)}
+                  </Text>
+                  {isCheckoutLoading ? (
+                    <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
+                  ) : (
+                    <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(cityTax)}</Text>
+                  )}
+                </View>
 
                 {platformFee > 0 && (
                   <View className="flex-row justify-between items-center">

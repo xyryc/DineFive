@@ -321,27 +321,23 @@ export const FreeMealTaxCheckoutModal: React.FC<
               </Text>
             </View>
 
-            {stateTax > 0 && (
-              <View className="flex-row justify-between items-center mt-1">
-                <Text className="text-sm font-body text-gray-600">
-                  State Tax{taxBreakdown?.providerState ? ` - ${taxBreakdown.providerState}` : ""}
-                </Text>
-                <Text className="text-sm font-body text-gray-900">
-                  {formatMoney(stateTax)}
-                </Text>
-              </View>
-            )}
+            <View className="flex-row justify-between items-center mt-1">
+              <Text className="text-sm font-body text-gray-600">
+                State Tax{taxBreakdown?.providerState ? ` - ${taxBreakdown.providerState}` : ""}
+              </Text>
+              <Text className="text-sm font-body text-gray-900">
+                {formatMoney(stateTax)}
+              </Text>
+            </View>
 
-            {cityTax > 0 && (
-              <View className="flex-row justify-between items-center mt-1">
-                <Text className="text-sm font-body text-gray-600">
-                  City Tax{taxBreakdown?.providerCity ? ` - ${taxBreakdown.providerCity}` : ""}
-                </Text>
-                <Text className="text-sm font-body text-gray-900">
-                  {formatMoney(cityTax)}
-                </Text>
-              </View>
-            )}
+            <View className="flex-row justify-between items-center mt-1">
+              <Text className="text-sm font-body text-gray-600">
+                City Tax{taxBreakdown?.providerCity ? ` - ${taxBreakdown.providerCity}` : ""}
+              </Text>
+              <Text className="text-sm font-body text-gray-900">
+                {formatMoney(cityTax)}
+              </Text>
+            </View>
 
             {platformFee > 0 && (
               <View className="flex-row justify-between items-center mt-1">

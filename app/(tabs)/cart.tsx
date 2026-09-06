@@ -49,7 +49,7 @@ const formatTaxLabel = (
   subtotal?: number,
 ) => {
   const numRate = Number(rate);
-  if (Number.isFinite(numRate) && numRate > 0) {
+  if (Number.isFinite(numRate) && numRate >= 0) {
     const pct = numRate < 1 ? numRate * 100 : numRate;
     const rounded = Number(pct.toFixed(2));
     const formatted = rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toString();
@@ -57,12 +57,11 @@ const formatTaxLabel = (
   }
   if (
     typeof taxAmount === "number" &&
-    taxAmount > 0 &&
     typeof subtotal === "number" &&
     subtotal > 0
   ) {
     const calcPct = (taxAmount / subtotal) * 100;
-    if (Number.isFinite(calcPct) && calcPct > 0) {
+    if (Number.isFinite(calcPct) && calcPct >= 0) {
       const rounded = Number(calcPct.toFixed(2));
       const formatted = rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toString();
       return `${baseLabel} (${formatted}%)`;
@@ -334,6 +333,14 @@ export default function CartScreen() {
     cartMeta?.stateTaxAmount ?? cartMeta?.stateTax,
     0,
   );
+  const stateTaxRate = toNumber(
+    cartMeta?.stateTaxRate ?? cartGroups?.[0]?.stateTaxRate,
+    0,
+  );
+  const cityTaxRate = toNumber(
+    cartMeta?.cityTaxRate ?? cartGroups?.[0]?.cityTaxRate,
+    0,
+  );
   const countyTaxAmount = toNumber(cartMeta?.countyTaxAmount, 0);
   const total = toNumber(
     cartMeta?.total,
@@ -496,35 +503,31 @@ export default function CartScreen() {
                 )}
               </View>
 
-              {group.stateTax > 0 && (
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-[11px] text-gray-400 font-body-semibold">
-                    {formatTaxLabel("State Tax", group.stateTaxRate, group.stateTax, group.subtotal)}
+              <View className="flex-row justify-between items-center">
+                <Text className="text-[11px] text-gray-400 font-body-semibold">
+                  {formatTaxLabel("State Tax", group.stateTaxRate, group.stateTax, group.subtotal)}
+                </Text>
+                {isSyncing ? (
+                  <View className="w-10 h-3.5 bg-gray-200 rounded animate-pulse" />
+                ) : (
+                  <Text className="text-xs font-body-semibold text-gray-600">
+                    {formatMoney(group.stateTax)}
                   </Text>
-                  {isSyncing ? (
-                    <View className="w-10 h-3.5 bg-gray-200 rounded animate-pulse" />
-                  ) : (
-                    <Text className="text-xs font-body-semibold text-gray-600">
-                      {formatMoney(group.stateTax)}
-                    </Text>
-                  )}
-                </View>
-              )}
+                )}
+              </View>
 
-              {group.cityTax > 0 && (
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-[11px] text-gray-400 font-body-semibold">
-                    {formatTaxLabel("City Tax", group.cityTaxRate, group.cityTax, group.subtotal)}
+              <View className="flex-row justify-between items-center">
+                <Text className="text-[11px] text-gray-400 font-body-semibold">
+                  {formatTaxLabel("City Tax", group.cityTaxRate, group.cityTax, group.subtotal)}
+                </Text>
+                {isSyncing ? (
+                  <View className="w-10 h-3.5 bg-gray-200 rounded animate-pulse" />
+                ) : (
+                  <Text className="text-xs font-body-semibold text-gray-600">
+                    {formatMoney(group.cityTax)}
                   </Text>
-                  {isSyncing ? (
-                    <View className="w-10 h-3.5 bg-gray-200 rounded animate-pulse" />
-                  ) : (
-                    <Text className="text-xs font-body-semibold text-gray-600">
-                      {formatMoney(group.cityTax)}
-                    </Text>
-                  )}
-                </View>
-              )}
+                )}
+              </View>
 
               {group.platformFee > 0 && (
                 <View className="flex-row justify-between items-center">
@@ -600,35 +603,31 @@ export default function CartScreen() {
               )}
             </View>
 
-            {stateTaxAmount > 0 && (
-              <View className="flex-row justify-between items-center">
-                <Text className="text-sm font-body-medium text-gray-500">
-                  State Tax
+            <View className="flex-row justify-between items-center">
+              <Text className="text-sm font-body-medium text-gray-500">
+                {formatTaxLabel("State Tax", stateTaxRate, stateTaxAmount, subtotal)}
+              </Text>
+              {loading ? (
+                <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
+              ) : (
+                <Text className="text-sm font-body-semibold text-gray-800">
+                  {formatMoney(stateTaxAmount)}
                 </Text>
-                {loading ? (
-                  <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
-                ) : (
-                  <Text className="text-sm font-body-semibold text-gray-800">
-                    {formatMoney(stateTaxAmount)}
-                  </Text>
-                )}
-              </View>
-            )}
+              )}
+            </View>
 
-            {cityTax > 0 && (
-              <View className="flex-row justify-between items-center">
-                <Text className="text-sm font-body-medium text-gray-500">
-                  City Tax
+            <View className="flex-row justify-between items-center">
+              <Text className="text-sm font-body-medium text-gray-500">
+                {formatTaxLabel("City Tax", cityTaxRate, cityTax, subtotal)}
+              </Text>
+              {loading ? (
+                <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
+              ) : (
+                <Text className="text-sm font-body-semibold text-gray-800">
+                  {formatMoney(cityTax)}
                 </Text>
-                {loading ? (
-                  <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
-                ) : (
-                  <Text className="text-sm font-body-semibold text-gray-800">
-                    {formatMoney(cityTax)}
-                  </Text>
-                )}
-              </View>
-            )}
+              )}
+            </View>
 
             <View className="flex-row justify-between items-center">
               <Text className="text-sm font-body-medium text-gray-500">
