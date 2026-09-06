@@ -17,6 +17,7 @@ import GoogleLogin from "./GoogleLogin";
 import AppleLogin from "./AppleLogin";
 import GradientButton from "../common/GradientButton";
 import TermsModal, { preloadLegalDocuments } from "../common/TermsModal";
+import { TaxDisclaimer } from "../common/TaxDisclaimer";
 
 interface AuthComponentsProps {
   initialTab?: "login" | "signup";
@@ -356,7 +357,10 @@ export const AuthComponents = ({
                 </Text>
               </View>
 
-              <View className="mt-7">
+              {/* Statutory Tax Compliance Disclaimer */}
+              <TaxDisclaimer variant="compact" className="mt-3.5" />
+
+              <View className="mt-5">
                 {isSubmittingSignup ? (
                   <View className="items-center py-4 bg-yellow-400 rounded-full">
                     <ActivityIndicator color="black" />

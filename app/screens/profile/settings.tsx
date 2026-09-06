@@ -1,4 +1,5 @@
 import { ScreenHeader } from "@/components/common/ScreenHeader";
+import { TaxDisclaimer, openStripeTaxRatesUrl } from "@/components/common/TaxDisclaimer";
 import { useStore } from "@/stores/stores";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -31,6 +32,14 @@ const MENU_ITEMS = [
     color: "#78909C",
     bgColor: "#ECEFF1",
     route: "/screens/profile/terms",
+  },
+  {
+    id: "tax_rates",
+    title: "US Sales Tax Rates (Stripe)",
+    icon: "receipt-outline",
+    color: "#E29E10",
+    bgColor: "#FFF8E7",
+    isExternal: true,
   },
 ];
 
@@ -103,7 +112,13 @@ export default function SettingsScreen() {
             <TouchableOpacity
               key={item.id}
               activeOpacity={0.7}
-              onPress={() => router.push(item.route as any)}
+              onPress={() => {
+                if ((item as any).isExternal) {
+                  openStripeTaxRatesUrl();
+                } else if (item.route) {
+                  router.push(item.route as any);
+                }
+              }}
               className={`flex-row items-center justify-between p-4 ${
                 index < MENU_ITEMS.length - 1 ? "border-b border-gray-50" : ""
               }`}
@@ -119,10 +134,17 @@ export default function SettingsScreen() {
                   {item.title}
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={16} color="#CCCCCC" />
+              <Ionicons 
+                name={(item as any).isExternal ? "open-outline" : "chevron-forward"} 
+                size={16} 
+                color="#CCCCCC" 
+              />
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* Tax Compliance & Stripe Statutory Rates Card */}
+        <TaxDisclaimer className="mb-6" />
 
         {/* Danger Zone */}
         <Text className="text-[11px] font-body-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">

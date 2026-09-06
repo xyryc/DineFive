@@ -1,6 +1,7 @@
 import { DonateModal } from "@/components/home/DonateModal";
 import { requireAuth } from "@/utils/authGuard";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
+import { TaxDisclaimer } from "@/components/common/TaxDisclaimer";
 import { useStore } from "@/stores/stores";
 import { Ionicons } from "@expo/vector-icons";
 import { StripeProvider, useStripe } from "@stripe/stripe-react-native";
@@ -38,34 +39,6 @@ const pickString = (...values: unknown[]): string => {
 };
 
 const formatMoney = (value: number) => `$${value.toFixed(2)}`;
-
-const formatTaxLabel = (
-  baseLabel: string,
-  rate?: number,
-  taxAmount?: number,
-  subtotal?: number,
-) => {
-  const numRate = Number(rate);
-  if (Number.isFinite(numRate) && numRate >= 0) {
-    const pct = numRate < 1 ? numRate * 100 : numRate;
-    const rounded = Number(pct.toFixed(2));
-    const formatted = rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toString();
-    return `${baseLabel} (${formatted}%)`;
-  }
-  if (
-    typeof taxAmount === "number" &&
-    typeof subtotal === "number" &&
-    subtotal > 0
-  ) {
-    const calcPct = (taxAmount / subtotal) * 100;
-    if (Number.isFinite(calcPct) && calcPct >= 0) {
-      const rounded = Number(calcPct.toFixed(2));
-      const formatted = rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toString();
-      return `${baseLabel} (${formatted}%)`;
-    }
-  }
-  return baseLabel;
-};
 
 const getSearchParam = (value?: string | string[]) =>
   Array.isArray(value) ? value[0] : value;
@@ -753,7 +726,7 @@ function CheckoutContent() {
 
                 <View className="flex-row justify-between items-center">
                   <Text className="text-sm font-body-medium text-gray-600">
-                    {formatTaxLabel("State Tax", stateTaxRate, stateTaxAmount, cartSubtotal)}
+                    State Tax
                   </Text>
                   {isCheckoutLoading ? (
                     <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
@@ -764,7 +737,7 @@ function CheckoutContent() {
 
                 <View className="flex-row justify-between items-center">
                   <Text className="text-sm font-body-medium text-gray-600">
-                    {formatTaxLabel("City Tax", cityTaxRate, cityTax, cartSubtotal)}
+                    City Tax
                   </Text>
                   {isCheckoutLoading ? (
                     <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
@@ -803,6 +776,9 @@ function CheckoutContent() {
             )}
           </View>
         </View>
+
+        {/* Tax Compliance & Statutory Rates Disclaimer */}
+        <TaxDisclaimer className="mb-4" />
 
         {/* Safety & Info Note */}
         <View className="bg-gray-50 border border-gray-100/60 rounded-3xl p-4 flex-row gap-3">

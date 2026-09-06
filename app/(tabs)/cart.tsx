@@ -1,5 +1,6 @@
 import { EmptyState } from "@/components/common/EmptyState";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
+import { TaxDisclaimer } from "@/components/common/TaxDisclaimer";
 import { useStore } from "@/stores/stores";
 import { requireAuth } from "@/utils/authGuard";
 import { Ionicons } from "@expo/vector-icons";
@@ -605,7 +606,7 @@ export default function CartScreen() {
 
             <View className="flex-row justify-between items-center">
               <Text className="text-sm font-body-medium text-gray-500">
-                {formatTaxLabel("State Tax", stateTaxRate, stateTaxAmount, subtotal)}
+                State Tax
               </Text>
               {loading ? (
                 <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
@@ -618,7 +619,7 @@ export default function CartScreen() {
 
             <View className="flex-row justify-between items-center">
               <Text className="text-sm font-body-medium text-gray-500">
-                {formatTaxLabel("City Tax", cityTaxRate, cityTax, subtotal)}
+                City Tax
               </Text>
               {loading ? (
                 <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
@@ -658,6 +659,9 @@ export default function CartScreen() {
             </View>
           </View>
         </View>
+
+        {/* Tax Compliance & Statutory Rates Disclaimer */}
+        <TaxDisclaimer className="mt-4 mb-2" />
       </ScrollView>
 
       {/* Floating Bottom action bar */}
