@@ -717,6 +717,64 @@ export default function OrderDetailsScreen() {
                   );
                 })}
               </View>
+
+              {/* Per-Restaurant Charges & Tax Rate Breakdown */}
+              {(() => {
+                const groupSubtotal = Number(group.subtotal || 0);
+                const groupStateTax = Number(group.stateTax || 0);
+                const groupCityTax = Number(group.cityTax || 0);
+                const groupPlatformFee = Number(group.platformFee || 0);
+                const groupTotal = Number(group.total || (groupSubtotal + groupStateTax + groupCityTax + groupPlatformFee));
+
+                const groupStateTaxRateFormatted = group.stateTaxRatePercentage
+                  || (groupSubtotal > 0 && groupStateTax > 0 ? `${((groupStateTax / groupSubtotal) * 100).toFixed(2)}%` : null);
+
+                const groupCityTaxRateFormatted = group.cityTaxRatePercentage
+                  || (groupSubtotal > 0 && groupCityTax > 0 ? `${((groupCityTax / groupSubtotal) * 100).toFixed(2)}%` : null);
+
+                return (
+                  <View className="mt-4 pt-3 border-t border-gray-100 bg-amber-50/30 p-3.5 rounded-2xl border border-amber-100/50 space-y-2">
+                    <Text className="text-[9px] font-body-bold text-amber-900 uppercase tracking-wider mb-0.5">
+                      Restaurant Price & Tax Breakdown
+                    </Text>
+
+                    <View className="flex-row justify-between items-center">
+                      <Text className="text-[11px] text-gray-500 font-body-medium">Food Subtotal</Text>
+                      <Text className="text-[11px] font-body-semibold text-gray-800">${groupSubtotal.toFixed(2)}</Text>
+                    </View>
+
+                    {groupStateTax > 0 && (
+                      <View className="flex-row justify-between items-center">
+                        <Text className="text-[11px] text-gray-500 font-body-medium">
+                          State Tax {groupStateTaxRateFormatted ? `(${groupStateTaxRateFormatted})` : ""}
+                        </Text>
+                        <Text className="text-[11px] font-body-semibold text-gray-800">${groupStateTax.toFixed(2)}</Text>
+                      </View>
+                    )}
+
+                    {groupCityTax > 0 && (
+                      <View className="flex-row justify-between items-center">
+                        <Text className="text-[11px] text-gray-500 font-body-medium">
+                          City Tax {groupCityTaxRateFormatted ? `(${groupCityTaxRateFormatted})` : ""}
+                        </Text>
+                        <Text className="text-[11px] font-body-semibold text-gray-800">${groupCityTax.toFixed(2)}</Text>
+                      </View>
+                    )}
+
+                    {groupPlatformFee > 0 && (
+                      <View className="flex-row justify-between items-center">
+                        <Text className="text-[11px] text-gray-500 font-body-medium">Platform Fee</Text>
+                        <Text className="text-[11px] font-body-semibold text-gray-800">${groupPlatformFee.toFixed(2)}</Text>
+                      </View>
+                    )}
+
+                    <View className="flex-row justify-between items-center pt-2 border-t border-amber-200/60 mt-1">
+                      <Text className="text-xs font-body-bold text-gray-900">Restaurant Total</Text>
+                      <Text className="text-xs font-body-bold text-amber-900">${groupTotal.toFixed(2)}</Text>
+                    </View>
+                  </View>
+                );
+              })()}
             </View>
           );
         })}
@@ -763,7 +821,7 @@ export default function OrderDetailsScreen() {
         </View>
 
         {/* Bill / Invoice Details Card */}
-        <View className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 mb-6">
+        <View className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 mb-4">
           <Text className="text-[10px] text-gray-400 font-body-semibold uppercase tracking-wider mb-3">Bill Details</Text>
           
           <View className="space-y-2 border-b border-gray-50 pb-3 mb-3">
@@ -804,6 +862,24 @@ export default function OrderDetailsScreen() {
             </Text>
           </View>
         </View>
+
+        {/* Stripe Tax Sourcing Disclaimer */}
+        <TouchableOpacity
+          onPress={() => Linking.openURL('https://stripe.com/resources/more/united-states-sales-tax-rates')}
+          activeOpacity={0.8}
+          className="flex-row items-center justify-between bg-white border border-gray-100 rounded-2xl p-3.5 mb-6 shadow-sm"
+        >
+          <View className="flex-row items-center gap-2 flex-1 mr-2">
+            <Ionicons name="shield-checkmark-outline" size={16} color="#D97706" />
+            <Text className="text-[11px] text-gray-500 font-body-medium flex-1">
+              Taxes dynamically calculated via <Text className="font-body-bold text-gray-800">Stripe Auto Tax</Text> based on restaurant origin.
+            </Text>
+          </View>
+          <View className="flex-row items-center gap-0.5 bg-amber-50 px-2 py-1 rounded-lg">
+            <Text className="text-[10px] font-body-bold text-amber-800">Official Rates</Text>
+            <Ionicons name="open-outline" size={12} color="#92400E" />
+          </View>
+        </TouchableOpacity>
 
         {/* Help/Support Section */}
         <TouchableOpacity
