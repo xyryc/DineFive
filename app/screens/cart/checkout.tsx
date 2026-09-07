@@ -737,7 +737,7 @@ function CheckoutContent() {
 
                 <View className="flex-row justify-between items-center">
                   <Text className="text-sm font-body-medium text-gray-600">
-                    City Tax
+                    Local Tax
                   </Text>
                   {isCheckoutLoading ? (
                     <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />

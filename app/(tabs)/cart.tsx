@@ -506,7 +506,7 @@ export default function CartScreen() {
 
               <View className="flex-row justify-between items-center">
                 <Text className="text-[11px] text-gray-400 font-body-semibold">
-                  {formatTaxLabel("State Tax", group.stateTaxRate, group.stateTax, group.subtotal)}
+                  State Tax
                 </Text>
                 {isSyncing ? (
                   <View className="w-10 h-3.5 bg-gray-200 rounded animate-pulse" />
@@ -519,7 +519,7 @@ export default function CartScreen() {
 
               <View className="flex-row justify-between items-center">
                 <Text className="text-[11px] text-gray-400 font-body-semibold">
-                  {formatTaxLabel("City Tax", group.cityTaxRate, group.cityTax, group.subtotal)}
+                  Local Tax
                 </Text>
                 {isSyncing ? (
                   <View className="w-10 h-3.5 bg-gray-200 rounded animate-pulse" />
@@ -619,7 +619,7 @@ export default function CartScreen() {
 
             <View className="flex-row justify-between items-center">
               <Text className="text-sm font-body-medium text-gray-500">
-                City Tax
+                Local Tax
               </Text>
               {loading ? (
                 <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
