@@ -215,6 +215,21 @@ export const useRestaurantStore = create<RestaurantState>((set, get) => ({
           locationLoading: false,
         });
         await AsyncStorage.setItem("DINE_FIVE_USER_LOCATION", JSON.stringify(coords));
+
+        // Refine location in background without blocking initial UI render
+        Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        }).then(async (current) => {
+          if (current) {
+            const refined = {
+              latitude: current.coords.latitude,
+              longitude: current.coords.longitude,
+            };
+            set({ location: refined });
+            await AsyncStorage.setItem("DINE_FIVE_USER_LOCATION", JSON.stringify(refined));
+          }
+        }).catch(() => {});
+        return;
       }
 
       const current = await Location.getCurrentPositionAsync({

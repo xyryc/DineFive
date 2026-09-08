@@ -97,13 +97,37 @@ export default function HomeScreen() {
     setLocationManually,
   } = useRestaurantStore();
 
+  const storeBanners = useStore((state: any) => state.banners);
+  const storeCategories = useStore((state: any) => state.categories);
+
   // ── State ──
-  const [banners, setBanners] = React.useState<Banner[]>([]);
-  const [categories, setCategories] = React.useState<string[]>(["All"]);
+  const [banners, setBanners] = React.useState<Banner[]>(() => {
+    const list = (useStore.getState() as any)?.banners;
+    return Array.isArray(list) ? list.map(mapBanner).filter((b: any) => b.title || b.image) : [];
+  });
+  const [categories, setCategories] = React.useState<string[]>(() => {
+    const list = (useStore.getState() as any)?.categories;
+    const names = Array.isArray(list) ? list.map((c: any) => c?.categoryName).filter(Boolean) : [];
+    return ["All", ...names];
+  });
   const [activeCategory, setActiveCategory] = React.useState("All");
   const [locationLabel, setLocationLabel] = React.useState("");
   const [refreshing, setRefreshing] = React.useState(false);
   const [isAddressModalVisible, setIsAddressModalVisible] = React.useState(false);
+
+  // Sync store updates into local state
+  React.useEffect(() => {
+    if (Array.isArray(storeBanners) && storeBanners.length > 0) {
+      setBanners(storeBanners.map(mapBanner).filter((b: any) => b.title || b.image));
+    }
+  }, [storeBanners]);
+
+  React.useEffect(() => {
+    if (Array.isArray(storeCategories) && storeCategories.length > 0) {
+      const names = storeCategories.map((c: any) => c?.categoryName).filter(Boolean);
+      setCategories(["All", ...names]);
+    }
+  }, [storeCategories]);
 
   const restaurants = React.useMemo<Restaurant[]>(
     () => (Array.isArray(storeRestaurants) ? storeRestaurants : []),
@@ -138,7 +162,6 @@ export default function HomeScreen() {
   const loadBanners = React.useCallback(async () => {
     try {
       const payload = await fetchBanners?.();
-      // API returns { data: [{ title, bannerImage }] } — already unwrapped by store
       const list: any[] = Array.isArray(payload) ? payload : [];
       setBanners(list.map(mapBanner).filter((b) => b.title || b.image));
     } catch {
@@ -149,7 +172,6 @@ export default function HomeScreen() {
   const loadCategories = React.useCallback(async () => {
     try {
       const data: any[] = await fetchCategories?.() ?? [];
-      // API returns [{ categoryName, categoryType, ... }]
       const names = Array.isArray(data)
         ? data.map((c) => c?.categoryName).filter(Boolean)
         : [];
@@ -159,12 +181,36 @@ export default function HomeScreen() {
     }
   }, [fetchCategories]);
 
+  const lastFetchedCoordsRef = React.useRef<{
+    latitude: number;
+    longitude: number;
+    timestamp: number;
+  } | null>(null);
+
   const loadNearby = React.useCallback(
     async (
       target: { latitude: number; longitude: number } | null | undefined,
-      search = ""
+      search = "",
+      force = false
     ) => {
       if (!target) return;
+
+      if (!force && !search && lastFetchedCoordsRef.current) {
+        const dLat = Math.abs(target.latitude - lastFetchedCoordsRef.current.latitude);
+        const dLng = Math.abs(target.longitude - lastFetchedCoordsRef.current.longitude);
+        const age = Date.now() - lastFetchedCoordsRef.current.timestamp;
+        // Skip duplicate fetch if coordinates haven't changed, within 60s, and restaurants exist
+        if (dLat < 0.001 && dLng < 0.001 && age < 60000 && storeRestaurants.length > 0) {
+          return;
+        }
+      }
+
+      lastFetchedCoordsRef.current = {
+        latitude: target.latitude,
+        longitude: target.longitude,
+        timestamp: Date.now(),
+      };
+
       await fetchNearbyRestaurants({
         latitude: target.latitude,
         longitude: target.longitude,
@@ -174,7 +220,7 @@ export default function HomeScreen() {
         search: search.trim() || undefined,
       });
     },
-    [fetchNearbyRestaurants]
+    [fetchNearbyRestaurants, storeRestaurants.length]
   );
 
   const handleRefresh = React.useCallback(async () => {
@@ -188,7 +234,7 @@ export default function HomeScreen() {
         fetchLocation(),
       ]);
       const loc = useRestaurantStore.getState().location ?? location;
-      await loadNearby(loc);
+      await loadNearby(loc, "", true);
     } finally {
       setRefreshing(false);
     }
@@ -198,13 +244,11 @@ export default function HomeScreen() {
   React.useEffect(() => { fetchLocation(); }, [fetchLocation]);
 
   React.useEffect(() => {
-     
-    loadBanners();
-    loadCategories();
-  }, [loadBanners, loadCategories]);
+    if (!banners.length) loadBanners();
+    if (categories.length <= 1) loadCategories();
+  }, [loadBanners, loadCategories, banners.length, categories.length]);
 
   React.useEffect(() => {
-     
     if (params.category) setActiveCategory(String(params.category));
   }, [params.category]);
 
@@ -226,7 +270,7 @@ export default function HomeScreen() {
     return () => { active = false; };
   }, [location]);
 
-  // Refresh nearby restaurants whenever Home tab gains focus
+  // Refresh nearby restaurants whenever Home tab gains focus (with deduplication)
   useFocusEffect(
     React.useCallback(() => {
       const loc = useRestaurantStore.getState().location ?? location;

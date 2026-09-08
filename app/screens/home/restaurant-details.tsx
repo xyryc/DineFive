@@ -1,5 +1,6 @@
 import { useStore } from "@/stores/stores";
 import { requireAuth } from "@/utils/authGuard";
+import { ViewCart } from "@/components/home/ViewCart";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { API_BASE_URL } from "@/utils/api";
@@ -974,39 +975,7 @@ function RestaurantDetailScreenInner() {
         </ScrollView>
 
         {!isFreeFlow && cartCount > 0 && (
-          <View
-            className="absolute bottom-16 left-5 right-5 bg-gray-900 rounded-[24px] p-4 flex-row items-center justify-between shadow-lg"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 10 },
-              shadowOpacity: 0.25,
-              shadowRadius: 15,
-              elevation: 8,
-            }}
-          >
-            <View className="flex-row items-center gap-3">
-              <View className="w-10 h-10 rounded-2xl bg-[#F5C518] items-center justify-center">
-                <Ionicons name="bag" size={20} color="#1F2937" />
-              </View>
-              <View>
-                <Text className="text-white font-body-bold text-sm">
-                  {cartCount} {cartCount === 1 ? "item" : "items"} in bag
-                </Text>
-                <Text className="text-gray-400 text-xs font-body-semibold">
-                  Fresh food ready for pickup
-                </Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              onPress={() => router.push("/(tabs)/cart")}
-              activeOpacity={0.8}
-              className="bg-[#F5C518] px-5 py-2.5 rounded-2xl"
-            >
-              <Text className="text-gray-900 font-body-bold text-xs">
-                View Bag
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <ViewCart count={cartCount} />
         )}
 
         {/* Success Modal */}

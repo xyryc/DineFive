@@ -12,6 +12,7 @@ import {
 } from "react-native-reanimated";
 import { useNotificationSync } from "@/hooks/useNotificationSync";
 import { useStore } from "@/stores/stores";
+import { useRestaurantStore } from "@/stores/useRestaurantStore";
 import { AnimatedSplashScreen } from "@/components/common/AnimatedSplashScreen";
 import "../global.css";
 
@@ -71,6 +72,7 @@ function RootLayout() {
         fetchCategories?.(),
         fetchHomeFeed?.(),
         accessToken ? fetchProfile?.() : Promise.resolve(),
+        useRestaurantStore.getState().fetchLocation(),
       ]).catch(() => {});
     }
   }, [

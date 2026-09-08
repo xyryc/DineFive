@@ -17,7 +17,7 @@ import {
   View,
 } from "react-native";
 import { useRestaurantStore } from "@/stores/useRestaurantStore";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { FreeMealTaxCheckoutModal } from "@/components/home/FreeMealTaxCheckoutModal";
 import { requireAuth } from "@/utils/authGuard";
@@ -65,6 +65,7 @@ export default function ProductDetails() {
 
 function ProductDetailsInner() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams();
   const {
     addFavorite,
@@ -73,6 +74,8 @@ function ProductDetailsInner() {
     favorites,
     fetchFavorites,
     fetchReviewsByFoodId,
+    fetchCartCount,
+    cartCount: storeCartCount,
   } = useStore() as any;
   
   const {
@@ -98,6 +101,24 @@ function ProductDetailsInner() {
   const [taxBreakdown, setTaxBreakdown] = useState<any>(null);
   const [isClaimingMeal, setIsClaimingMeal] = useState(false);
   const [isAddedToCartSuccess, setIsAddedToCartSuccess] = useState(false);
+  const [cartCount, setCartCount] = useState<number>(
+    () => (useStore.getState() as any)?.cartCount || 0
+  );
+
+  useEffect(() => {
+    fetchCartCount?.()
+      .then((c: number) => {
+        if (typeof c === "number") setCartCount(c);
+      })
+      .catch(() => {});
+  }, [fetchCartCount]);
+
+  useEffect(() => {
+    if (typeof storeCartCount === "number" && storeCartCount >= 0) {
+      setCartCount(storeCartCount);
+    }
+  }, [storeCartCount]);
+
   const [reviewsLoading, setReviewsLoading] = useState(true);
 
   const productId =
@@ -299,8 +320,9 @@ function ProductDetailsInner() {
     if (!requireAuth("add items to cart")) return;
 
     // ── 0ms OPTIMISTIC UPDATE ──────────────────────────────────────────────
-    // Instantly reflect success state in 0ms without navigation or blocking UI
+    // Instantly reflect success state and increment cart count in 0ms
     setIsAddedToCartSuccess(true);
+    setCartCount((prev) => prev + quantity);
 
     setTimeout(() => {
       setIsAddedToCartSuccess(false);
@@ -311,15 +333,19 @@ function ProductDetailsInner() {
       .then((result: any) => {
         if (!result) {
           setIsAddedToCartSuccess(false);
+          fetchCartCount?.().then((c: number) => setCartCount(c)).catch(() => {});
           const latestError = (useStore.getState() as any)?.error;
           Alert.alert(
             "Failed",
             latestError || "Failed to add to cart. Please try again.",
           );
+        } else {
+          fetchCartCount?.().then((c: number) => setCartCount(c)).catch(() => {});
         }
       })
       .catch((error: any) => {
         setIsAddedToCartSuccess(false);
+        fetchCartCount?.().then((c: number) => setCartCount(c)).catch(() => {});
         Alert.alert("Failed", error?.message || "Something went wrong while adding to cart.");
       });
   };
@@ -329,59 +355,13 @@ function ProductDetailsInner() {
       <View className="flex-1 bg-white">
         <StatusBar style="light" />
 
-        {/* Top Header Buttons Overlay */}
-        <SafeAreaView className="absolute top-0 w-full z-50">
-          <View className="flex-row justify-between px-4 pt-3">
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 20,
-                backgroundColor: "rgba(255, 255, 255, 0.9)",
-                alignItems: "center",
-                justifyContent: "center",
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
-                elevation: 3,
-              }}
-            >
-              <Ionicons name="chevron-back" size={24} color="#1F2937" />
-            </TouchableOpacity>
-
-            <View className="flex-row gap-3">
-              <TouchableOpacity
-                onPress={handleToggleFavorite}
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 20,
-                  backgroundColor: "rgba(255, 255, 255, 0.9)",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 4,
-                  elevation: 3,
-                }}
-              >
-                <Ionicons
-                  name={isFav ? "heart" : "heart-outline"}
-                  size={20}
-                  color={isFav ? "#EF4444" : "#1F2937"}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </SafeAreaView>
-
         {/* Main Scrollable View */}
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ flexGrow: 1 }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingBottom: !isFreeMeal && cartCount > 0 ? 140 : 40,
+          }}
           className="flex-1"
         >
           {/* Hero Product Image */}
@@ -416,6 +396,56 @@ function ProductDetailsInner() {
                 height: 112,
               }}
             />
+
+            {/* Top Header Buttons (Inside Hero Image -> Scrolls with image) */}
+            <View
+              className="absolute left-0 right-0 flex-row justify-between items-center px-4 z-10"
+              style={{ top: insets.top + 8 }}
+            >
+              <TouchableOpacity
+                onPress={() => router.back()}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: "rgba(255, 255, 255, 0.9)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 4,
+                  elevation: 3,
+                }}
+              >
+                <Ionicons name="chevron-back" size={24} color="#1F2937" />
+              </TouchableOpacity>
+
+              <View className="flex-row gap-3">
+                <TouchableOpacity
+                  onPress={handleToggleFavorite}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: "rgba(255, 255, 255, 0.9)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 4,
+                    elevation: 3,
+                  }}
+                >
+                  <Ionicons
+                    name={isFav ? "heart" : "heart-outline"}
+                    size={20}
+                    color={isFav ? "#EF4444" : "#1F2937"}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
 
           {/* Details Card */}
@@ -771,11 +801,8 @@ function ProductDetailsInner() {
           </View>
         </ScrollView>
 
-        {!isFreeMeal && (
-          <ViewCart
-            count={quantity}
-            total={quantity * parseFloat(product.price)}
-          />
+        {!isFreeMeal && cartCount > 0 && (
+          <ViewCart count={cartCount} />
         )}
       </View>
     );

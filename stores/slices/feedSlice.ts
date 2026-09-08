@@ -214,6 +214,11 @@ export const createFeedSlice = (set: any, get: () => RootStore): FeedSlice => ({
               allBanners.push(banner);
             }
           });
+
+          // Primary or fallback endpoint succeeded, stop trying remaining endpoints
+          if (allBanners.length > 0 || response.ok) {
+            break;
+          }
         } catch {
           // ignore single endpoint failures
         }

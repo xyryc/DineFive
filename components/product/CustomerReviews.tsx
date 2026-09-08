@@ -1,18 +1,38 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import React from "react";
+import React, { useState } from "react";
 import { Text, View } from "react-native";
 import { normalizeImageUri } from "@/utils/userAvatar";
 
+const DEFAULT_AVATAR = require("@/assets/images/user-icon.jpg");
+
 interface Review {
-  _id: string;
-  customerId: {
-    fullName: string;
+  _id?: string;
+  id?: string;
+  customerId?: {
+    _id?: string;
+    fullName?: string;
     profilePic?: string;
+    googlePicture?: string;
+    avatar?: string;
   };
+  name?: string;
+  fullName?: string;
+  profileImage?: string;
+  profilePic?: string;
+  customerProfile?: string;
+  avatar?: string;
+  image?: string;
   rating: number;
-  comment: string;
-  createdAt: string;
+  comment?: string;
+  description?: string;
+  createdAt?: string;
+  date?: string;
+  updatedAt?: string;
+  reply?: {
+    comment?: string;
+    createdAt?: string;
+  } | null;
 }
 
 interface CustomerReviewsProps {
@@ -83,32 +103,49 @@ const getReviewerName = (review: any) =>
 const getReviewerImage = (review: any) =>
   normalizeImageUri(
     pickString(
+      review?.profileImage,
+      review?.profilePic,
+      review?.avatar,
+      review?.image,
+      review?.photo,
+      review?.customerProfile,
+      review?.userAvatar,
+      review?.customerAvatar,
+      review?.googlePicture,
       review?.customerId?.profilePic,
+      review?.customerId?.profilePicture,
+      review?.customerId?.googlePicture,
       review?.customerId?.avatar,
       review?.customerId?.image,
+      review?.customerId?.photo,
       review?.customer?.profilePic,
+      review?.customer?.profilePicture,
+      review?.customer?.googlePicture,
       review?.customer?.avatar,
       review?.customer?.image,
       review?.author?.profilePic,
       review?.author?.avatar,
       review?.user?.profilePic,
+      review?.user?.googlePicture,
       review?.user?.avatar,
       review?.orderId?.customerId?.profilePic,
+      review?.orderId?.customerId?.profilePicture,
+      review?.orderId?.customerId?.googlePicture,
       review?.orderId?.customerId?.avatar,
       review?.orderId?.customerId?.image,
       review?.orderId?.userId?.profilePic,
       review?.orderId?.userId?.avatar,
       review?.orderId?.userId?.image,
     ),
-  ) || "https://i.ibb.co.com/WvT5LftP/iconprofile.jpg";
+  );
 
 const getReviewComment = (review: any) => {
   const directComment = pickString(
     review?.comment,
+    review?.description,
     review?.review,
     review?.message,
     review?.text,
-    review?.description,
     review?.details,
     review?.content,
   );
@@ -123,6 +160,13 @@ const getReviewComment = (review: any) => {
   }
 
   if (
+    typeof review?.description === "number" ||
+    typeof review?.description === "boolean"
+  ) {
+    return String(review.description);
+  }
+
+  if (
     typeof review?.review === "number" ||
     typeof review?.review === "boolean"
   ) {
@@ -133,7 +177,12 @@ const getReviewComment = (review: any) => {
 };
 
 const getReviewDate = (review: any) => {
-  const rawDate = pickString(review?.createdAt, review?.updatedAt);
+  const rawDate = pickString(
+    review?.createdAt,
+    review?.date,
+    review?.updatedAt,
+    review?.created_at,
+  );
   if (!rawDate) return "Recently";
 
   const parsedDate = new Date(rawDate);
@@ -147,9 +196,25 @@ const getReviewDate = (review: any) => {
 };
 
 const getReviewRating = (review: any) => {
-  const parsed = Number(review?.rating);
+  const parsed = Number(review?.rating ?? review?.rate ?? review?.stars);
   if (!Number.isFinite(parsed)) return 0;
   return Math.max(0, Math.min(5, parsed));
+};
+
+const ReviewerAvatar = ({ review }: { review: any }) => {
+  const uri = getReviewerImage(review);
+  const [loadError, setLoadError] = useState(false);
+
+  return (
+    <View className="w-12 h-12 rounded-full overflow-hidden bg-[#F1F1EF] items-center justify-center border border-gray-100">
+      <Image
+        source={!uri || loadError ? DEFAULT_AVATAR : { uri }}
+        style={{ width: "100%", height: "100%", borderRadius: 100 }}
+        contentFit="cover"
+        onError={() => setLoadError(true)}
+      />
+    </View>
+  );
 };
 
 export const CustomerReviews = ({ reviews = [] }: CustomerReviewsProps) => {
@@ -173,13 +238,7 @@ export const CustomerReviews = ({ reviews = [] }: CustomerReviewsProps) => {
           key={getReviewKey(review, index)}
           className="flex-row items-start mb-6"
         >
-          <Image
-            source={{
-              uri: getReviewerImage(review),
-            }}
-            style={{ height: 50, width: 50, borderRadius: 100 }}
-            contentFit="cover"
-          />
+          <ReviewerAvatar review={review} />
           <View className="flex-1 ml-4">
             <Text className="text-sm font-body-semibold text-[#1F2A33] mb-1">
               {getReviewerName(review)}
@@ -207,6 +266,17 @@ export const CustomerReviews = ({ reviews = [] }: CustomerReviewsProps) => {
             <Text className="text-[#7A7A7A] font-body text-sm leading-5">
               {getReviewComment(review)}
             </Text>
+
+            {review?.reply?.comment ? (
+              <View className="mt-2.5 p-2.5 bg-gray-50 rounded-lg border-l-2 border-[#F5C518]">
+                <Text className="text-xs font-body-semibold text-[#1F2A33] mb-0.5">
+                  Restaurant Response
+                </Text>
+                <Text className="text-xs text-gray-500 font-body">
+                  {review.reply.comment}
+                </Text>
+              </View>
+            ) : null}
           </View>
         </View>
       ))}
