@@ -2,7 +2,7 @@ import * as Sentry from "@sentry/react-native";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import { Image } from "expo-image";
 import { useFonts } from "expo-font";
@@ -12,6 +12,7 @@ import {
 } from "react-native-reanimated";
 import { useNotificationSync } from "@/hooks/useNotificationSync";
 import { useStore } from "@/stores/stores";
+import { AnimatedSplashScreen } from "@/components/common/AnimatedSplashScreen";
 import "../global.css";
 
 Sentry.init({
@@ -29,14 +30,20 @@ configureReanimatedLogger({
   strict: false,
 });
 
-// Keep the splash screen visible while we fetch resources
+// Keep the native splash screen visible until our animated video splash takes over
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function RootLayout() {
+  const [splashAnimationFinished, setSplashAnimationFinished] = useState(false);
   const isInitialized = useStore((state: any) => state.isInitialized);
   const initializeAuth = useStore((state: any) => state.initializeAuth);
   const accessToken = useStore((state: any) => state.accessToken);
   const user = useStore((state: any) => state.user);
+  const fetchBanners = useStore((state: any) => state.fetchBanners);
+  const fetchCategories = useStore((state: any) => state.fetchCategories);
+  const fetchHomeFeed = useStore((state: any) => state.fetchHomeFeed);
+  const fetchProfile = useStore((state: any) => state.fetchProfile);
+
   const segments = useSegments();
   const router = useRouter();
   const [fontsLoaded] = useFonts({
@@ -56,11 +63,25 @@ function RootLayout() {
     initializeAuth();
   }, [initializeAuth]);
 
+  // Background preloading while the animated splash video plays
   useEffect(() => {
-    if (isInitialized && fontsLoaded) {
-      SplashScreen.hideAsync().catch(() => {});
+    if (isInitialized && !splashAnimationFinished) {
+      Promise.allSettled([
+        fetchBanners?.(),
+        fetchCategories?.(),
+        fetchHomeFeed?.(),
+        accessToken ? fetchProfile?.() : Promise.resolve(),
+      ]).catch(() => {});
     }
-  }, [isInitialized, fontsLoaded]);
+  }, [
+    isInitialized,
+    splashAnimationFinished,
+    accessToken,
+    fetchBanners,
+    fetchCategories,
+    fetchHomeFeed,
+    fetchProfile,
+  ]);
 
   const isGuest = useStore((state: any) => state.isGuest);
 
@@ -100,21 +121,32 @@ function RootLayout() {
 
   useNotificationSync();
 
-  if (!isInitialized || !fontsLoaded) {
-    return null;
-  }
+  const isAppReady = Boolean(isInitialized && fontsLoaded);
 
   return (
-    <>
+    <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
       <StatusBar style="auto" />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-        <Stack.Screen name="screens" options={{ headerShown: false }} />
-      </Stack>
-    </>
+      {isAppReady && (
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: "#ffffff" },
+          }}
+        >
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+          <Stack.Screen name="screens" options={{ headerShown: false }} />
+        </Stack>
+      )}
+      {!splashAnimationFinished && (
+        <AnimatedSplashScreen
+          onAnimationFinish={() => setSplashAnimationFinished(true)}
+          isAppReady={isAppReady}
+        />
+      )}
+    </View>
   );
 }
 

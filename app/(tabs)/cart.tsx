@@ -3,6 +3,7 @@ import { ScreenHeader } from "@/components/common/ScreenHeader";
 import { TaxDisclaimer } from "@/components/common/TaxDisclaimer";
 import { useStore } from "@/stores/stores";
 import { requireAuth } from "@/utils/authGuard";
+import { restaurantTaxRows } from "@/utils/restaurantTax";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -41,34 +42,6 @@ const pickString = (...values: unknown[]): string => {
 const formatMoney = (value: unknown) => {
   const num = toNumber(value, 0);
   return `$${num.toFixed(2)}`;
-};
-
-const formatTaxLabel = (
-  baseLabel: string,
-  rate?: number,
-  taxAmount?: number,
-  subtotal?: number,
-) => {
-  const numRate = Number(rate);
-  if (Number.isFinite(numRate) && numRate >= 0) {
-    const pct = numRate < 1 ? numRate * 100 : numRate;
-    const rounded = Number(pct.toFixed(2));
-    const formatted = rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toString();
-    return `${baseLabel} (${formatted}%)`;
-  }
-  if (
-    typeof taxAmount === "number" &&
-    typeof subtotal === "number" &&
-    subtotal > 0
-  ) {
-    const calcPct = (taxAmount / subtotal) * 100;
-    if (Number.isFinite(calcPct) && calcPct >= 0) {
-      const rounded = Number(calcPct.toFixed(2));
-      const formatted = rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toString();
-      return `${baseLabel} (${formatted}%)`;
-    }
-  }
-  return baseLabel;
 };
 
 export default function CartScreen() {
@@ -227,6 +200,7 @@ export default function CartScreen() {
             subtotal: subtotalVal,
             stateTax: stateTaxVal,
             cityTax: cityTaxVal,
+            taxBreakdown: group.taxBreakdown,
             platformFee: toNumber(group.platformFee, 0),
             stateTaxRate: toNumber(
               group.stateTaxRate ?? group.items?.[0]?.stateTaxRate ?? root?.stateTaxRate,
@@ -504,31 +478,20 @@ export default function CartScreen() {
                 )}
               </View>
 
-              <View className="flex-row justify-between items-center">
-                <Text className="text-[11px] text-gray-400 font-body-semibold">
-                  State Tax
-                </Text>
-                {isSyncing ? (
-                  <View className="w-10 h-3.5 bg-gray-200 rounded animate-pulse" />
-                ) : (
-                  <Text className="text-xs font-body-semibold text-gray-600">
-                    {formatMoney(group.stateTax)}
+              {restaurantTaxRows(group).map((tax, index) => (
+                <View key={`${group.providerId}-tax-${index}`} className="flex-row justify-between items-center">
+                  <Text className="flex-1 mr-3 text-[11px] text-gray-400 font-body-semibold">
+                    {tax.label}
                   </Text>
-                )}
-              </View>
-
-              <View className="flex-row justify-between items-center">
-                <Text className="text-[11px] text-gray-400 font-body-semibold">
-                  Local Tax
-                </Text>
-                {isSyncing ? (
-                  <View className="w-10 h-3.5 bg-gray-200 rounded animate-pulse" />
-                ) : (
-                  <Text className="text-xs font-body-semibold text-gray-600">
-                    {formatMoney(group.cityTax)}
-                  </Text>
-                )}
-              </View>
+                  {isSyncing ? (
+                    <View className="w-10 h-3.5 bg-gray-200 rounded animate-pulse" />
+                  ) : (
+                    <Text className="text-xs font-body-semibold text-gray-600">
+                      {formatMoney(tax.amount)}
+                    </Text>
+                  )}
+                </View>
+              ))}
 
               {group.platformFee > 0 && (
                 <View className="flex-row justify-between items-center">
