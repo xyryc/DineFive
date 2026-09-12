@@ -96,31 +96,36 @@ export default function FavoriteScreen() {
         }
     };
 
-    const handleAddToCart = async (food: any) => {
+    const handleAddToCart = (food: any) => {
         if (!requireAuth("add items to bag")) return;
         if (isAddingToCart) return;
+
+        // ── 0ms OPTIMISTIC UPDATE ──────────────────────────────────────────
+        // Show success instantly; the network call runs in the background
+        // and only interrupts the user if it actually fails.
         setIsAddingToCart(food.foodId);
-        try {
-            const cartItem = {
-                id: food.foodId,
-                foodId: food.foodId,
-                title: food.title,
-                price: food.finalPriceTag || 5.99,
-                image: food.image,
-                restaurantName: "Restaurant",
-            };
-            const success = await addToCart(cartItem, 1);
-            if (success) {
-                Alert.alert("Added to Bag", `${food.title} has been added to your checkout bag.`);
-            } else {
-                Alert.alert("Failed", "Could not add item to bag. Please try again.");
-            }
-        } catch (error) {
-            console.error("Error adding to cart:", error);
-            Alert.alert("Error", "Something went wrong. Please try again.");
-        } finally {
-            setIsAddingToCart(null);
-        }
+        Alert.alert("Added to Bag", `${food.title} has been added to your checkout bag.`);
+        setTimeout(() => setIsAddingToCart(null), 600);
+
+        const cartItem = {
+            id: food.foodId,
+            foodId: food.foodId,
+            title: food.title,
+            price: food.finalPriceTag || 5.99,
+            image: food.image,
+            restaurantName: "Restaurant",
+        };
+
+        addToCart(cartItem, 1)
+            .then((success: any) => {
+                if (!success) {
+                    Alert.alert("Failed", "Could not add item to bag. Please try again.");
+                }
+            })
+            .catch((error: any) => {
+                console.error("Error adding to cart:", error);
+                Alert.alert("Error", "Something went wrong. Please try again.");
+            });
     };
 
     const renderItem = ({ item }: { item: any }) => {
