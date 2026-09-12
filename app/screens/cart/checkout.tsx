@@ -1,7 +1,7 @@
 import { DonateModal } from "@/components/home/DonateModal";
 import { requireAuth } from "@/utils/authGuard";
+import { deriveMealTaxRatePercents } from "@/utils/restaurantTax";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
-import { TaxDisclaimer } from "@/components/common/TaxDisclaimer";
 import { useStore } from "@/stores/stores";
 import { Ionicons } from "@expo/vector-icons";
 import { StripeProvider, useStripe } from "@stripe/stripe-react-native";
@@ -100,6 +100,13 @@ function CheckoutContent() {
     (donationBreakdown?.platformFeePerMeal ? donationMealCount * donationFeePerMeal : 0);
   const donationStateTax = donationBreakdown?.stateTax ?? 0;
   const donationCityTax = donationBreakdown?.cityTax ?? 0;
+
+  const formatTaxLabel = (base: string, place?: string, rate?: number) => {
+    const parts = [place, rate ? `${(rate * 100).toFixed(2)}%` : ""].filter(Boolean);
+    return parts.length ? `${base} (${parts.join(" · ")})` : base;
+  };
+  const donationStateTaxLabel = formatTaxLabel("State Tax", donationBreakdown?.state, donationBreakdown?.stateTaxRate);
+  const donationCityTaxLabel = formatTaxLabel("City Tax", donationBreakdown?.city, donationBreakdown?.cityTaxRate);
   const donationTotal =
     donationBreakdown?.total ??
     donationSubtotal + donationPlatformFee + donationStateTax + donationCityTax;
@@ -164,7 +171,13 @@ function CheckoutContent() {
           const subtotalVal = toNumber(group.subtotal, 0);
           const stateTaxVal = toNumber(group.stateTax ?? group.stateTaxAmount, 0);
           const cityTaxVal = toNumber(group.cityTax, 0);
-          const totalVal = toNumber(group.total, subtotalVal + stateTaxVal + cityTaxVal);
+          const platformFeeVal = toNumber(group.platformFee, 0);
+          // Rate shown next to State Tax / City Tax must be the exact percentage
+          // Stripe applied to the meal line, never a tax ÷ subtotal guess (that
+          // overstates the rate because the tax total also includes tax on the
+          // platform fee line). null means "unknown" — the label omits the % then.
+          const { statePercent, cityPercent } = deriveMealTaxRatePercents(group.taxBreakdown);
+          const totalVal = toNumber(group.total, subtotalVal + stateTaxVal + cityTaxVal + platformFeeVal);
 
           const groupItems = Array.isArray(group.items) ? group.items : [];
           const formattedItems = groupItems.map((item: any) => {
@@ -186,6 +199,9 @@ function CheckoutContent() {
             subtotal: subtotalVal,
             stateTax: stateTaxVal,
             cityTax: cityTaxVal,
+            statePercent,
+            cityPercent,
+            platformFee: platformFeeVal,
             total: totalVal,
             items: formattedItems,
           };
@@ -683,7 +699,7 @@ function CheckoutContent() {
                     <View className="flex-row items-center gap-2">
                       <Ionicons name="receipt-outline" size={16} color="#9CA3AF" />
                       <Text className="text-sm font-body-medium text-gray-600">
-                        State Tax{donationBreakdown?.state ? ` (${donationBreakdown.state})` : ""}
+                        {donationStateTaxLabel}
                       </Text>
                     </View>
                     <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(donationStateTax)}</Text>
@@ -694,7 +710,7 @@ function CheckoutContent() {
                     <View className="flex-row items-center gap-2">
                       <Ionicons name="location-outline" size={16} color="#9CA3AF" />
                       <Text className="text-sm font-body-medium text-gray-600">
-                        City Tax{donationBreakdown?.city ? ` (${donationBreakdown.city})` : ""}
+                        {donationCityTaxLabel}
                       </Text>
                     </View>
                     <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(donationCityTax)}</Text>
@@ -715,46 +731,44 @@ function CheckoutContent() {
               </View>
             ) : (
               <View className="gap-y-3.5">
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-sm font-body-medium text-gray-600">Subtotal</Text>
-                  {isCheckoutLoading ? (
+                {isCheckoutLoading ? (
+                  <View className="gap-y-3.5">
                     <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
-                  ) : (
-                    <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(cartSubtotal)}</Text>
-                  )}
-                </View>
-
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-sm font-body-medium text-gray-600">
-                    State Tax
-                  </Text>
-                  {isCheckoutLoading ? (
                     <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
-                  ) : (
-                    <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(stateTaxAmount)}</Text>
-                  )}
-                </View>
-
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-sm font-body-medium text-gray-600">
-                    Local Tax
-                  </Text>
-                  {isCheckoutLoading ? (
-                    <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
-                  ) : (
-                    <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(cityTax)}</Text>
-                  )}
-                </View>
-
-                {platformFee > 0 && (
-                  <View className="flex-row justify-between items-center">
-                    <Text className="text-sm font-body-medium text-gray-600">Platform Fee</Text>
-                    {isCheckoutLoading ? (
-                      <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
-                    ) : (
-                      <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(platformFee)}</Text>
-                    )}
                   </View>
+                ) : (
+                  cartGroups.map((group, idx) => (
+                    <View
+                      key={group.providerId || idx}
+                      className={idx < cartGroups.length - 1 ? "pb-3.5 border-b border-gray-50 gap-y-2" : "gap-y-2"}
+                    >
+                      <Text className="text-xs font-body-semibold text-gray-400 uppercase tracking-wide">
+                        {group.restaurantName}
+                      </Text>
+                      <View className="flex-row justify-between items-center">
+                        <Text className="text-sm font-body-medium text-gray-600">Item Subtotal</Text>
+                        <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(group.subtotal)}</Text>
+                      </View>
+                      {group.platformFee > 0 && (
+                        <View className="flex-row justify-between items-center">
+                          <Text className="text-sm font-body-medium text-gray-600">Platform Fee</Text>
+                          <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(group.platformFee)}</Text>
+                        </View>
+                      )}
+                      <View className="flex-row justify-between items-center">
+                        <Text className="text-sm font-body-medium text-gray-600">
+                          State Tax{typeof group.statePercent === "number" ? ` (${group.statePercent.toFixed(2)}%)` : ""}
+                        </Text>
+                        <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(group.stateTax)}</Text>
+                      </View>
+                      <View className="flex-row justify-between items-center">
+                        <Text className="text-sm font-body-medium text-gray-600">
+                          City Tax{typeof group.cityPercent === "number" ? ` (${group.cityPercent.toFixed(2)}%)` : ""}
+                        </Text>
+                        <Text className="text-sm font-body-semibold text-gray-800">{formatMoney(group.cityTax)}</Text>
+                      </View>
+                    </View>
+                  ))
                 )}
 
                 {/* Dashed Separator with Notch Cutouts */}
@@ -777,8 +791,15 @@ function CheckoutContent() {
           </View>
         </View>
 
-        {/* Tax Compliance & Statutory Rates Disclaimer */}
-        <TaxDisclaimer className="mb-4" />
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => router.push("/screens/profile/terms" as any)}
+          className="mb-4 self-start"
+        >
+          <Text className="text-[11px] text-gray-400 font-body-medium underline">
+            Tax & fees — see our Terms
+          </Text>
+        </TouchableOpacity>
 
         {/* Safety & Info Note */}
         <View className="bg-gray-50 border border-gray-100/60 rounded-3xl p-4 flex-row gap-3">

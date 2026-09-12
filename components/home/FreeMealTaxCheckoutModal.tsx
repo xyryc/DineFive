@@ -247,6 +247,10 @@ export const FreeMealTaxCheckoutModal: React.FC<
   const mealPrice = taxBreakdown?.mealPrice ?? 5.99;
   const stateTax = taxBreakdown?.stateTax ?? 0;
   const cityTax = taxBreakdown?.cityTax ?? 0;
+  const formatTaxLabel = (base: string, place?: string, rate?: number) => {
+    const parts = [place, rate ? `${(rate * 100).toFixed(2)}%` : ""].filter(Boolean);
+    return parts.length ? `${base} (${parts.join(" · ")})` : base;
+  };
   const platformFee = taxBreakdown?.platformFee ?? 0;
   const totalTax = taxBreakdown?.totalTax ?? stateTax + cityTax;
   const totalToPay =
@@ -321,24 +325,6 @@ export const FreeMealTaxCheckoutModal: React.FC<
               </Text>
             </View>
 
-            <View className="flex-row justify-between items-center mt-1">
-              <Text className="text-sm font-body text-gray-600">
-                State Tax{taxBreakdown?.providerState ? ` - ${taxBreakdown.providerState}` : ""}
-              </Text>
-              <Text className="text-sm font-body text-gray-900">
-                {formatMoney(stateTax)}
-              </Text>
-            </View>
-
-            <View className="flex-row justify-between items-center mt-1">
-              <Text className="text-sm font-body text-gray-600">
-                City Tax{taxBreakdown?.providerCity ? ` - ${taxBreakdown.providerCity}` : ""}
-              </Text>
-              <Text className="text-sm font-body text-gray-900">
-                {formatMoney(cityTax)}
-              </Text>
-            </View>
-
             {platformFee > 0 && (
               <View className="flex-row justify-between items-center mt-1">
                 <Text className="text-sm font-body text-gray-600">
@@ -349,6 +335,24 @@ export const FreeMealTaxCheckoutModal: React.FC<
                 </Text>
               </View>
             )}
+
+            <View className="flex-row justify-between items-center mt-1">
+              <Text className="text-sm font-body text-gray-600">
+                {formatTaxLabel("State Tax", taxBreakdown?.providerState, taxBreakdown?.stateTaxRate)}
+              </Text>
+              <Text className="text-sm font-body text-gray-900">
+                {formatMoney(stateTax)}
+              </Text>
+            </View>
+
+            <View className="flex-row justify-between items-center mt-1">
+              <Text className="text-sm font-body text-gray-600">
+                {formatTaxLabel("City Tax", taxBreakdown?.providerCity, taxBreakdown?.cityTaxRate)}
+              </Text>
+              <Text className="text-sm font-body text-gray-900">
+                {formatMoney(cityTax)}
+              </Text>
+            </View>
 
             <View className="border-t border-amber-200/80 pt-2 flex-row justify-between items-center mt-2">
               <Text className="text-base font-heading text-amber-950">

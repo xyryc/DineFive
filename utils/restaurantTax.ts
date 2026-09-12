@@ -29,6 +29,50 @@ export function formatRestaurantTaxLabel(part: RestaurantTaxPart): string {
   return `${base}${rate}${reason ? ` — ${reason}` : ""}`;
 }
 
+/**
+ * Derives the official state / city(+county+district) rate for display next to
+ * "State Tax" / "City Tax" totals — summed straight from Stripe's own per-jurisdiction
+ * percentages for the meal line (never tax ÷ subtotal, which overstates the rate
+ * because the tax total also includes tax charged on the platform fee line).
+ * Returns null for a rate when no trustworthy breakdown is available, rather than
+ * guessing — callers should simply omit the percentage in that case.
+ */
+export function deriveMealTaxRatePercents(
+  taxBreakdown: RestaurantTaxPart[] | undefined,
+): { statePercent: number | null; cityPercent: number | null } {
+  if (!Array.isArray(taxBreakdown) || !taxBreakdown.length) {
+    return { statePercent: null, cityPercent: null };
+  }
+
+  const mealParts = taxBreakdown.filter(
+    part => part.lineReference === "meal" &&
+      typeof part.percentage === "string" &&
+      /^\d+(\.\d+)?$/.test(part.percentage),
+  );
+  if (!mealParts.length) return { statePercent: null, cityPercent: null };
+
+  let statePercent = 0;
+  let cityPercent = 0;
+  let hasState = false;
+  let hasCity = false;
+
+  for (const part of mealParts) {
+    const value = parseFloat(part.percentage as string);
+    if (part.jurisdiction.level === "state") {
+      statePercent += value;
+      hasState = true;
+    } else {
+      cityPercent += value;
+      hasCity = true;
+    }
+  }
+
+  return {
+    statePercent: hasState ? statePercent : null,
+    cityPercent: hasCity ? cityPercent : null,
+  };
+}
+
 export function restaurantTaxRows(group: {
   taxBreakdown?: RestaurantTaxPart[];
   stateTax: number;

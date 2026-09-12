@@ -1,9 +1,8 @@
 import { EmptyState } from "@/components/common/EmptyState";
 import { ScreenHeader } from "@/components/common/ScreenHeader";
-import { TaxDisclaimer } from "@/components/common/TaxDisclaimer";
 import { useStore } from "@/stores/stores";
 import { requireAuth } from "@/utils/authGuard";
-import { restaurantTaxRows } from "@/utils/restaurantTax";
+import { deriveMealTaxRatePercents } from "@/utils/restaurantTax";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -60,7 +59,8 @@ export default function CartScreen() {
   // Derive subtotal dynamically from cartItems so totals update in 0ms on +/- taps
   const subtotal = React.useMemo(() => {
     return cartItems.reduce(
-      (acc: number, item: any) => acc + (toNumber(item.price, 0) * (Number(item.quantity) || 0)),
+      (acc: number, item: any) =>
+        acc + toNumber(item.price, 0) * (Number(item.quantity) || 0),
       0,
     );
   }, [cartItems]);
@@ -202,20 +202,20 @@ export default function CartScreen() {
             cityTax: cityTaxVal,
             taxBreakdown: group.taxBreakdown,
             platformFee: toNumber(group.platformFee, 0),
-            stateTaxRate: toNumber(
-              group.stateTaxRate ?? group.items?.[0]?.stateTaxRate ?? root?.stateTaxRate,
-              0,
-            ),
-            cityTaxRate: toNumber(
-              group.cityTaxRate ?? group.items?.[0]?.cityTaxRate ?? root?.cityTaxRate,
-              0,
-            ),
+            // Rate shown next to State Tax / City Tax must be the exact percentage
+            // Stripe applied to the meal line, never a tax ÷ subtotal guess (that
+            // overstates the rate because the tax total also includes tax on the
+            // platform fee line). null means "unknown" — the label omits the % then.
+            ...deriveMealTaxRatePercents(group.taxBreakdown),
             total: totalVal,
             items: formattedGroupItems,
           };
         });
         setCartGroups(formattedGroups);
-        const allFlatItems = formattedGroups.reduce((acc: any[], g: any) => [...acc, ...g.items], []);
+        const allFlatItems = formattedGroups.reduce(
+          (acc: any[], g: any) => [...acc, ...g.items],
+          [],
+        );
         setCartItems(allFlatItems);
       } else {
         setCartItems([]);
@@ -308,15 +308,8 @@ export default function CartScreen() {
     cartMeta?.stateTaxAmount ?? cartMeta?.stateTax,
     0,
   );
-  const stateTaxRate = toNumber(
-    cartMeta?.stateTaxRate ?? cartGroups?.[0]?.stateTaxRate,
-    0,
-  );
-  const cityTaxRate = toNumber(
-    cartMeta?.cityTaxRate ?? cartGroups?.[0]?.cityTaxRate,
-    0,
-  );
   const countyTaxAmount = toNumber(cartMeta?.countyTaxAmount, 0);
+  const taxSubtotal = stateTaxAmount + cityTax + countyTaxAmount;
   const total = toNumber(
     cartMeta?.total,
     subtotal + platformFee + cityTax + stateTaxAmount + countyTaxAmount,
@@ -467,7 +460,7 @@ export default function CartScreen() {
             <View className="px-4 py-3 bg-gray-50/10 border-t border-gray-100/50 gap-y-1.5">
               <View className="flex-row justify-between items-center">
                 <Text className="text-[11px] text-gray-400 font-body-semibold">
-                  Subtotal
+                  Food Item
                 </Text>
                 {isSyncing ? (
                   <View className="w-12 h-3.5 bg-gray-200 rounded animate-pulse" />
@@ -477,21 +470,6 @@ export default function CartScreen() {
                   </Text>
                 )}
               </View>
-
-              {restaurantTaxRows(group).map((tax, index) => (
-                <View key={`${group.providerId}-tax-${index}`} className="flex-row justify-between items-center">
-                  <Text className="flex-1 mr-3 text-[11px] text-gray-400 font-body-semibold">
-                    {tax.label}
-                  </Text>
-                  {isSyncing ? (
-                    <View className="w-10 h-3.5 bg-gray-200 rounded animate-pulse" />
-                  ) : (
-                    <Text className="text-xs font-body-semibold text-gray-600">
-                      {formatMoney(tax.amount)}
-                    </Text>
-                  )}
-                </View>
-              ))}
 
               {group.platformFee > 0 && (
                 <View className="flex-row justify-between items-center">
@@ -507,6 +485,38 @@ export default function CartScreen() {
                   )}
                 </View>
               )}
+
+              <View className="flex-row justify-between items-center">
+                <Text className="text-[11px] text-gray-400 font-body-semibold">
+                  State Tax
+                  {typeof group.statePercent === "number"
+                    ? ` (${group.statePercent.toFixed(2)}%)`
+                    : ""}
+                </Text>
+                {isSyncing ? (
+                  <View className="w-10 h-3.5 bg-gray-200 rounded animate-pulse" />
+                ) : (
+                  <Text className="text-xs font-body-semibold text-gray-600">
+                    {formatMoney(group.stateTax)}
+                  </Text>
+                )}
+              </View>
+
+              <View className="flex-row justify-between items-center">
+                <Text className="text-[11px] text-gray-400 font-body-semibold">
+                  City Tax
+                  {typeof group.cityPercent === "number"
+                    ? ` (${group.cityPercent.toFixed(2)}%)`
+                    : ""}
+                </Text>
+                {isSyncing ? (
+                  <View className="w-10 h-3.5 bg-gray-200 rounded animate-pulse" />
+                ) : (
+                  <Text className="text-xs font-body-semibold text-gray-600">
+                    {formatMoney(group.cityTax)}
+                  </Text>
+                )}
+              </View>
 
               <View className="flex-row justify-between items-center pt-1.5 mt-1 border-t border-gray-100/50">
                 <Text className="text-[12px] font-body-bold text-gray-800">
@@ -569,33 +579,7 @@ export default function CartScreen() {
 
             <View className="flex-row justify-between items-center">
               <Text className="text-sm font-body-medium text-gray-500">
-                State Tax
-              </Text>
-              {loading ? (
-                <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
-              ) : (
-                <Text className="text-sm font-body-semibold text-gray-800">
-                  {formatMoney(stateTaxAmount)}
-                </Text>
-              )}
-            </View>
-
-            <View className="flex-row justify-between items-center">
-              <Text className="text-sm font-body-medium text-gray-500">
-                Local Tax
-              </Text>
-              {loading ? (
-                <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
-              ) : (
-                <Text className="text-sm font-body-semibold text-gray-800">
-                  {formatMoney(cityTax)}
-                </Text>
-              )}
-            </View>
-
-            <View className="flex-row justify-between items-center">
-              <Text className="text-sm font-body-medium text-gray-500">
-                Platform fee
+                Platform fee subtotal
               </Text>
               {loading ? (
                 <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
@@ -606,7 +590,20 @@ export default function CartScreen() {
               )}
             </View>
 
-            {/* Taxes are itemized per restaurant card above */}
+            <View className="flex-row justify-between items-center">
+              <Text className="text-sm font-body-medium text-gray-500">
+                Tax subtotal
+              </Text>
+              {loading ? (
+                <View className="bg-gray-100 h-5 w-16 rounded animate-pulse" />
+              ) : (
+                <Text className="text-sm font-body-semibold text-gray-800">
+                  {formatMoney(taxSubtotal)}
+                </Text>
+              )}
+            </View>
+
+            {/* Per-restaurant jurisdiction breakdown (state vs. city rate) stays on the cards above */}
 
             <View className="flex-row justify-between items-center pt-3 mt-1 border-t border-gray-50">
               <Text className="text-base font-heading text-gray-900">
@@ -622,9 +619,6 @@ export default function CartScreen() {
             </View>
           </View>
         </View>
-
-        {/* Tax Compliance & Statutory Rates Disclaimer */}
-        <TaxDisclaimer className="mt-4 mb-2" />
       </ScrollView>
 
       {/* Floating Bottom action bar */}

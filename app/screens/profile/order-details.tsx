@@ -21,7 +21,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function OrderDetailsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { submitReview, fetchReviewByOrderId, updateReview, fetchOrderById } = useStore() as any;
+  const { submitReview, fetchReviewByOrderId, updateReview, fetchOrderById } =
+    useStore() as any;
   const [existingReviewId, setExistingReviewId] = useState<string | null>(null);
   const [orderData, setOrderData] = useState<any>(null);
   const [orderLoading, setOrderLoading] = useState(true);
@@ -54,12 +55,18 @@ export default function OrderDetailsScreen() {
   useEffect(() => {
     const loadOrder = async () => {
       const orderId = (params.orderId as string) || (params._id as string);
-      console.log("📦 [OrderDetailsScreen] Mounted with params:", JSON.stringify(params, null, 2));
+      console.log(
+        "📦 [OrderDetailsScreen] Mounted with params:",
+        JSON.stringify(params, null, 2),
+      );
       if (orderId) {
         console.log(`🔍 [OrderDetailsScreen] Fetching orderId: ${orderId}`);
         const result = await fetchOrderById(orderId);
         if (result) {
-          console.log("📥 [OrderDetailsScreen] Raw Order Data:", JSON.stringify(result, null, 2));
+          console.log(
+            "📥 [OrderDetailsScreen] Raw Order Data:",
+            JSON.stringify(result, null, 2),
+          );
           setOrderData(result);
         }
       }
@@ -75,7 +82,9 @@ export default function OrderDetailsScreen() {
       const currentOrderStatus = orderData?.status || currentState || "pending";
       if (
         orderId &&
-        ["picked_up", "delivered", "completed"].includes(currentOrderStatus.toLowerCase())
+        ["picked_up", "delivered", "completed"].includes(
+          currentOrderStatus.toLowerCase(),
+        )
       ) {
         console.log("Checking for existing review for order:", orderId);
         const result = await fetchReviewByOrderId(orderId);
@@ -83,7 +92,12 @@ export default function OrderDetailsScreen() {
         const reviews = result?.data || result;
         const reviewData = Array.isArray(reviews) ? reviews[0] : reviews;
 
-        if (reviewData && reviewData._id && (reviewData.orderId === orderId || reviewData.orderId?._id === orderId)) {
+        if (
+          reviewData &&
+          reviewData._id &&
+          (reviewData.orderId === orderId ||
+            reviewData.orderId?._id === orderId)
+        ) {
           console.log("Found existing review:", reviewData._id);
           setExistingReviewId(reviewData._id);
           setRating(reviewData.rating || 0);
@@ -98,11 +112,20 @@ export default function OrderDetailsScreen() {
 
     if (
       params.autoRate === "true" &&
-      ["picked_up", "delivered", "completed"].includes(currentState.toLowerCase())
+      ["picked_up", "delivered", "completed"].includes(
+        currentState.toLowerCase(),
+      )
     ) {
       setRateModalVisible(true);
     }
-  }, [params.autoRate, currentState, params._id, params.orderId, orderData, fetchReviewByOrderId]);
+  }, [
+    params.autoRate,
+    currentState,
+    params._id,
+    params.orderId,
+    orderData,
+    fetchReviewByOrderId,
+  ]);
 
   const currentOrderStatus = orderData?.status || currentState || "pending";
 
@@ -125,8 +148,6 @@ export default function OrderDetailsScreen() {
       params: { orderId: targetId },
     });
   };
-
-
 
   const handleReviewSubmit = async () => {
     if (rating === 0) {
@@ -166,7 +187,12 @@ export default function OrderDetailsScreen() {
       if (existingReviewId) {
         result = await updateReview(existingReviewId, rating, review);
       } else {
-        result = await submitReview(orderIdToSend, foodIdToSend, rating, review);
+        result = await submitReview(
+          orderIdToSend,
+          foodIdToSend,
+          rating,
+          review,
+        );
       }
       setIsSubmittingReview(false);
 
@@ -228,8 +254,18 @@ export default function OrderDetailsScreen() {
   const getStepIndex = (status: string) => {
     const s = (status || "").toLowerCase();
     if (["pending", "pending_split", "created"].includes(s)) return 0;
-    if (["accepted", "accepted_by_restaurant", "preparing", "in_progress", "kitchen"].includes(s)) return 1;
-    if (["ready", "ready_for_pickup", "ready_for_delivery"].includes(s)) return 2;
+    if (
+      [
+        "accepted",
+        "accepted_by_restaurant",
+        "preparing",
+        "in_progress",
+        "kitchen",
+      ].includes(s)
+    )
+      return 1;
+    if (["ready", "ready_for_pickup", "ready_for_delivery"].includes(s))
+      return 2;
     if (["picked_up", "delivered", "completed"].includes(s)) return 3;
     return 0;
   };
@@ -282,11 +318,15 @@ export default function OrderDetailsScreen() {
         <View className="relative mb-5">
           <View
             className={`absolute -left-[31px] w-4 h-4 rounded-full border-2 ${
-              activeStep >= 0 ? "bg-[#FFC107] border-[#FFC107]" : "bg-gray-100 border-gray-200"
+              activeStep >= 0
+                ? "bg-[#FFC107] border-[#FFC107]"
+                : "bg-gray-100 border-gray-200"
             } z-10`}
           />
           <View>
-            <Text className={`font-heading text-sm ${activeStep === 0 ? "text-gray-900 font-bold" : "text-gray-400"}`}>
+            <Text
+              className={`font-heading text-sm ${activeStep === 0 ? "text-gray-900 font-bold" : "text-gray-400"}`}
+            >
               Order Placed
             </Text>
             <Text className="text-gray-500 text-xs mt-0.5">
@@ -299,11 +339,15 @@ export default function OrderDetailsScreen() {
         <View className="relative mb-5">
           <View
             className={`absolute -left-[31px] w-4 h-4 rounded-full border-2 ${
-              activeStep >= 1 ? "bg-[#FFC107] border-[#FFC107]" : "bg-gray-100 border-gray-200"
+              activeStep >= 1
+                ? "bg-[#FFC107] border-[#FFC107]"
+                : "bg-gray-100 border-gray-200"
             } z-10`}
           />
           <View>
-            <Text className={`font-heading text-sm ${activeStep === 1 ? "text-gray-900 font-bold" : "text-gray-400"}`}>
+            <Text
+              className={`font-heading text-sm ${activeStep === 1 ? "text-gray-900 font-bold" : "text-gray-400"}`}
+            >
               Preparing food
             </Text>
             {activeStep === 1 && (
@@ -318,11 +362,15 @@ export default function OrderDetailsScreen() {
         <View className="relative mb-5">
           <View
             className={`absolute -left-[31px] w-4 h-4 rounded-full border-2 ${
-              activeStep >= 2 ? "bg-[#FFC107] border-[#FFC107]" : "bg-gray-100 border-gray-200"
+              activeStep >= 2
+                ? "bg-[#FFC107] border-[#FFC107]"
+                : "bg-gray-100 border-gray-200"
             } z-10`}
           />
           <View>
-            <Text className={`font-heading text-sm ${activeStep === 2 ? "text-gray-900 font-bold" : "text-gray-400"}`}>
+            <Text
+              className={`font-heading text-sm ${activeStep === 2 ? "text-gray-900 font-bold" : "text-gray-400"}`}
+            >
               Ready for Pickup
             </Text>
             {activeStep === 2 && (
@@ -339,11 +387,15 @@ export default function OrderDetailsScreen() {
         <View className="relative">
           <View
             className={`absolute -left-[31px] w-4 h-4 rounded-full border-2 ${
-              activeStep === 3 ? "bg-[#FFC107] border-[#FFC107]" : "bg-gray-100 border-gray-200"
+              activeStep === 3
+                ? "bg-[#FFC107] border-[#FFC107]"
+                : "bg-gray-100 border-gray-200"
             } z-10`}
           />
           <View>
-            <Text className={`font-heading text-sm ${activeStep === 3 ? "text-gray-900 font-bold" : "text-gray-400"}`}>
+            <Text
+              className={`font-heading text-sm ${activeStep === 3 ? "text-gray-900 font-bold" : "text-gray-400"}`}
+            >
               Order Completed
             </Text>
             {activeStep === 3 && (
@@ -371,7 +423,7 @@ export default function OrderDetailsScreen() {
   const getGroups = () => {
     const isMulti = Boolean(
       orderData?.isMultiVendor ||
-        (orderData?.subOrders && orderData.subOrders.length > 1),
+      (orderData?.subOrders && orderData.subOrders.length > 1),
     );
 
     if (orderData?.restaurantGroups && orderData.restaurantGroups.length > 0) {
@@ -380,19 +432,20 @@ export default function OrderDetailsScreen() {
           (so: any) =>
             so.subOrderId === rg.subOrderId ||
             so.providerId === rg.providerId ||
-            so.providerId?._id === rg.providerId
+            so.providerId?._id === rg.providerId,
         );
 
         const groupStatus = isMulti
-          ? (matchingSub?.status || rg.status || orderData.status || currentState)
-          : (orderData.status || rg.status || currentState);
+          ? matchingSub?.status || rg.status || orderData.status || currentState
+          : orderData.status || rg.status || currentState;
 
         return {
           ...rg,
           status: groupStatus,
           _id: matchingSub?._id || rg._id || rg.subOrderId,
           id: matchingSub?._id || rg._id || rg.subOrderId,
-          subOrderId: rg.subOrderId || matchingSub?.subOrderId || matchingSub?._id,
+          subOrderId:
+            rg.subOrderId || matchingSub?.subOrderId || matchingSub?._id,
         };
       });
     }
@@ -401,32 +454,54 @@ export default function OrderDetailsScreen() {
         _id: so._id,
         id: so._id,
         subOrderId: so.subOrderId || so._id,
-        restaurantName: so.provider?.restaurantName || so.restaurantName || orderData.restaurantName || "Dine Five Restaurant",
-        restaurantAddress: so.provider?.restaurantAddress || so.restaurantAddress || pickupAddress,
-        restaurantImage: so.provider?.restaurantImage || so.provider?.restaurantPic || orderData.restaurantImage,
+        restaurantName:
+          so.provider?.restaurantName ||
+          so.restaurantName ||
+          orderData.restaurantName ||
+          "Dine Five Restaurant",
+        restaurantAddress:
+          so.provider?.restaurantAddress ||
+          so.restaurantAddress ||
+          pickupAddress,
+        restaurantImage:
+          so.provider?.restaurantImage ||
+          so.provider?.restaurantPic ||
+          orderData.restaurantImage,
         phoneNumber: so.provider?.phoneNumber || so.phoneNumber,
         status: isMulti
-          ? (so.status || orderData.status || currentState)
-          : (orderData.status || so.status || currentState),
+          ? so.status || orderData.status || currentState
+          : orderData.status || so.status || currentState,
         items: so.items || [],
         subtotal: so.subtotal,
         total: so.vendorAmount || so.total,
       }));
     }
     if (orderData) {
-      return [{
-        _id: orderData._id || orderData.orderId,
-        id: orderData._id || orderData.orderId,
-        subOrderId: orderData.orderId,
-        restaurantName: orderData.providerId?.restaurantName || orderData.restaurantName || "Dine Five Restaurant",
-        restaurantAddress: orderData.providerId?.restaurantAddress || orderData.restaurantAddress || pickupAddress,
-        restaurantImage: orderData.restaurantImage || orderData.providerId?.restaurantPic || orderData.restaurants?.[0]?.restaurantImage,
-        phoneNumber: orderData.providerId?.phoneNumber || orderData.phoneNumber,
-        status: orderData.status || currentState,
-        items: orderData.items || [],
-        subtotal: orderData.subtotal,
-        total: orderData.totalPrice || orderData.displayTotal,
-      }];
+      return [
+        {
+          _id: orderData._id || orderData.orderId,
+          id: orderData._id || orderData.orderId,
+          subOrderId: orderData.orderId,
+          restaurantName:
+            orderData.providerId?.restaurantName ||
+            orderData.restaurantName ||
+            "Dine Five Restaurant",
+          restaurantAddress:
+            orderData.providerId?.restaurantAddress ||
+            orderData.restaurantAddress ||
+            pickupAddress,
+          restaurantImage:
+            orderData.restaurantImage ||
+            orderData.providerId?.restaurantPic ||
+            orderData.restaurants?.[0]?.restaurantImage,
+          phoneNumber:
+            orderData.providerId?.phoneNumber || orderData.phoneNumber,
+          status: orderData.status || currentState,
+          items: orderData.items || [],
+          subtotal: orderData.subtotal,
+          total: orderData.totalPrice || orderData.displayTotal,
+        },
+      ];
     }
     return [];
   };
@@ -436,7 +511,9 @@ export default function OrderDetailsScreen() {
       <SafeAreaView className="flex-1 bg-[#FDFBF7] items-center justify-center">
         <StatusBar style="dark" />
         <ActivityIndicator size="large" color="#FFC107" />
-        <Text className="text-gray-500 mt-4 font-body-medium">Loading order details...</Text>
+        <Text className="text-gray-500 mt-4 font-body-medium">
+          Loading order details...
+        </Text>
       </SafeAreaView>
     );
   }
@@ -484,7 +561,11 @@ export default function OrderDetailsScreen() {
                 style={{ marginLeft: idx > 0 ? -12 : 0, zIndex: 10 - idx }}
               >
                 {pic ? (
-                  <Image source={{ uri: pic }} className="w-full h-full" resizeMode="cover" />
+                  <Image
+                    source={{ uri: pic }}
+                    className="w-full h-full"
+                    resizeMode="cover"
+                  />
                 ) : (
                   <Ionicons name="restaurant" size={16} color="#FFC107" />
                 )}
@@ -503,7 +584,11 @@ export default function OrderDetailsScreen() {
     return (
       <View className="w-11 h-11 bg-gray-50 border border-gray-100 rounded-full items-center justify-center overflow-hidden shadow-sm">
         {pic ? (
-          <Image source={{ uri: pic }} className="w-full h-full" resizeMode="cover" />
+          <Image
+            source={{ uri: pic }}
+            className="w-full h-full"
+            resizeMode="cover"
+          />
         ) : (
           <Ionicons name="restaurant" size={20} color="#FFC107" />
         )}
@@ -523,7 +608,9 @@ export default function OrderDetailsScreen() {
         >
           <Ionicons name="chevron-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text className="text-xl font-heading text-gray-900">Order Details</Text>
+        <Text className="text-xl font-heading text-gray-900">
+          Order Details
+        </Text>
       </View>
 
       <ScrollView
@@ -544,15 +631,22 @@ export default function OrderDetailsScreen() {
           <View className="flex-row items-center gap-3 flex-1">
             {renderHeaderProfile()}
             <View className="flex-1">
-              <Text className="text-base font-heading text-gray-950" numberOfLines={2}>
+              <Text
+                className="text-base font-heading text-gray-950"
+                numberOfLines={2}
+              >
                 {getHeaderTitle()}
               </Text>
-              
+
               {/* Order ID & Item count badge */}
               <View className="flex-row items-center gap-1.5 mt-1 flex-wrap">
                 {displayOrderId ? (
                   <View className="bg-amber-100/80 px-2 py-0.5 rounded-md flex-row items-center">
-                    <Ionicons name="receipt-outline" size={10} color="#92400E" />
+                    <Ionicons
+                      name="receipt-outline"
+                      size={10}
+                      color="#92400E"
+                    />
                     <Text className="text-[10px] font-body-bold text-amber-900 ml-1">
                       {displayOrderId}
                     </Text>
@@ -569,7 +663,9 @@ export default function OrderDetailsScreen() {
 
         {/* Items & Status Tracking Grouped by Restaurant */}
         <Text className="text-[10px] text-gray-400 font-body-semibold uppercase tracking-wider mb-3 px-1">
-          {groups.length > 1 ? "Restaurants & Order Trackers" : "Restaurant & Order Status"}
+          {groups.length > 1
+            ? "Restaurants & Order Trackers"
+            : "Restaurant & Order Status"}
         </Text>
         {groups.map((group: any, index: number) => {
           const phone =
@@ -585,19 +681,33 @@ export default function OrderDetailsScreen() {
           const groupStatus = group.status || currentOrderStatus;
 
           return (
-            <View key={group.subOrderId || index} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 mb-5">
+            <View
+              key={group.subOrderId || index}
+              className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 mb-5"
+            >
               {/* Restaurant Header */}
               <View className="flex-row items-center justify-between pb-3 border-b border-gray-50 mb-3">
                 <View className="flex-row items-center flex-1 mr-2">
                   <View className="w-9 h-9 rounded-full bg-gray-50 border border-gray-100 overflow-hidden items-center justify-center mr-2.5">
                     {group.restaurantImage ? (
-                      <Image source={{ uri: group.restaurantImage }} className="w-full h-full" resizeMode="cover" />
+                      <Image
+                        source={{ uri: group.restaurantImage }}
+                        className="w-full h-full"
+                        resizeMode="cover"
+                      />
                     ) : (
-                      <Ionicons name="restaurant-outline" size={16} color="#FFC107" />
+                      <Ionicons
+                        name="restaurant-outline"
+                        size={16}
+                        color="#FFC107"
+                      />
                     )}
                   </View>
                   <View className="flex-1">
-                    <Text className="text-xs font-heading text-gray-900" numberOfLines={1}>
+                    <Text
+                      className="text-xs font-heading text-gray-900"
+                      numberOfLines={1}
+                    >
                       {group.restaurantName}
                     </Text>
 
@@ -605,20 +715,31 @@ export default function OrderDetailsScreen() {
                     <View className="flex-row items-center gap-1.5 mt-0.5 flex-wrap">
                       {(group.subOrderId || group._id) && (
                         <View className="bg-amber-50 border border-amber-200/80 px-1.5 py-0.5 rounded-md flex-row items-center">
-                          <Ionicons name="receipt-outline" size={9} color="#B45309" />
+                          <Ionicons
+                            name="receipt-outline"
+                            size={9}
+                            color="#B45309"
+                          />
                           <Text className="text-[9px] font-body-bold text-amber-800 ml-1">
                             {group.subOrderId || group._id}
                           </Text>
                         </View>
                       )}
-                      <Text className="text-[10px] text-gray-400 font-body-medium" numberOfLines={1}>
+                      <Text
+                        className="text-[10px] text-gray-400 font-body-medium"
+                        numberOfLines={1}
+                      >
                         {group.restaurantAddress}
                       </Text>
                     </View>
 
                     {phone ? (
                       <View className="flex-row items-center gap-1 mt-1">
-                        <Ionicons name="call-outline" size={10} color="#9CA3AF" />
+                        <Ionicons
+                          name="call-outline"
+                          size={10}
+                          color="#9CA3AF"
+                        />
                         <Text className="text-[10px] text-gray-400 font-body-semibold">
                           {phone}
                         </Text>
@@ -628,16 +749,22 @@ export default function OrderDetailsScreen() {
                           activeOpacity={0.8}
                         >
                           <Ionicons name="call" size={8} color="#1F2937" />
-                          <Text className="text-[8px] font-body-bold text-gray-900">Call</Text>
+                          <Text className="text-[8px] font-body-bold text-gray-900">
+                            Call
+                          </Text>
                         </TouchableOpacity>
                       </View>
                     ) : null}
                   </View>
                 </View>
-              
+
                 <View className="flex-row items-center gap-1.5">
-                  <View className={`px-2 py-0.5 rounded-full border ${getStatusBadgeStyle(groupStatus).container}`}>
-                    <Text className={`text-[9px] font-body-semibold uppercase ${getStatusBadgeStyle(groupStatus).text}`}>
+                  <View
+                    className={`px-2 py-0.5 rounded-full border ${getStatusBadgeStyle(groupStatus).container}`}
+                  >
+                    <Text
+                      className={`text-[9px] font-body-semibold uppercase ${getStatusBadgeStyle(groupStatus).text}`}
+                    >
                       {formatStatus(groupStatus)}
                     </Text>
                   </View>
@@ -673,7 +800,10 @@ export default function OrderDetailsScreen() {
                     Status Tracker
                   </Text>
                   {(group.subOrderId || group._id) && (
-                    <Text className="text-[9px] font-body-bold text-amber-900/80 shrink-0" numberOfLines={1}>
+                    <Text
+                      className="text-[9px] font-body-bold text-amber-900/80 shrink-0"
+                      numberOfLines={1}
+                    >
                       ID: {group.subOrderId || group._id}
                     </Text>
                   )}
@@ -689,29 +819,48 @@ export default function OrderDetailsScreen() {
                 {group.items?.map((item: any, idx: number) => {
                   const imageUri = item?.image || item?.food?.image || "";
                   return (
-                    <View key={item._id || idx} className="flex-row items-center justify-between">
+                    <View
+                      key={item._id || idx}
+                      className="flex-row items-center justify-between"
+                    >
                       <View className="flex-row items-center flex-1 mr-3">
                         <View className="w-11 h-11 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden mr-2.5">
                           {imageUri ? (
-                            <Image source={{ uri: imageUri }} className="w-full h-full" resizeMode="cover" />
+                            <Image
+                              source={{ uri: imageUri }}
+                              className="w-full h-full"
+                              resizeMode="cover"
+                            />
                           ) : (
                             <View className="w-full h-full bg-amber-50 items-center justify-center">
-                              <Ionicons name="fast-food-outline" size={16} color="#FFC107" />
+                              <Ionicons
+                                name="fast-food-outline"
+                                size={16}
+                                color="#FFC107"
+                              />
                             </View>
                           )}
                         </View>
                         <View className="flex-1">
-                          <Text className="text-xs font-body-semibold text-gray-800" numberOfLines={1}>
+                          <Text
+                            className="text-xs font-body-semibold text-gray-800"
+                            numberOfLines={1}
+                          >
                             {item.title || item.food?.title || "Item"}
                           </Text>
                           <Text className="text-[10px] text-gray-400 font-body-semibold mt-0.5">
-                            x{item.quantity} · ${item.unitPrice || item.price || 5.99}
+                            x{item.quantity} · $
+                            {item.unitPrice || item.price || 5.99}
                           </Text>
                         </View>
                       </View>
-                      
+
                       <Text className="text-xs font-body-semibold text-gray-900">
-                        ${(item.lineTotal || (item.quantity * (item.unitPrice || item.price || 5.99))).toFixed(2)}
+                        $
+                        {(
+                          item.lineTotal ||
+                          item.quantity * (item.unitPrice || item.price || 5.99)
+                        ).toFixed(2)}
                       </Text>
                     </View>
                   );
@@ -724,13 +873,23 @@ export default function OrderDetailsScreen() {
                 const groupStateTax = Number(group.stateTax || 0);
                 const groupCityTax = Number(group.cityTax || 0);
                 const groupPlatformFee = Number(group.platformFee || 0);
-                const groupTotal = Number(group.total || (groupSubtotal + groupStateTax + groupCityTax + groupPlatformFee));
+                const groupTotal = Number(
+                  group.total ||
+                    groupSubtotal +
+                      groupStateTax +
+                      groupCityTax +
+                      groupPlatformFee,
+                );
 
-                const groupStateTaxRateFormatted = group.stateTaxRatePercentage
-                  || (groupSubtotal > 0 && groupStateTax > 0 ? `${((groupStateTax / groupSubtotal) * 100).toFixed(2)}%` : null);
-
-                const groupCityTaxRateFormatted = group.cityTaxRatePercentage
-                  || (groupSubtotal > 0 && groupCityTax > 0 ? `${((groupCityTax / groupSubtotal) * 100).toFixed(2)}%` : null);
+                // Never reconstruct a rate as tax ÷ subtotal — the tax total also
+                // includes tax charged on the platform fee, so dividing by the meal
+                // subtotal alone overstates the rate. Only show the backend's real
+                // Stripe-derived percentage; omit it entirely when unavailable
+                // (e.g. an order placed before this was persisted).
+                const groupStateTaxRateFormatted =
+                  group.stateTaxRatePercentage || null;
+                const groupCityTaxRateFormatted =
+                  group.cityTaxRatePercentage || null;
 
                 return (
                   <View className="mt-4 pt-3 border-t border-gray-100 bg-amber-50/30 p-3.5 rounded-2xl border border-amber-100/50 space-y-2">
@@ -739,38 +898,60 @@ export default function OrderDetailsScreen() {
                     </Text>
 
                     <View className="flex-row justify-between items-center">
-                      <Text className="text-[11px] text-gray-500 font-body-medium">Food Subtotal</Text>
-                      <Text className="text-[11px] font-body-semibold text-gray-800">${groupSubtotal.toFixed(2)}</Text>
+                      <Text className="text-[11px] text-gray-500 font-body-medium">
+                        Food Item
+                      </Text>
+                      <Text className="text-[11px] font-body-semibold text-gray-800">
+                        ${groupSubtotal.toFixed(2)}
+                      </Text>
                     </View>
+
+                    {groupPlatformFee > 0 && (
+                      <View className="flex-row justify-between items-center">
+                        <Text className="text-[11px] text-gray-500 font-body-medium">
+                          Platform Fee
+                        </Text>
+                        <Text className="text-[11px] font-body-semibold text-gray-800">
+                          ${groupPlatformFee.toFixed(2)}
+                        </Text>
+                      </View>
+                    )}
 
                     {groupStateTax > 0 && (
                       <View className="flex-row justify-between items-center">
                         <Text className="text-[11px] text-gray-500 font-body-medium">
-                          State Tax {groupStateTaxRateFormatted ? `(${groupStateTaxRateFormatted})` : ""}
+                          State Tax{" "}
+                          {groupStateTaxRateFormatted
+                            ? `(${groupStateTaxRateFormatted})`
+                            : ""}
                         </Text>
-                        <Text className="text-[11px] font-body-semibold text-gray-800">${groupStateTax.toFixed(2)}</Text>
+                        <Text className="text-[11px] font-body-semibold text-gray-800">
+                          ${groupStateTax.toFixed(2)}
+                        </Text>
                       </View>
                     )}
 
                     {groupCityTax > 0 && (
                       <View className="flex-row justify-between items-center">
                         <Text className="text-[11px] text-gray-500 font-body-medium">
-                          City Tax {groupCityTaxRateFormatted ? `(${groupCityTaxRateFormatted})` : ""}
+                          City Tax{" "}
+                          {groupCityTaxRateFormatted
+                            ? `(${groupCityTaxRateFormatted})`
+                            : ""}
                         </Text>
-                        <Text className="text-[11px] font-body-semibold text-gray-800">${groupCityTax.toFixed(2)}</Text>
-                      </View>
-                    )}
-
-                    {groupPlatformFee > 0 && (
-                      <View className="flex-row justify-between items-center">
-                        <Text className="text-[11px] text-gray-500 font-body-medium">Platform Fee</Text>
-                        <Text className="text-[11px] font-body-semibold text-gray-800">${groupPlatformFee.toFixed(2)}</Text>
+                        <Text className="text-[11px] font-body-semibold text-gray-800">
+                          ${groupCityTax.toFixed(2)}
+                        </Text>
                       </View>
                     )}
 
                     <View className="flex-row justify-between items-center pt-2 border-t border-amber-200/60 mt-1">
-                      <Text className="text-xs font-body-bold text-gray-900">Restaurant Total</Text>
-                      <Text className="text-xs font-body-bold text-amber-900">${groupTotal.toFixed(2)}</Text>
+                      <Text className="text-xs font-body-bold text-gray-900">
+                        Restaurant Total
+                      </Text>
+                      <Text className="text-xs font-body-bold text-amber-900">
+                        ${groupTotal.toFixed(2)}
+                      </Text>
                     </View>
                   </View>
                 );
@@ -781,18 +962,29 @@ export default function OrderDetailsScreen() {
 
         {/* Pickup & Payment details */}
         <View className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 mb-6">
-          <Text className="text-[10px] text-gray-400 font-body-semibold uppercase tracking-wider mb-3">Order Details</Text>
-          
+          <Text className="text-[10px] text-gray-400 font-body-semibold uppercase tracking-wider mb-3">
+            Order Details
+          </Text>
+
           <View className="space-y-3">
             <View className="flex-row justify-between items-start">
               <View className="flex-row items-center gap-2.5 mr-2">
                 <Ionicons name="location-outline" size={16} color="#6B7280" />
-                <Text className="text-gray-500 text-xs font-body-semibold">Pickup from</Text>
+                <Text className="text-gray-500 text-xs font-body-semibold">
+                  Pickup from
+                </Text>
               </View>
               <View className="flex-col flex-1 items-end gap-1">
                 {groups.map((group: any, idx: number) => (
-                  <Text key={idx} className="text-gray-800 font-body-semibold text-xs text-right" numberOfLines={2}>
-                    {group.restaurantName}{group.restaurantAddress ? ` (${group.restaurantAddress})` : ""}
+                  <Text
+                    key={idx}
+                    className="text-gray-800 font-body-semibold text-xs text-right"
+                    numberOfLines={2}
+                  >
+                    {group.restaurantName}
+                    {group.restaurantAddress
+                      ? ` (${group.restaurantAddress})`
+                      : ""}
                   </Text>
                 ))}
               </View>
@@ -801,7 +993,9 @@ export default function OrderDetailsScreen() {
             <View className="flex-row justify-between items-center">
               <View className="flex-row items-center gap-2.5">
                 <Ionicons name="card-outline" size={16} color="#6B7280" />
-                <Text className="text-gray-500 text-xs font-body-semibold">Payment Method</Text>
+                <Text className="text-gray-500 text-xs font-body-semibold">
+                  Payment Method
+                </Text>
               </View>
               <Text className="text-gray-800 font-body-semibold text-xs capitalize">
                 {orderData?.paymentMethod || "Card"}
@@ -811,7 +1005,9 @@ export default function OrderDetailsScreen() {
             <View className="flex-row justify-between items-center">
               <View className="flex-row items-center gap-2.5">
                 <Ionicons name="calendar-outline" size={16} color="#6B7280" />
-                <Text className="text-gray-500 text-xs font-body-semibold">Placed On</Text>
+                <Text className="text-gray-500 text-xs font-body-semibold">
+                  Placed On
+                </Text>
               </View>
               <Text className="text-gray-800 font-body-semibold text-xs">
                 {orderData?.createdAt ? formatDate(orderData.createdAt) : "N/A"}
@@ -822,64 +1018,76 @@ export default function OrderDetailsScreen() {
 
         {/* Bill / Invoice Details Card */}
         <View className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 mb-4">
-          <Text className="text-[10px] text-gray-400 font-body-semibold uppercase tracking-wider mb-3">Bill Details</Text>
-          
+          <Text className="text-[10px] text-gray-400 font-body-semibold uppercase tracking-wider mb-3">
+            Bill Details
+          </Text>
+
           <View className="space-y-2 border-b border-gray-50 pb-3 mb-3">
             <View className="flex-row justify-between items-center">
-              <Text className="text-xs text-gray-500 font-body-semibold">Subtotal</Text>
-              <Text className="text-xs font-body-semibold text-gray-800">${orderData?.subtotal?.toFixed(2) || "0.00"}</Text>
-            </View>
-
-            <View className="flex-row justify-between items-center">
-              <Text className="text-xs text-gray-500 font-body-semibold">State Tax</Text>
+              <Text className="text-xs text-gray-500 font-body-semibold">
+                Subtotal
+              </Text>
               <Text className="text-xs font-body-semibold text-gray-800">
-                ${(orderData?.stateTax || orderData?.stateTaxAmount || 0).toFixed(2)}
+                ${orderData?.subtotal?.toFixed(2) || "0.00"}
               </Text>
             </View>
 
             <View className="flex-row justify-between items-center">
-              <Text className="text-xs text-gray-500 font-body-semibold">City Tax</Text>
-              <Text className="text-xs font-body-semibold text-gray-800">${(orderData?.cityTax || 0).toFixed(2)}</Text>
+              <Text className="text-xs text-gray-500 font-body-semibold">
+                Platform Fee
+              </Text>
+              <Text className="text-xs font-body-semibold text-gray-800">
+                ${orderData?.platformFee?.toFixed(2) || "0.00"}
+              </Text>
             </View>
 
             <View className="flex-row justify-between items-center">
-              <Text className="text-xs text-gray-500 font-body-semibold">Platform Fee</Text>
-              <Text className="text-xs font-body-semibold text-gray-800">${orderData?.platformFee?.toFixed(2) || "0.00"}</Text>
+              <Text className="text-xs text-gray-500 font-body-semibold">
+                State Tax
+              </Text>
+              <Text className="text-xs font-body-semibold text-gray-800">
+                $
+                {(
+                  orderData?.stateTax ||
+                  orderData?.stateTaxAmount ||
+                  0
+                ).toFixed(2)}
+              </Text>
+            </View>
+
+            <View className="flex-row justify-between items-center">
+              <Text className="text-xs text-gray-500 font-body-semibold">
+                City Tax
+              </Text>
+              <Text className="text-xs font-body-semibold text-gray-800">
+                ${(orderData?.cityTax || 0).toFixed(2)}
+              </Text>
             </View>
 
             {orderData?.isDonation && (
               <View className="flex-row justify-between items-center">
-                <Text className="text-xs text-rose-500 font-body-semibold">Donation Amount</Text>
-                <Text className="text-xs font-body-semibold text-rose-600">${orderData.donationAmount.toFixed(2)}</Text>
+                <Text className="text-xs text-rose-500 font-body-semibold">
+                  Donation Amount
+                </Text>
+                <Text className="text-xs font-body-semibold text-rose-600">
+                  ${orderData.donationAmount.toFixed(2)}
+                </Text>
               </View>
             )}
           </View>
 
           <View className="flex-row justify-between items-center">
-            <Text className="text-sm font-heading text-gray-900">Total Paid</Text>
+            <Text className="text-sm font-heading text-gray-900">
+              Total Paid
+            </Text>
             <Text className="text-lg font-heading text-[#D97706]">
-              ${(orderData?.totalPrice || orderData?.displayTotal || 0).toFixed(2)}
+              $
+              {(orderData?.totalPrice || orderData?.displayTotal || 0).toFixed(
+                2,
+              )}
             </Text>
           </View>
         </View>
-
-        {/* Stripe Tax Sourcing Disclaimer */}
-        <TouchableOpacity
-          onPress={() => Linking.openURL('https://stripe.com/resources/more/united-states-sales-tax-rates')}
-          activeOpacity={0.8}
-          className="flex-row items-center justify-between bg-white border border-gray-100 rounded-2xl p-3.5 mb-6 shadow-sm"
-        >
-          <View className="flex-row items-center gap-2 flex-1 mr-2">
-            <Ionicons name="shield-checkmark-outline" size={16} color="#D97706" />
-            <Text className="text-[11px] text-gray-500 font-body-medium flex-1">
-              Taxes dynamically calculated via <Text className="font-body-bold text-gray-800">Stripe Auto Tax</Text> based on restaurant origin.
-            </Text>
-          </View>
-          <View className="flex-row items-center gap-0.5 bg-amber-50 px-2 py-1 rounded-lg">
-            <Text className="text-[10px] font-body-bold text-amber-800">Official Rates</Text>
-            <Ionicons name="open-outline" size={12} color="#92400E" />
-          </View>
-        </TouchableOpacity>
 
         {/* Help/Support Section */}
         <TouchableOpacity
@@ -888,7 +1096,11 @@ export default function OrderDetailsScreen() {
           }}
           className="flex-row items-center justify-center bg-amber-50/50 border border-amber-100 rounded-2xl py-3.5"
         >
-          <Ionicons name="chatbubble-ellipses-outline" size={18} color="#D97706" />
+          <Ionicons
+            name="chatbubble-ellipses-outline"
+            size={18}
+            color="#D97706"
+          />
           <Text className="text-amber-800 font-body-semibold text-xs ml-2">
             Need Help? Chat with Support
           </Text>
@@ -948,7 +1160,11 @@ export default function OrderDetailsScreen() {
               <Text
                 className={`font-body-bold text-lg ${isSubmittingReview ? "text-gray-400" : "text-gray-900"}`}
               >
-                {isSubmittingReview ? "Submitting..." : (existingReviewId ? "Update Review" : "Submit Rating")}
+                {isSubmittingReview
+                  ? "Submitting..."
+                  : existingReviewId
+                    ? "Update Review"
+                    : "Submit Rating"}
               </Text>
             </TouchableOpacity>
           </View>
